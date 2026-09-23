@@ -52,13 +52,23 @@ window.STATE_DATA = [
   {id:"56",name:"Wyoming",abbr:"WY",capital:"Cheyenne",region:"West Region",division:"Mountain Division"}
 ];
 
-window.BUNDLED_SPELLING_WORDS = ["sheaf","were","between","extreme","turkey","trolley","wheat","feast","copy","astronomy","complete","envy","money","sincere","speech","kneel","tease","freeze","barley","empty"];
+window.BUNDLED_SPELLING_WORDS = ["police","promise","reply","slight","behind","child","mire","cyclone","sighing","satisfy","lightning","die","rind","thy","untie","whine","divide","decide","sign","thigh"];
+const CARTOON_DOG_HEELER_WORDS = ["sheaf","were","between","extreme","turkey","trolley","wheat","feast","copy","astronomy","complete","envy","money","sincere","speech","kneel","tease","freeze","barley","empty"];
 
 window.AUDIO_PACKS = {
   "cartoon-dog-heeler": {
     label:"Cartoon Dog Heeler",
-    spelling:Object.fromEntries(window.BUNDLED_SPELLING_WORDS.map(word=>[word,`audio/cartoon-dog-heeler/spelling/${word}.mp3`])),
+    sampleWord:"between",
+    words:CARTOON_DOG_HEELER_WORDS,
+    spelling:Object.fromEntries(CARTOON_DOG_HEELER_WORDS.map(word=>[word,`audio/cartoon-dog-heeler/spelling/${word}.mp3`])),
     poems:{"the-crocodile":"audio/cartoon-dog-heeler/poems/the-crocodile.mp3"}
+  },
+  "william-cypher": {
+    label:"William Cypher",
+    sampleWord:"cyclone",
+    words:window.BUNDLED_SPELLING_WORDS,
+    spelling:Object.fromEntries(window.BUNDLED_SPELLING_WORDS.map(word=>[word,`audio/william-cypher/spelling/${word}.mp3`])),
+    poems:{"the-crocodile":"audio/william-cypher/poems/the-crocodile.mp3"}
   }
 };
 

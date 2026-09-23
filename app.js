@@ -15,8 +15,8 @@
     stats: {stars: 0, days: {}},
     statePrefs: {region:"Northeast Region", division:"All", mode:"mixed", kind:"mixed", count:"10"},
     mathPrefs: {tables:[0,1,2,3,4,5,6,7,8,9], mode:"mixed", count:"10", timer:"0"},
-    spellingPrefs: {mode:"mixed"},
-    voicePrefs: {source:"cartoon-dog-heeler", voiceURI:"", style:"bright"}
+    spellingPrefs: {mode:"mixed", count:"max"},
+    voicePrefs: {source:"william-cypher", voiceURI:"", style:"bright"}
   };
   let store;
   try { store = {...defaults, ...JSON.parse(localStorage.getItem(STORE) || "{}")}; }
@@ -26,6 +26,7 @@
   store.spelling = Array.isArray(store.spelling) ? store.spelling : defaults.spelling;
   if (!store.statePrefs || !["All 50","Northeast Region","Midwest Region","South Region","West Region"].includes(store.statePrefs.region)) store.statePrefs = {...defaults.statePrefs};
   store.mathPrefs = {...defaults.mathPrefs, ...(store.mathPrefs || {})};
+  store.spellingPrefs = {...defaults.spellingPrefs, ...(store.spellingPrefs || {})};
   store.voicePrefs = {...defaults.voicePrefs, ...(store.voicePrefs || {})};
   const sameWords = (a,b) => a.length === b.length && a.every((word,index)=>norm(word)===norm(b[index]));
   if (!store.audioContentV1) {
@@ -33,6 +34,14 @@
     const crocodile = window.DEFAULT_POEMS.find(poem=>poem.id==="the-crocodile");
     if (crocodile && !store.poems.some(poem=>poem.id===crocodile.id)) store.poems.unshift(crocodile);
     store.audioContentV1 = true;
+    saveSoon();
+  }
+  if (!store.audioContentV2) {
+    const earlierWords = window.AUDIO_PACKS?.["cartoon-dog-heeler"]?.words || [];
+    if (sameWords(store.spelling, earlierWords) || sameWords(store.spelling, ORIGINAL_SPELLING)) store.spelling = [...BUNDLED_SPELLING];
+    if (!store.voicePrefs.source || store.voicePrefs.source === "cartoon-dog-heeler") store.voicePrefs.source = "william-cypher";
+    store.spellingPrefs.count = "max";
+    store.audioContentV2 = true;
     saveSoon();
   }
   const save = () => localStorage.setItem(STORE, JSON.stringify(store));
@@ -59,12 +68,12 @@
   }
 
   function recordedAudioFor(text) {
-    if (store.voicePrefs.source !== "cartoon-dog-heeler") return "";
-    return window.AUDIO_PACKS?.["cartoon-dog-heeler"]?.spelling?.[norm(text)] || "";
+    return window.AUDIO_PACKS?.[store.voicePrefs.source]?.spelling?.[norm(text)] || "";
   }
 
-  function playPracticeAudio(text, suppliedAudio="") {
-    const audioPath = store.voicePrefs.source === "cartoon-dog-heeler" ? (suppliedAudio || recordedAudioFor(text)) : "";
+  function playPracticeAudio(text, suppliedAudio="", poemId="") {
+    const pack = window.AUDIO_PACKS?.[store.voicePrefs.source];
+    const audioPath = pack ? (poemId ? pack.poems?.[poemId] || suppliedAudio : suppliedAudio || recordedAudioFor(text)) : "";
     if (!audioPath) { speakText(text); return; }
     window.speechSynthesis?.cancel();
     if (activeAudio) activeAudio.pause();
@@ -74,13 +83,14 @@
 
   function voicePanelMarkup() {
     refreshVoices();
-    return `<div class="panel voice-panel"><p class="label">Reading voice</p><div class="field"><label>Audio source</label><select data-audio-source><option value="cartoon-dog-heeler" ${store.voicePrefs.source==='cartoon-dog-heeler'?'selected':''}>Cartoon Dog Heeler recordings</option><option value="system" ${store.voicePrefs.source==='system'?'selected':''}>Device voice</option></select></div><div class="device-voice-options" ${store.voicePrefs.source==='system'?'':'hidden'}><div class="field"><label>Device voice</label><select data-voice-select><option value="">Best available voice</option>${availableVoices.map(v=>`<option value="${esc(v.voiceURI)}" ${store.voicePrefs.voiceURI===v.voiceURI?'selected':''}>${esc(v.name)} (${esc(v.lang)})</option>`).join("")}</select></div><div class="field"><label>Voice style</label><select data-voice-style><option value="bright" ${store.voicePrefs.style==='bright'?'selected':''}>Bright explorer</option><option value="hero" ${store.voicePrefs.style==='hero'?'selected':''}>Upbeat hero</option><option value="calm" ${store.voicePrefs.style==='calm'?'selected':''}>Calm storyteller</option><option value="natural" ${store.voicePrefs.style==='natural'?'selected':''}>Natural</option></select></div></div><button class="secondary" data-test-voice>Hear a sample</button><p class="helper">The recorded pack plays its bundled words and poem. Other text automatically uses the selected device voice.</p></div>`;
+    const packs=Object.entries(window.AUDIO_PACKS||{}).map(([id,pack])=>`<option value="${esc(id)}" ${store.voicePrefs.source===id?'selected':''}>${esc(pack.label)} recordings</option>`).join("");
+    return `<div class="panel voice-panel"><p class="label">Reading voice</p><div class="field"><label>Audio source</label><select data-audio-source>${packs}<option value="system" ${store.voicePrefs.source==='system'?'selected':''}>Device voice</option></select></div><div class="device-voice-options" ${store.voicePrefs.source==='system'?'':'hidden'}><div class="field"><label>Device voice</label><select data-voice-select><option value="">Best available voice</option>${availableVoices.map(v=>`<option value="${esc(v.voiceURI)}" ${store.voicePrefs.voiceURI===v.voiceURI?'selected':''}>${esc(v.name)} (${esc(v.lang)})</option>`).join("")}</select></div><div class="field"><label>Voice style</label><select data-voice-style><option value="bright" ${store.voicePrefs.style==='bright'?'selected':''}>Bright explorer</option><option value="hero" ${store.voicePrefs.style==='hero'?'selected':''}>Upbeat hero</option><option value="calm" ${store.voicePrefs.style==='calm'?'selected':''}>Calm storyteller</option><option value="natural" ${store.voicePrefs.style==='natural'?'selected':''}>Natural</option></select></div></div><button class="secondary" data-test-voice>Hear a sample</button><p class="helper">A recorded pack plays its matching words and poem. Other text automatically uses the selected device voice.</p></div>`;
   }
   function wireVoicePanel(root) {
     $('[data-audio-source]',root)?.addEventListener('change',e=>{store.voicePrefs.source=e.target.value;save();root.querySelector('.device-voice-options').hidden=e.target.value!=="system";});
     $('[data-voice-select]',root)?.addEventListener('change',e=>{store.voicePrefs.voiceURI=e.target.value;save();});
     $('[data-voice-style]',root)?.addEventListener('change',e=>{store.voicePrefs.style=e.target.value;save();});
-    $('[data-test-voice]',root)?.addEventListener('click',()=>playPracticeAudio(store.voicePrefs.source==='cartoon-dog-heeler'?"between":"Ready for a learning adventure? Let's go!"));
+    $('[data-test-voice]',root)?.addEventListener('click',()=>{const sample=window.AUDIO_PACKS?.[store.voicePrefs.source]?.sampleWord||"Ready for a learning adventure? Let's go!";playPracticeAudio(sample);});
   }
 
   function toast(message) {
@@ -187,19 +197,24 @@
 
   function renderSpelling() {
     const p = store.spellingPrefs || defaults.spellingPrefs;
+    const maxCount = p.mode === "mixed" ? store.spelling.length * 2 : store.spelling.length;
+    if (!['10','20','max'].includes(p.count)) p.count='max';
     $("#spellingView").innerHTML = `${head("Word Wizard",`${store.spelling.length} words in this week's bank`)}
       <div class="panel"><p class="label">This week's words</p><div class="pill-row">${store.spelling.slice(0,10).map(w => `<span class="pill">${esc(w)}</span>`).join("")}${store.spelling.length > 10 ? `<span class="pill">+${store.spelling.length-10}</span>`:""}</div><button class="secondary" data-go="settings" data-focus="spelling">Edit word bank</button></div>
       <div class="panel"><p class="label">Practice mode</p>${modeButtons(p.mode)}</div>
+      <div class="panel"><p class="label">Round length</p><div class="option-grid" data-choice-group="count"><button class="choice ${p.count==='10'?'selected':''}" data-value="10">10 questions</button><button class="choice ${p.count==='20'?'selected':''}" data-value="20">20 questions</button><button class="choice ${p.count==='max'?'selected':''}" data-value="max">Max · ${maxCount}</button></div></div>
       ${voicePanelMarkup()}
-      <button class="secondary" id="loadAudioWords" style="margin-bottom:14px">Load the 20 recorded sample words</button>
+      <button class="secondary" id="loadAudioWords" style="margin-bottom:14px">Load the William Cypher word list</button>
       <div class="panel"><p class="helper"><strong>Listen mode:</strong> in child play, tap the speaker to hear each word. In parent mode, the spelling stays visible only to the person holding the phone.</p></div>
       <button class="primary" id="startSpelling" ${store.spelling.length ? "" : "disabled"}>Start spelling round</button>`;
-    wireChoices($("#spellingView"), (_,value) => { p.mode=value; store.spellingPrefs=p; save(); });
+    wireChoices($("#spellingView"), (group,value) => { p[group]=value; store.spellingPrefs=p; save(); renderSpelling(); });
     wireVoicePanel($("#spellingView"));
     $("#loadAudioWords").onclick=()=>{store.spelling=[...BUNDLED_SPELLING];save();renderSpelling();toast("20 recorded words loaded");};
     $("#startSpelling").onclick = () => {
-      const words = shuffle(store.spelling).slice(0,Math.min(12,store.spelling.length));
-      startSession("Word Wizard", words.map(word => ({subject:"spelling",prompt:"Spell the word you hear",answer:word,speech:word,detail:word,pool:store.spelling})), p.mode);
+      const makeQuestion=(word,modeOverride)=>({subject:"spelling",prompt:"Spell the word you hear",answer:word,speech:word,detail:word,pool:store.spelling,modeOverride});
+      const bank=p.mode==="mixed"?store.spelling.flatMap(word=>[makeQuestion(word,"choice"),makeQuestion(word,"type")]):store.spelling.map(word=>makeQuestion(word,p.mode));
+      const wanted=p.count==='max'?bank.length:Math.min(+p.count,bank.length);
+      startSession("Word Wizard", shuffle(bank).slice(0,wanted), p.mode);
     };
   }
 
@@ -234,14 +249,14 @@
   function wirePoemModes(poem){$$('[data-poem-mode]',$("#poemModes")).forEach(b=>b.onclick=()=>startPoem(poem,b.dataset.poemMode));}
   function startPoem(poem,mode){
     const lines=poem.text.split("\n").filter(x=>x.trim());
-    if(mode==="read"){session={title:"Poem Power",questions:[{subject:"poem-read",prompt:poem.title,answer:poem.text,detail:poem.author,speech:poem.text,audio:poem.audio||window.AUDIO_PACKS?.["cartoon-dog-heeler"]?.poems?.[poem.id]||""}],index:0,correct:0,mode:"read",minutes:0};go("session");renderQuestion();return;}
+    if(mode==="read"){session={title:"Poem Power",questions:[{subject:"poem-read",prompt:poem.title,answer:poem.text,detail:poem.author,speech:poem.text,audio:poem.audio||"",poemId:poem.id}],index:0,correct:0,mode:"read",minutes:0};go("session");renderQuestion();return;}
     if(mode==="recite"){session={title:"Poem Power",questions:[{subject:"poem-recite",prompt:`Recite “${poem.title}” from memory`,answer:poem.text,detail:poem.author}],index:0,correct:0,mode:"parent"};go("session");renderQuestion();return;}
     if(mode==="lines"){const qs=lines.slice(0,-1).map((line,i)=>({subject:"poem-line",prompt:line,answer:lines[i+1],detail:`Next line: ${lines[i+1]}`}));startSession("Next-Line Prompts",shuffle(qs).slice(0,8),"type");return;}
     const candidates=lines.map(line=>({line,words:(line.match(/[A-Za-z’']+/g)||[]).filter(w=>w.length>3)})).filter(x=>x.words.length);const qs=shuffle(candidates).slice(0,Math.min(8,candidates.length)).map(({line,words})=>{const word=pick(words);return {subject:"poem-missing",prompt:line.replace(new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\b`,'i'),"_____"),answer:word,detail:`The missing word was “${word}.”`};});startSession("Missing Words",qs,"type");
   }
 
   function startSession(title,questions,mode,minutes=0){session={title,questions,index:0,correct:0,mode,locked:false,minutes,deadline:minutes?Date.now()+minutes*60000:0,timedOut:false};go("session");renderQuestion();}
-  function resolvedMode(){return session.mode==="mixed"?pick(["choice","type"]):session.mode;}
+  function resolvedMode(){return session.questions[session.index]?.modeOverride || (session.mode==="mixed"?pick(["choice","type"]):session.mode);}
   function updateTimer(){if(!session?.deadline)return;const left=Math.max(0,session.deadline-Date.now()),seconds=Math.ceil(left/1000),el=$("#timer");if(el)el.textContent=`${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;if(left<=0){clearInterval(session.timerId);session.timedOut=true;renderFinish();}}
   function renderQuestion(){
     clearInterval(session?.timerId);const view=$("#sessionView");const q=session.questions[session.index];if(!q){renderFinish();return;}session.locked=false;session.currentMode=resolvedMode();
@@ -254,7 +269,7 @@
 
   function renderQuestionBody(q){
     const body=$("#questionBody");const mode=session.currentMode;
-    if(q.subject==="poem-read") {body.innerHTML=`<h2>${esc(q.prompt)}</h2><p class="helper">${esc(q.detail)}</p><button class="secondary" style="margin-bottom:16px" data-play-poem>🔊 Play poem audio</button><div class="poem-text">${esc(q.answer)}</div><button class="primary" style="margin-top:18px" data-self-done>I read it aloud</button>`;$('[data-play-poem]').onclick=()=>playPracticeAudio(q.speech,q.audio);$('[data-self-done]').onclick=()=>grade(true);return;}
+    if(q.subject==="poem-read") {body.innerHTML=`<h2>${esc(q.prompt)}</h2><p class="helper">${esc(q.detail)}</p><button class="secondary" style="margin-bottom:16px" data-play-poem>🔊 Play poem audio</button><div class="poem-text">${esc(q.answer)}</div><button class="primary" style="margin-top:18px" data-self-done>I read it aloud</button>`;$('[data-play-poem]').onclick=()=>playPracticeAudio(q.speech,q.audio,q.poemId);$('[data-self-done]').onclick=()=>grade(true);return;}
     const speech=q.speech?`<button class="subject-icon" id="speakWord" aria-label="Hear the word" style="border:0;color:#5e4bd0">🔊</button>`:"";
     body.innerHTML=`${q.map?`<div class="map-stage" id="mapStage"><span class="helper">Loading state shape…</span></div>`:""}${speech}<h2 class="${q.subject?.startsWith('poem')?'poem-text':''}">${esc(q.prompt)}</h2><div id="interaction"></div>`;
     if(q.map) renderStateMap(q.state);
