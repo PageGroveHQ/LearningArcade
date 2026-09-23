@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#17143b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Asher's Arcade">
+  <meta name="description" content="A private, installable practice arcade for states, spelling, multiplication, and poems.">
+  <title>Asher's Learning Arcade</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="brand" type="button" data-go="home" aria-label="Go home">
+        <span class="brand-mark">A</span><span>Asher's Arcade</span>
+      </button>
+      <button class="icon-button" type="button" data-go="settings" aria-label="Open parent setup">⚙</button>
+    </header>
+
+    <main id="app" tabindex="-1">
+      <section class="screen active" data-screen="home">
+        <div class="welcome-row">
+          <div>
+            <p class="eyebrow">Choose a quest</p>
+            <h1>What should we practice?</h1>
+          </div>
+          <div class="streak-chip"><span>★</span><strong id="totalStars">0</strong> stars</div>
+        </div>
+        <div class="subject-grid">
+          <button class="subject-card states" data-go="states">
+            <span class="subject-icon">⌖</span><span class="subject-copy"><strong>State Quest</strong><small>States · capitals · abbreviations · maps</small></span><span class="arrow">›</span>
+          </button>
+          <button class="subject-card spelling" data-go="spelling">
+            <span class="subject-icon">Aa</span><span class="subject-copy"><strong>Word Wizard</strong><small>This week's spelling words</small></span><span class="arrow">›</span>
+          </button>
+          <button class="subject-card math" data-go="math">
+            <span class="subject-icon">×</span><span class="subject-copy"><strong>Multiply Mayhem</strong><small>Facts from 0 × 0 through 9 × 9</small></span><span class="arrow">›</span>
+          </button>
+          <button class="subject-card poems" data-go="poems">
+            <span class="subject-icon">❝</span><span class="subject-copy"><strong>Poem Power</strong><small>Read · remember · recite</small></span><span class="arrow">›</span>
+          </button>
+        </div>
+        <section class="progress-panel">
+          <div><p class="eyebrow">Today's progress</p><h2 id="todayCount">Ready for your first round</h2></div>
+          <div class="progress-ring" id="progressRing"><span>0</span><small>answers</small></div>
+        </section>
+      </section>
+
+      <section class="screen" data-screen="states"><div id="statesView"></div></section>
+      <section class="screen" data-screen="spelling"><div id="spellingView"></div></section>
+      <section class="screen" data-screen="math"><div id="mathView"></div></section>
+      <section class="screen" data-screen="poems"><div id="poemsView"></div></section>
+      <section class="screen" data-screen="session"><div id="sessionView"></div></section>
+      <section class="screen" data-screen="settings"><div id="settingsView"></div></section>
+    </main>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="vendor/d3.min.js"></script>
+  <script src="vendor/topojson-client.min.js"></script>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
+
