@@ -283,8 +283,16 @@
     $$('[data-grade]').forEach(b=>b.onclick=()=>grade(b.dataset.grade==="true"));wireSwipe();
   }
 
+  function mathAnswerOptions(q) {
+    const n=q.a*q.b;
+    const candidates=[n+q.a,n+q.b,n-q.a,n-q.b,q.a*(q.b+1),q.a*Math.max(0,q.b-1),(q.a+1)*q.b,Math.max(0,q.a-1)*q.b,n+1,n-1,n+2,n-2,q.a+q.b,Math.abs(q.a-q.b)];
+    const distractors=[...new Set(candidates.filter(value=>Number.isInteger(value)&&value>=0&&value!==n))];
+    for(let step=1;distractors.length<3;step++) [n+step,n-step].forEach(value=>{if(value>=0&&value!==n&&!distractors.includes(value))distractors.push(value);});
+    return shuffle([n,...shuffle(distractors).slice(0,3)]).map(String);
+  }
+
   function answerOptions(q){
-    if(q.subject==="math"){const n=+q.answer;return shuffle([...new Set([n,n+q.a,n+q.b,Math.max(0,n-q.a),n+1])]).slice(0,4).map(String);}
+    if(q.subject==="math") return mathAnswerOptions(q);
     if(q.subject==="spelling"||q.subject==="state-spelling"){const w=q.answer;const variants=[w,w.slice(0,-1)+(w.endsWith('e')?'a':'e'),w.replace(/([aeiou])/, '$1$1'),w.length>4?w.slice(0,2)+w.slice(3):w+'e'];return shuffle([...new Set(variants)]).slice(0,4);}
     if(q.subject==="states"){
       if(q.combined){return shuffle([q.state,...shuffle(q.pool.filter(s=>s!==q.state)).slice(0,3)]).map(s=>q.map?`${s.name} · ${s.abbr} · ${s.capital}`:`${s.abbr} · ${s.capital}`);}
