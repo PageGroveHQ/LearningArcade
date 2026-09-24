@@ -1,4 +1,4 @@
-const CACHE = "learning-arcade-v9";
+const CACHE = "learning-arcade-v10";
 const PACKS = {"cartoon-dog-heeler":["sheaf","were","between","extreme","turkey","trolley","wheat","feast","copy","astronomy","complete","envy","money","sincere","speech","kneel","tease","freeze","barley","empty"],"william-cypher":["police","promise","reply","slight","behind","child","mire","cyclone","sighing","satisfy","lightning","die","rind","thy","untie","whine","divide","decide","sign","thigh"],"circuit-sentinel":[]};
 const AUDIO = Object.entries(PACKS).flatMap(([pack,words])=>[`./audio/${pack}/poems/the-crocodile.mp3`,...words.map(word=>`./audio/${pack}/spelling/${word}.mp3`)]);
 const ART = ["./assets/backgrounds/circuit-lab.jpg","./assets/backgrounds/metal-panel.jpg","./assets/characters/circuit-sentinel-action.png","./assets/characters/circuit-sentinel-success.png","./assets/characters/circuit-sentinel-thinking.png","./assets/characters/professor-volt.png","./assets/ui/energy-orb.png"];
