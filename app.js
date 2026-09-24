@@ -68,11 +68,8 @@
     store.audioContentV3=true;
     saveSoon();
   }
-  if (!store.genericBrandV1) {
-    store.poems.forEach(poem=>{if(poem.author==="Asher's Learning Arcade")poem.author="Learning Arcade";});
-    store.genericBrandV1=true;
-    saveSoon();
-  }
+  const legacyBrandedPoem=store.poems.find(poem=>poem.author==="Asher's Learning Arcade");
+  if(legacyBrandedPoem){store.poems.forEach(poem=>{if(poem.author==="Asher's Learning Arcade")poem.author="Learning Arcade";});saveSoon();}
   const save = () => localStorage.setItem(STORE, JSON.stringify(store));
   function saveSoon(){setTimeout(()=>localStorage.setItem(STORE,JSON.stringify(store)),0);}
   let session = null;
