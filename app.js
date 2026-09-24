@@ -6,9 +6,18 @@
   const pick = arr => arr[Math.floor(Math.random() * arr.length)];
   const norm = value => String(value).trim().toLowerCase().replace(/[.?!,'’]/g, "").replace(/\s+/g, " ");
   const today = () => new Date().toISOString().slice(0, 10);
-  const STORE = "asher-learning-arcade-v1";
+  const STORE = "learning-arcade-v2";
+  const OLD_STORE = "asher-learning-arcade-v1";
   const ORIGINAL_SPELLING = ["because", "friend", "school", "people", "favorite", "different", "thought", "through"];
   const BUNDLED_SPELLING = window.BUNDLED_SPELLING_WORDS || [];
+  const blankStats = () => ({stars:0,days:{},subjects:{},rounds:[]});
+  const createProfile = (name="Player 1", stats=blankStats()) => ({id:`profile-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,name,stats,missions:{},activeMissionId:"state-scan"});
+  const MISSIONS = [
+    {id:"state-scan",title:"Power the State Scanner",story:"Professor Volt needs geographic coordinates to restart the navigation deck.",subject:"states",goal:10,target:"states",reward:5},
+    {id:"word-vault",title:"Decode the Word Vault",story:"Spell ten signal words to open the encrypted archive.",subject:"spelling",goal:10,target:"spelling",reward:5},
+    {id:"math-core",title:"Repair the Multiplication Core",story:"Solve twenty multiplication facts to stabilize the arcade reactor.",subject:"math",goal:20,target:"math",reward:8},
+    {id:"poetry-signal",title:"Restore the Poetry Signal",story:"Complete five poem activities so Circuit Sentinel can transmit the final message.",subject:"poems",goal:5,target:"poems",reward:8}
+  ];
   const defaults = {
     spelling: BUNDLED_SPELLING,
     poems: window.DEFAULT_POEMS,
@@ -16,12 +25,20 @@
     statePrefs: {region:"Northeast Region", division:"All", mode:"mixed", kind:"mixed", count:"10"},
     mathPrefs: {tables:[0,1,2,3,4,5,6,7,8,9], mode:"mixed", count:"10", timer:"0"},
     spellingPrefs: {mode:"mixed", count:"max"},
-    voicePrefs: {source:"william-cypher", voiceURI:"", style:"bright"}
+    voicePrefs: {source:"circuit-sentinel", voiceURI:"", style:"bright"},
+    profiles: [],
+    activeProfileId: ""
   };
   let store;
-  try { store = {...defaults, ...JSON.parse(localStorage.getItem(STORE) || "{}")}; }
+  try { store = {...defaults, ...JSON.parse(localStorage.getItem(STORE) || localStorage.getItem(OLD_STORE) || "{}")}; }
   catch { store = structuredClone(defaults); }
   store.stats ||= {stars:0, days:{}}; store.stats.days ||= {};
+  if (!Array.isArray(store.profiles) || !store.profiles.length) store.profiles = [createProfile("Player 1",store.stats)];
+  store.profiles.forEach(profile=>{profile.name=String(profile.name||"Player").trim()||"Player";profile.stats={...blankStats(),...(profile.stats||{})};profile.stats.days||={};profile.stats.subjects||={};profile.stats.rounds=Array.isArray(profile.stats.rounds)?profile.stats.rounds:[];profile.missions||={};profile.activeMissionId||="state-scan";});
+  if (!store.profiles.some(profile=>profile.id===store.activeProfileId)) store.activeProfileId=store.profiles[0].id;
+  const activeProfile = () => store.profiles.find(profile=>profile.id===store.activeProfileId) || store.profiles[0];
+  const syncActiveProfile = () => {store.stats=activeProfile().stats;};
+  syncActiveProfile();
   store.poems = Array.isArray(store.poems) && store.poems.length ? store.poems : window.DEFAULT_POEMS;
   store.spelling = Array.isArray(store.spelling) ? store.spelling : defaults.spelling;
   if (!store.statePrefs || !["All 50","Northeast Region","Midwest Region","South Region","West Region"].includes(store.statePrefs.region)) store.statePrefs = {...defaults.statePrefs};
@@ -42,6 +59,13 @@
     if (!store.voicePrefs.source || store.voicePrefs.source === "cartoon-dog-heeler") store.voicePrefs.source = "william-cypher";
     store.spellingPrefs.count = "max";
     store.audioContentV2 = true;
+    saveSoon();
+  }
+  if (!store.audioContentV3) {
+    const crocodile=store.poems.find(poem=>poem.id==="the-crocodile");
+    if(crocodile){crocodile.text=crocodile.text.replace(/ev[’']ry/gi,"every");crocodile.audio="audio/circuit-sentinel/poems/the-crocodile.mp3";}
+    store.voicePrefs.source="circuit-sentinel";
+    store.audioContentV3=true;
     saveSoon();
   }
   const save = () => localStorage.setItem(STORE, JSON.stringify(store));
@@ -73,7 +97,8 @@
 
   function playPracticeAudio(text, suppliedAudio="", poemId="") {
     const pack = window.AUDIO_PACKS?.[store.voicePrefs.source];
-    const audioPath = pack ? (poemId ? pack.poems?.[poemId] || suppliedAudio : suppliedAudio || recordedAudioFor(text)) : "";
+    const fallbackPack=window.AUDIO_PACKS?.["william-cypher"];
+    const audioPath = pack ? (poemId ? pack.poems?.[poemId] || suppliedAudio : recordedAudioFor(text)||fallbackPack?.spelling?.[norm(text)]||suppliedAudio) : suppliedAudio;
     if (!audioPath) { speakText(text); return; }
     window.speechSynthesis?.cancel();
     if (activeAudio) activeAudio.pause();
@@ -106,6 +131,9 @@
     if (name === "spelling") renderSpelling();
     if (name === "math") renderMath();
     if (name === "poems") renderPoems();
+    if (name === "story") renderStory();
+    if (name === "profiles") renderProfiles();
+    if (name === "reports") renderReports();
     if (name === "settings") renderSettings();
   }
 
@@ -114,11 +142,16 @@
   }
 
   function renderHome() {
-    const count = store.stats.days[today()]?.answered || 0;
-    $("#totalStars").textContent = store.stats.stars || 0;
-    $("#todayCount").textContent = count ? `${count} answer${count === 1 ? "" : "s"} practiced today` : "Ready for your first round";
-    $("#progressRing span").textContent = count;
-    $("#progressRing").style.background = `conic-gradient(var(--gold) ${Math.min(count / 20, 1) * 360}deg,#eeeafa 0)`;
+    syncActiveProfile();
+    const profile=activeProfile(),stats=profile.stats;
+    const totals=Object.values(stats.subjects).reduce((sum,item)=>({answered:sum.answered+(item.answered||0),correct:sum.correct+(item.correct||0)}),{answered:0,correct:0});
+    const accuracy=totals.answered?Math.round(totals.correct/totals.answered*100):0;
+    const mission=MISSIONS.find(item=>(profile.missions[item.id]?.progress||0)<item.goal)||MISSIONS[MISSIONS.length-1];
+    const progress=Math.min(profile.missions[mission.id]?.progress||0,mission.goal);
+    $("#profileName").textContent=profile.name;
+    $("#profileInitial").textContent=profile.name.charAt(0).toUpperCase();
+    $("#totalStars").textContent = stats.stars || 0;
+    $("#homeReport").innerHTML=`<div><p class="eyebrow">${esc(profile.name)}'s learning record</p><h2>${totals.answered?`${accuracy}% accuracy across ${totals.answered} answers`:"Ready to begin a learning record"}</h2><p class="helper">Current mission: ${esc(mission.title)} · ${progress}/${mission.goal}</p></div><button class="report-orb" data-go="reports" aria-label="Open reports"><img src="assets/ui/energy-orb.png" alt=""><strong>${stats.rounds.length}</strong><small>rounds</small></button>`;
   }
 
   function modeButtons(current) {
@@ -255,6 +288,47 @@
     const candidates=lines.map(line=>({line,words:(line.match(/[A-Za-z’']+/g)||[]).filter(w=>w.length>3)})).filter(x=>x.words.length);const qs=shuffle(candidates).slice(0,Math.min(8,candidates.length)).map(({line,words})=>{const word=pick(words);return {subject:"poem-missing",prompt:line.replace(new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\b`,'i'),"_____"),answer:word,detail:`The missing word was “${word}.”`};});startSession("Missing Words",qs,"type");
   }
 
+  function subjectGroup(subject="") {
+    if(subject==="states"||subject==="state-spelling")return "states";
+    if(subject==="spelling")return "spelling";
+    if(subject==="math")return "math";
+    if(subject.startsWith("poem"))return "poems";
+    return "other";
+  }
+  const subjectLabel=subject=>({states:"State Quest",spelling:"Word Wizard",math:"Multiply Mayhem",poems:"Poem Power",other:"Other"}[subject]||subject);
+
+  function renderStory(){
+    const profile=activeProfile();
+    const completed=MISSIONS.filter(m=>(profile.missions[m.id]?.progress||0)>=m.goal).length;
+    $("#storyView").innerHTML=`${head("Story Mode",`${profile.name}'s mission map`)}
+      <div class="panel story-intro"><img src="assets/characters/professor-volt.png" alt="Professor Volt"><div><p class="eyebrow">Arcade restoration</p><h2>${completed} of ${MISSIONS.length} missions complete</h2><p class="helper">Practice in any learning game to advance its mission. Completed missions award bonus energy orbs.</p></div><img src="assets/characters/circuit-sentinel-action.png" alt="Circuit Sentinel"></div>
+      <div class="mission-list">${MISSIONS.map((mission,index)=>{const state=profile.missions[mission.id]||{progress:0,complete:false};const progress=Math.min(state.progress||0,mission.goal),done=progress>=mission.goal,pct=Math.round(progress/mission.goal*100);return `<article class="panel mission-card ${done?'mission-complete':''}"><div class="mission-number">${done?'✓':index+1}</div><div class="grow"><p class="eyebrow">Mission ${index+1}</p><h2>${esc(mission.title)}</h2><p class="helper">${esc(mission.story)}</p><div class="mission-progress"><span style="width:${pct}%"></span></div><div class="mission-meta"><strong>${progress}/${mission.goal} activities</strong><span>+${mission.reward} orbs</span></div></div><button class="tiny" data-start-mission="${mission.id}">${done?'Practice again':'Start mission'}</button></article>`;}).join("")}</div>`;
+    $$('[data-start-mission]').forEach(button=>button.onclick=()=>{const mission=MISSIONS.find(item=>item.id===button.dataset.startMission);profile.activeMissionId=mission.id;save();go(mission.target);});
+  }
+
+  function renderProfiles(){
+    const current=activeProfile();
+    $("#profilesView").innerHTML=`${head("Learner Profiles","Progress is stored locally on this device")}
+      <div class="panel profile-hero"><img src="assets/characters/professor-volt.png" alt="Professor Volt"><div><p class="eyebrow">Current learner</p><h2>${esc(current.name)}</h2><p class="helper">Each learner has separate rewards, missions, assessments, and reports.</p></div></div>
+      <div class="panel"><p class="label">Choose a learner</p><div class="profile-list">${store.profiles.map(profile=>`<button class="profile-row ${profile.id===store.activeProfileId?'selected':''}" data-profile="${esc(profile.id)}"><span>${esc(profile.name.charAt(0).toUpperCase())}</span><span class="grow"><strong>${esc(profile.name)}</strong><small>${profile.stats.rounds.length} completed rounds · ${profile.stats.stars||0} orbs</small></span><b>${profile.id===store.activeProfileId?'Active':'Choose'}</b></button>`).join("")}</div></div>
+      <div class="panel"><p class="label">Add a local profile</p><form id="profileForm" class="profile-form"><input class="answer-input" id="newProfileName" maxlength="24" placeholder="Learner name" autocomplete="off"><button class="primary">Create profile</button></form><p class="helper">Profiles stay on this device and are included in downloaded backups.</p></div>`;
+    $$('[data-profile]').forEach(button=>button.onclick=()=>{store.activeProfileId=button.dataset.profile;syncActiveProfile();save();renderProfiles();toast(`${activeProfile().name} selected`);});
+    $("#profileForm").onsubmit=event=>{event.preventDefault();const name=$("#newProfileName").value.trim();if(!name)return toast("Enter a learner name");const profile=createProfile(name);store.profiles.push(profile);store.activeProfileId=profile.id;syncActiveProfile();save();renderProfiles();toast(`${name} profile created`);};
+  }
+
+  function renderReports(){
+    const profile=activeProfile(),stats=profile.stats;
+    const groups=["states","spelling","math","poems"];
+    const totals=groups.reduce((sum,key)=>{const item=stats.subjects[key]||{};sum.answered+=item.answered||0;sum.correct+=item.correct||0;return sum;},{answered:0,correct:0});
+    const accuracy=totals.answered?Math.round(totals.correct/totals.answered*100):0;
+    const subjectRows=groups.map(key=>{const item=stats.subjects[key]||{answered:0,correct:0};const pct=item.answered?Math.round(item.correct/item.answered*100):0;return `<div class="report-row"><strong>${subjectLabel(key)}</strong><span>${item.answered} answered</span><b>${item.answered?`${pct}%`:'—'}</b></div>`;}).join("");
+    const recent=stats.rounds.slice(-8).reverse();
+    $("#reportsView").innerHTML=`${head("Assessments & Reports",`${profile.name}'s saved learning record`)}
+      <div class="report-cards"><div class="report-stat"><strong>${totals.answered}</strong><span>Total answers</span></div><div class="report-stat"><strong>${totals.answered?`${accuracy}%`:'—'}</strong><span>Overall accuracy</span></div><div class="report-stat"><strong>${stats.rounds.length}</strong><span>Completed rounds</span></div><div class="report-stat"><strong>${stats.stars||0}</strong><span>Energy orbs</span></div></div>
+      <div class="panel"><p class="label">Subject assessment</p><div class="report-table">${subjectRows}</div></div>
+      <div class="panel"><p class="label">Recent completed rounds</p>${recent.length?`<div class="report-table">${recent.map(round=>`<div class="report-row"><strong>${esc(round.title)}</strong><span>${esc(round.date)}</span><b>${round.correct}/${round.total}</b></div>`).join("")}</div>`:'<div class="empty">Complete a practice round to begin this report.</div>'}</div>`;
+  }
+
   function startSession(title,questions,mode,minutes=0){session={title,questions,index:0,correct:0,mode,locked:false,minutes,deadline:minutes?Date.now()+minutes*60000:0,timedOut:false};go("session");renderQuestion();}
   function resolvedMode(){return session.questions[session.index]?.modeOverride || (session.mode==="mixed"?pick(["choice","type"]):session.mode);}
   function updateTimer(){if(!session?.deadline)return;const left=Math.max(0,session.deadline-Date.now()),seconds=Math.ceil(left/1000),el=$("#timer");if(el)el.textContent=`${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;if(left<=0){clearInterval(session.timerId);session.timedOut=true;renderFinish();}}
@@ -306,14 +380,24 @@
     else{it.innerHTML=`<form id="answerForm" class="stack"><input class="answer-input" id="typedAnswer" aria-label="Your answer" placeholder="Type your answer" autocomplete="off" autocapitalize="words"><button class="primary">Check answer</button></form><div id="feedback"></div>`;$("#answerForm").onsubmit=e=>{e.preventDefault();finishAnswer(norm($("#typedAnswer").value)===norm(q.answer),q);};setTimeout(()=>$("#typedAnswer")?.focus(),80);}}
 
   function finishAnswer(ok,q){if(session.locked)return;session.locked=true;const feedback=$("#feedback")||$("#interaction");const correction=q.subject==="math"&&!ok?`${q.a} groups of ${q.b}: ${Array(q.a).fill(q.b).join(" + ") || "0"} = ${q.answer}`:q.detail||`Answer: ${q.answer}`;const message=ok?pick(["Nice work!","You got it!","Great recall!","Level up!"]):`Good try. ${esc(correction)}`;feedback.innerHTML=`<div class="feedback ${ok?'good':'try'} mascot-feedback"><img src="assets/characters/circuit-sentinel-${ok?'success':'thinking'}.png" alt=""><span>${message}</span></div><button class="primary" style="margin-top:10px" data-next>${session.index===session.questions.length-1?'See results':'Next question'}</button>`;$('[data-next]').onclick=()=>grade(ok);}
-  function grade(ok){if(ok)session.correct++;const day=store.stats.days[today()]||{answered:0,correct:0};day.answered++;if(ok)day.correct++;store.stats.days[today()]=day;if(ok)store.stats.stars=(store.stats.stars||0)+1;save();session.index++;renderQuestion();}
+  function recordAnswer(ok,q){
+    const stats=activeProfile().stats,group=subjectGroup(q?.subject||"");
+    const day=stats.days[today()]||{answered:0,correct:0};day.answered++;if(ok)day.correct++;stats.days[today()]=day;
+    const subject=stats.subjects[group]||{answered:0,correct:0};subject.answered++;if(ok)subject.correct++;stats.subjects[group]=subject;
+    if(ok)stats.stars=(stats.stars||0)+1;
+    const mission=MISSIONS.find(item=>item.subject===group);
+    if(mission){const state=activeProfile().missions[mission.id]||{progress:0,complete:false};if(!state.complete){state.progress=Math.min(mission.goal,(state.progress||0)+1);if(state.progress>=mission.goal){state.complete=true;stats.stars=(stats.stars||0)+mission.reward;toast(`Mission complete! +${mission.reward} bonus orbs`);}activeProfile().missions[mission.id]=state;}}
+    syncActiveProfile();
+  }
+  function grade(ok){const q=session.questions[session.index];if(ok)session.correct++;recordAnswer(ok,q);save();session.index++;renderQuestion();}
   function wireSwipe(){let startX=0;const card=$("#flashCard");card.addEventListener('touchstart',e=>startX=e.touches[0].clientX,{passive:true});card.addEventListener('touchend',e=>{if($("#revealed")?.hidden)return;const d=e.changedTouches[0].clientX-startX;if(Math.abs(d)>70)grade(d>0);},{passive:true});}
 
   async function renderStateMap(state){const stage=$("#mapStage");try{if(!mapTopology){const res=await fetch("vendor/states-10m.json");mapTopology=await res.json();}const features=topojson.feature(mapTopology,mapTopology.objects.states).features;const feature=features.find(f=>String(f.id).padStart(2,'0')===state.id);const projection=d3.geoIdentity().reflectY(true).fitExtent([[18,14],[332,218]],feature);const path=d3.geoPath(projection);stage.innerHTML=`<svg viewBox="0 0 350 232" role="img" aria-label="Unlabeled state outline"><path d="${path(feature)}"></path></svg>`;}catch{stage.innerHTML=`<div class="feedback try">This state outline could not load. Try reopening the app.</div>`;}}
-  function renderFinish(){clearInterval(session?.timerId);const total=session.timedOut?session.index:session.questions.length,correct=session.correct,pct=Math.round(correct/Math.max(1,total)*100),pose=pct>=60?'success':'thinking';$("#sessionView").innerHTML=`${head(session.timedOut?"Time's up!":"Round complete!",session.title,"home")}<div class="panel finish-panel"><img class="finish-mascot" src="assets/characters/circuit-sentinel-${pose}.png" alt="Circuit Sentinel"><div><img class="finish-orb" src="assets/ui/energy-orb.png" alt="Energy orb reward"><h1>${correct} of ${total}</h1><p class="helper">${session.timedOut?`You answered ${total} before the timer ended. `:''}${pct>=80?'Fantastic focus!':pct>=60?'Strong work—one more round will make it stick.':'Every practice round grows your brain.'}</p></div></div><div class="stack"><button class="primary" data-again>Practice again</button><button class="secondary" data-go="home">Back to quests</button></div>`;$('[data-again]').onclick=()=>{session.index=0;session.correct=0;session.timedOut=false;session.deadline=session.minutes?Date.now()+session.minutes*60000:0;session.questions=shuffle(session.questions);renderQuestion();};}
+  function renderFinish(){clearInterval(session?.timerId);const total=session.timedOut?session.index:session.questions.length,correct=session.correct,pct=Math.round(correct/Math.max(1,total)*100),pose=pct>=60?'success':'thinking';if(!session.roundSaved){const stats=activeProfile().stats;stats.rounds.push({date:today(),title:session.title,total,correct,accuracy:pct});stats.rounds=stats.rounds.slice(-100);session.roundSaved=true;save();}$("#sessionView").innerHTML=`${head(session.timedOut?"Time's up!":"Round complete!",session.title,"home")}<div class="panel finish-panel"><img class="finish-mascot" src="assets/characters/circuit-sentinel-${pose}.png" alt="Circuit Sentinel"><div><img class="finish-orb" src="assets/ui/energy-orb.png" alt="Energy orb reward"><h1>${correct} of ${total}</h1><p class="helper">${session.timedOut?`You answered ${total} before the timer ended. `:''}${pct>=80?'Fantastic focus!':pct>=60?'Strong work—one more round will make it stick.':'Every practice round grows your brain.'}</p></div></div><div class="stack"><button class="primary" data-again>Practice again</button><button class="secondary" data-go="reports">View report</button><button class="secondary" data-go="home">Back to quests</button></div>`;$('[data-again]').onclick=()=>{session.index=0;session.correct=0;session.roundSaved=false;session.timedOut=false;session.deadline=session.minutes?Date.now()+session.minutes*60000:0;session.questions=shuffle(session.questions);renderQuestion();};}
 
   function renderSettings(){
     $("#settingsView").innerHTML=`${head("Parent Setup","Update weekly practice without rebuilding the app")}
+      <div class="panel"><h2>Learner profiles</h2><p class="helper">Create or switch local profiles so reports and missions stay separate for each learner.</p><button class="secondary" data-go="profiles">Manage profiles</button></div>
       <div class="panel" id="spellingSettings"><h2>Spelling word bank</h2><p class="helper">Enter one word per line or separate words with commas.</p><div class="field"><textarea id="wordBank">${esc(store.spelling.join("\n"))}</textarea></div><button class="primary" id="saveWords">Save word bank</button></div>
       <div class="panel" id="poemSettings"><h2>Poems</h2><div class="stack">${store.poems.map((p,i)=>`<div class="list-item"><span class="grow"><strong>${esc(p.title)}</strong><small>${esc(p.author||"")}</small></span><button class="tiny" data-edit-poem="${i}">Edit</button></div>`).join("")}</div><button class="secondary" style="margin-top:10px" id="addPoem">Add a poem</button><div id="poemEditor"></div></div>
       <div class="panel"><h2>Save protection</h2><p class="helper">Progress is saved on this device. Download a backup before deleting and re-adding the home-screen app.</p><div class="two"><button class="secondary" id="exportData">Download backup</button><button class="secondary" id="importData">Import backup</button></div><input type="file" id="importFile" accept="application/json" hidden></div>
@@ -324,15 +408,15 @@
     $("#checkUpdate").onclick=async()=>{if(!('serviceWorker'in navigator)){toast('No update is waiting');return;}const reg=await navigator.serviceWorker.getRegistration();await reg?.update();toast('Update check complete');};
   }
   function renderPoemEditor(index){const poem=Number.isInteger(index)?store.poems[index]:{title:"",author:"",text:""};$("#poemEditor").innerHTML=`<div class="field"><label>Title</label><input id="poemTitle" value="${esc(poem.title)}"></div><div class="field"><label>Author</label><input id="poemAuthor" value="${esc(poem.author)}"></div><div class="field"><label>Poem text</label><textarea id="poemText">${esc(poem.text)}</textarea></div><div class="two"><button class="primary" id="savePoem">Save poem</button>${Number.isInteger(index)?'<button class="danger-btn" id="deletePoem">Delete</button>':''}</div>`;$("#poemTitle").focus();$("#savePoem").onclick=()=>{const title=$("#poemTitle").value.trim(),text=$("#poemText").value.trim();if(!title||!text){toast('Add a title and poem text');return;}const next={id:(poem.id||title.toLowerCase().replace(/[^a-z0-9]+/g,'-'))+(!Number.isInteger(index)?`-${Date.now()}`:''),title,author:$("#poemAuthor").value.trim(),text,...(poem.audio?{audio:poem.audio}:{})};if(Number.isInteger(index))store.poems[index]=next;else store.poems.push(next);save();renderSettings();toast('Poem saved');};if(Number.isInteger(index))$("#deletePoem").onclick=()=>{if(store.poems.length===1){toast('Keep at least one poem');return;}store.poems.splice(index,1);save();renderSettings();};}
-  function exportData(){const blob=new Blob([JSON.stringify(store,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`asher-arcade-backup-${today()}.json`;a.click();URL.revokeObjectURL(a.href);}
-  function importData(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const parsed=JSON.parse(reader.result);store={...defaults,...parsed};save();renderSettings();toast('Backup restored');}catch{toast('That backup could not be read');}};reader.readAsText(file);}
+  function exportData(){const blob=new Blob([JSON.stringify(store,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`learning-arcade-backup-${today()}.json`;a.click();URL.revokeObjectURL(a.href);}
+  function importData(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const parsed=JSON.parse(reader.result);store={...defaults,...parsed};localStorage.setItem(STORE,JSON.stringify(store));location.reload();}catch{toast('That backup could not be read');}};reader.readAsText(file);}
 
   document.addEventListener("click", e => {const nav=e.target.closest("[data-go]");if(nav)go(nav.dataset.go);});
   window.addEventListener("hashchange",()=>go(location.hash.slice(1)||"home"));
   if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js"));
   if (document.modelContext?.registerTool) {
     const register = tool => Promise.resolve(document.modelContext.registerTool(tool)).catch(() => {});
-    register({name:"read_learning_sets",title:"Read learning sets",description:"Read the current spelling words and poem titles configured in Asher's Learning Arcade.",inputSchema:{type:"object",properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({spellingWords:[...store.spelling],poems:store.poems.map(p=>({id:p.id,title:p.title,author:p.author}))})});
+    register({name:"read_learning_sets",title:"Read learning sets",description:"Read the current spelling words and poem titles configured in Learning Arcade.",inputSchema:{type:"object",properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({spellingWords:[...store.spelling],poems:store.poems.map(p=>({id:p.id,title:p.title,author:p.author}))})});
     register({name:"update_spelling_words",title:"Update spelling words",description:"Replace the weekly spelling word bank and update the visible app.",inputSchema:{type:"object",properties:{words:{type:"array",items:{type:"string",minLength:1},minItems:1}},required:["words"],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:true},execute:({words})=>{if(!Array.isArray(words)||!words.length)throw new Error("At least one word is required");store.spelling=[...new Set(words.map(w=>String(w).trim()).filter(Boolean))];save();if($("[data-screen='settings']").classList.contains("active"))renderSettings();return{saved:true,count:store.spelling.length};}});
     register({name:"add_practice_poem",title:"Add practice poem",description:"Add a poem to the memorization and recitation list.",inputSchema:{type:"object",properties:{title:{type:"string",minLength:1},author:{type:"string"},text:{type:"string",minLength:1}},required:["title","text"],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:true},execute:({title,author="",text})=>{if(!String(title).trim()||!String(text).trim())throw new Error("Title and poem text are required");const poem={id:`poem-${Date.now()}`,title:String(title).trim(),author:String(author).trim(),text:String(text).trim()};store.poems.push(poem);save();if($("[data-screen='poems']").classList.contains("active"))renderPoems();return{saved:true,id:poem.id,title:poem.title};}});
   }

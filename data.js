@@ -69,6 +69,13 @@ window.AUDIO_PACKS = {
     words:window.BUNDLED_SPELLING_WORDS,
     spelling:Object.fromEntries(window.BUNDLED_SPELLING_WORDS.map(word=>[word,`audio/william-cypher/spelling/${word}.mp3`])),
     poems:{"the-crocodile":"audio/william-cypher/poems/the-crocodile.mp3"}
+  },
+  "circuit-sentinel": {
+    label:"Circuit Sentinel",
+    sampleWord:"",
+    words:[],
+    spelling:{},
+    poems:{"the-crocodile":"audio/circuit-sentinel/poems/the-crocodile.mp3"}
   }
 };
 
@@ -76,11 +83,11 @@ window.DEFAULT_POEMS = [{
   id:"the-crocodile",
   title:"The Crocodile",
   author:"Lewis Carroll",
-  audio:"audio/cartoon-dog-heeler/poems/the-crocodile.mp3",
-  text:"How doth the little crocodile\nImprove his shining tail,\nAnd pour the waters of the Nile\nOn ev’ry golden scale!\n\nHow cheerfully he seems to grin,\nHow neatly spreads his claws,\nAnd welcomes little fishes in\nWith gently smiling jaws!"
+  audio:"audio/circuit-sentinel/poems/the-crocodile.mp3",
+  text:"How doth the little crocodile\nImprove his shining tail,\nAnd pour the waters of the Nile\nOn every golden scale!\n\nHow cheerfully he seems to grin,\nHow neatly spreads his claws,\nAnd welcomes little fishes in\nWith gently smiling jaws!"
 },{
   id:"brave-little-steps",
   title:"Brave Little Steps",
-  author:"Asher's Learning Arcade",
+  author:"Learning Arcade",
   text:"A little step, a little try,\nA question asked: how, when, and why?\nI do not need to know it all—\nI learn each time I rise from a fall.\n\nWith every word and fact I find,\nI build a brave and growing mind."
 }];

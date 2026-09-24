@@ -1,7 +1,7 @@
 {
-  "name": "Asher's Learning Arcade",
-  "short_name": "Asher's Arcade",
-  "description": "States, spelling, multiplication, and poem practice.",
+  "name": "Learning Arcade",
+  "short_name": "Learning Arcade",
+  "description": "Learning games, story missions, profiles, and progress reports.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -11,4 +11,3 @@
     {"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
   ]
 }
-

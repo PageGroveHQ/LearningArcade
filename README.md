@@ -1,4 +1,4 @@
-# Asher's Learning Arcade
+# Learning Arcade
 
 A mobile-first, installable learning app for:
 
@@ -6,6 +6,7 @@ A mobile-first, installable learning app for:
 - Weekly spelling word banks
 - Multiplication facts from 0 × 0 through 9 × 9
 - Editable poem memorization and recitation practice
+- Local learner profiles, story missions, and progress reports
 
 Everything is static and can be hosted on GitHub Pages. Practice data is stored only in the browser on the current device.
 
@@ -17,4 +18,3 @@ Everything is static and can be hosted on GitHub Pages. Practice data is stored 
 4. Open the Pages URL on the iPhone, then use **Share → Add to Home Screen**.
 
 Keep the existing home-screen icon when updating the app. Use **Parent Setup → Download backup** before deleting or reinstalling it.
-

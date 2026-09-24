@@ -6,9 +6,9 @@
   <meta name="theme-color" content="#17143b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Asher's Arcade">
-  <meta name="description" content="A private, installable practice arcade for states, spelling, multiplication, and poems.">
-  <title>Asher's Learning Arcade</title>
+  <meta name="apple-mobile-web-app-title" content="Learning Arcade">
+  <meta name="description" content="An installable learning arcade for states, spelling, multiplication, poems, missions, and progress reports.">
+  <title>Learning Arcade</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="apple-touch-icon" href="icon.svg">
@@ -18,9 +18,9 @@
   <div class="app-shell">
     <header class="topbar">
       <button class="brand" type="button" data-go="home" aria-label="Go home">
-        <span class="brand-mark">A</span><span>Asher's Arcade</span>
+        <span class="brand-mark">L</span><span>Learning Arcade</span>
       </button>
-      <button class="icon-button" type="button" data-go="settings" aria-label="Open parent setup">⚙</button>
+      <div class="top-actions"><button class="profile-button" type="button" data-go="profiles" aria-label="Choose profile"><span id="profileInitial">P</span><strong id="profileName">Player 1</strong></button><button class="icon-button" type="button" data-go="settings" aria-label="Open parent setup">⚙</button></div>
     </header>
 
     <main id="app" tabindex="-1">
@@ -51,16 +51,17 @@
             <span class="subject-icon">❝</span><span class="subject-copy"><strong>Poem Power</strong><small>Read · remember · recite</small></span><span class="arrow">›</span>
           </button>
         </div>
-        <section class="progress-panel">
-          <div><p class="eyebrow">Today's progress</p><h2 id="todayCount">Ready for your first round</h2></div>
-          <div class="progress-ring" id="progressRing"><img src="assets/ui/energy-orb.png" alt=""><span>0</span><small>answers</small></div>
-        </section>
+        <div class="adventure-grid"><button class="adventure-card mission-link" data-go="story"><span>MISSION MAP</span><strong>Story Mode</strong><small>Complete goals and restore the arcade</small></button><button class="adventure-card report-link" data-go="reports"><span>LEARNING RECORD</span><strong>Assessments & Reports</strong><small>Accuracy, subjects, and recent rounds</small></button></div>
+        <section class="progress-panel" id="homeReport"></section>
       </section>
 
       <section class="screen" data-screen="states"><div id="statesView"></div></section>
       <section class="screen" data-screen="spelling"><div id="spellingView"></div></section>
       <section class="screen" data-screen="math"><div id="mathView"></div></section>
       <section class="screen" data-screen="poems"><div id="poemsView"></div></section>
+      <section class="screen" data-screen="story"><div id="storyView"></div></section>
+      <section class="screen" data-screen="profiles"><div id="profilesView"></div></section>
+      <section class="screen" data-screen="reports"><div id="reportsView"></div></section>
       <section class="screen" data-screen="session"><div id="sessionView"></div></section>
       <section class="screen" data-screen="settings"><div id="settingsView"></div></section>
     </main>
