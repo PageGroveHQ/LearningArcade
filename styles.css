@@ -12,3 +12,25 @@
 /* Keep map artwork inside its own stage so prompts never overlap it. */
 .map-card .map-stage,.map-card .map-stage svg{overflow:hidden!important}
 .map-card h2{position:relative;z-index:2;background:#fff;width:100%;padding-top:8px}
+
+/* Circuit Sentinel visual system */
+html,body{background:#071a3c url("assets/backgrounds/circuit-lab.jpg") center/cover fixed}
+.app-shell{background:rgba(244,249,255,.94);backdrop-filter:blur(4px)}
+.screen{background:linear-gradient(rgba(248,250,255,.9),rgba(248,250,255,.96)),url("assets/backgrounds/circuit-lab.jpg") center/cover fixed}
+.topbar{background:linear-gradient(90deg,#071a3c,#0b2f63 52%,#071a3c);border-bottom:2px solid #35d8f0}
+.brand-mark{background:linear-gradient(135deg,#39ddf4,#1765c8);box-shadow:0 0 16px rgba(53,216,240,.55),inset 0 0 0 2px rgba(255,255,255,.5)}
+.panel,.progress-panel,.flash-card{background-color:rgba(255,255,255,.96);background-image:linear-gradient(rgba(255,255,255,.88),rgba(255,255,255,.94)),url("assets/backgrounds/metal-panel.jpg");background-size:100% 100%;border-color:#b9d6e8}
+.primary{background:linear-gradient(135deg,#075bbd,#26cbe1);box-shadow:0 12px 24px rgba(7,91,189,.25)}
+.secondary{background:#dff5fb;color:#124b79}
+.choice.selected{border-color:#15aeca;background:#ddf8fc;color:#075b73;box-shadow:inset 0 0 0 1px #15aeca}
+.quiz-progress span{background:linear-gradient(90deg,#1170d0,#36dcb8)}
+.streak-chip{background:#fff2ca;border:1px solid #f4c658;color:#6c4a00}.streak-chip img{width:28px;height:24px;object-fit:contain}
+.progress-ring{position:relative;background-color:#e8fbff}.progress-ring img{position:absolute;width:42px;height:36px;object-fit:contain;opacity:.2}.progress-ring span,.progress-ring small{position:relative;z-index:1}
+.home-cast{position:relative;height:150px;margin:-4px 0 18px;border-radius:26px;overflow:hidden;border:1px solid #8bd9e8;background:linear-gradient(135deg,rgba(7,34,74,.96),rgba(11,79,125,.94)),url("assets/backgrounds/metal-panel.jpg") center/cover;box-shadow:var(--shadow)}
+.home-cast img{position:absolute;bottom:-44px;height:190px;width:145px;object-fit:contain;filter:drop-shadow(0 8px 10px rgba(0,0,0,.3))}.home-professor{left:-12px}.home-robot{right:-10px}.cast-copy{position:relative;z-index:2;width:46%;margin:auto;padding-top:32px;text-align:center;color:#fff}.cast-copy .eyebrow{color:#67edff}.cast-copy h2{font-size:1.05rem;line-height:1.25;margin:0}
+.page-head{min-height:64px}.page-title{min-width:0}.menu-cast{position:relative;flex:0 0 94px;height:64px;margin-left:auto;border-radius:18px;overflow:hidden;background:linear-gradient(135deg,#0a2e61,#147f9b);border:1px solid #56d8e8}.menu-cast img{position:absolute;bottom:-14px;width:58px;height:82px;object-fit:contain;filter:drop-shadow(0 4px 5px rgba(0,0,0,.3))}.menu-cast img:first-child{left:-2px}.menu-cast img:last-child{right:-2px}
+.score{display:flex;align-items:center;gap:3px}.score img{width:29px;height:25px;object-fit:contain}
+.question-guide{display:flex;align-items:center;justify-content:center;gap:8px;height:54px;margin:-4px auto 4px;color:#126d86;font-size:.78rem;font-weight:900;text-transform:uppercase;letter-spacing:.07em}.question-guide img{width:48px;height:54px;object-fit:contain;object-position:center 14%;filter:drop-shadow(0 3px 4px rgba(0,0,0,.15))}
+.mascot-feedback{display:flex;align-items:center;gap:12px;text-align:left;min-height:82px}.mascot-feedback img{flex:0 0 64px;width:64px;height:74px;object-fit:contain;filter:drop-shadow(0 3px 4px rgba(0,0,0,.16))}.mascot-feedback span{flex:1}
+.finish-panel{display:grid;grid-template-columns:minmax(105px,34%) 1fr;align-items:center;gap:14px;text-align:center;padding:20px}.finish-mascot{width:100%;max-height:230px;object-fit:contain;filter:drop-shadow(0 8px 10px rgba(0,0,0,.18))}.finish-orb{width:64px;height:54px;object-fit:contain}.finish-panel h1{margin:4px 0 10px}
+@media(max-width:430px){.home-cast{height:126px}.home-cast img{height:154px;width:108px;bottom:-34px}.cast-copy{padding-top:24px;width:48%}.cast-copy h2{font-size:.82rem}.menu-cast{flex-basis:76px;height:56px}.menu-cast img{width:48px;height:70px}.page-head h1{font-size:1.45rem}.page-head p{font-size:.78rem}.question-guide{height:46px}.question-guide img{width:42px;height:47px}.map-stage{height:210px}.mascot-feedback img{flex-basis:54px;width:54px;height:64px}}
