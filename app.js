@@ -10,13 +10,39 @@
   const OLD_STORE = "asher-learning-arcade-v1";
   const ORIGINAL_SPELLING = ["because", "friend", "school", "people", "favorite", "different", "thought", "through"];
   const BUNDLED_SPELLING = window.BUNDLED_SPELLING_WORDS || [];
-  const blankStats = () => ({stars:0,days:{},subjects:{},rounds:[]});
-  const createProfile = (name="Player 1", stats=blankStats()) => ({id:`profile-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,name,stats,missions:{},activeMissionId:"state-scan"});
+  const blankStats = () => ({stars:0,days:{},subjects:{},rounds:[],mistakes:{},skills:{},assessments:{}});
+  const createProfile = (name="Player 1", stats=blankStats()) => ({id:`profile-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,name,stats,missions:{},activeMissionId:"state-scan-1"});
+  const SECTORS = {
+    states:{title:"Atlas Station",subtitle:"State Quest",icon:"⌖",className:"atlas",target:"states"},
+    spelling:{title:"Word Workshop",subtitle:"Word Wizard",icon:"Aa",className:"words",target:"spelling"},
+    math:{title:"Multiplication Reactor",subtitle:"Multiply Mayhem",icon:"×",className:"reactor",target:"math"},
+    poems:{title:"Poetry Signal Tower",subtitle:"Poem Power",icon:"❝",className:"poetry",target:"poems"}
+  };
   const MISSIONS = [
-    {id:"state-scan",title:"Power the State Scanner",story:"Professor Volt needs geographic coordinates to restart the navigation deck.",subject:"states",goal:10,target:"states",reward:5},
-    {id:"word-vault",title:"Decode the Word Vault",story:"Spell ten signal words to open the encrypted archive.",subject:"spelling",goal:10,target:"spelling",reward:5},
-    {id:"math-core",title:"Repair the Multiplication Core",story:"Solve twenty multiplication facts to stabilize the arcade reactor.",subject:"math",goal:20,target:"math",reward:8},
-    {id:"poetry-signal",title:"Restore the Poetry Signal",story:"Complete five poem activities so Circuit Sentinel can transmit the final message.",subject:"poems",goal:5,target:"poems",reward:8}
+    {id:"state-scan-1",subject:"states",title:"Wake the State Scanner",story:"Identify 5 geographic signals so Professor Volt can locate Atlas Station.",goal:5,reward:3},
+    {id:"state-scan-2",subject:"states",title:"Calibrate the Compass",story:"Complete 10 state answers to align the navigation array.",goal:10,reward:5},
+    {id:"state-scan-3",subject:"states",title:"Trace the Borders",story:"Decode 15 names, capitals, abbreviations, or map shapes.",goal:15,reward:6},
+    {id:"state-scan-4",subject:"states",title:"Link the Regions",story:"Send 20 correct coordinates through the regional network.",goal:20,reward:8},
+    {id:"state-scan-5",subject:"states",title:"Restore Atlas Station",story:"Finish 25 final signals and bring the whole station online.",goal:25,reward:12},
+    {id:"word-vault-1",subject:"spelling",title:"Open the Word Vault",story:"Spell 5 signal words to unlock the archive door.",goal:5,reward:3},
+    {id:"word-vault-2",subject:"spelling",title:"Sort the Sound Crystals",story:"Complete 10 correct spellings to organize the archive.",goal:10,reward:5},
+    {id:"word-vault-3",subject:"spelling",title:"Repair the Letter Grid",story:"Spell 15 words to reconnect the workshop terminals.",goal:15,reward:6},
+    {id:"word-vault-4",subject:"spelling",title:"Decode the Master List",story:"Complete 20 correct spellings from the active word bank.",goal:20,reward:8},
+    {id:"word-vault-5",subject:"spelling",title:"Restore the Word Workshop",story:"Transmit 20 final spellings without losing the signal.",goal:20,reward:12},
+    {id:"math-core-1",subject:"math",title:"Start the Number Engine",story:"Solve 10 facts to start the reactor's first turbine.",goal:10,reward:3},
+    {id:"math-core-2",subject:"math",title:"Balance the Arrays",story:"Complete 15 facts to steady the multiplication field.",goal:15,reward:5},
+    {id:"math-core-3",subject:"math",title:"Charge the Core",story:"Solve 20 facts and fill the reactor with learning energy.",goal:20,reward:6},
+    {id:"math-core-4",subject:"math",title:"Break the Speed Barrier",story:"Complete 25 facts to synchronize every number channel.",goal:25,reward:8},
+    {id:"math-core-5",subject:"math",title:"Restore the Reactor",story:"Solve 30 final facts and return full power to the arcade.",goal:30,reward:12},
+    {id:"poetry-signal-1",subject:"poems",title:"Find the Lost Verse",story:"Complete 1 poem activity to locate the missing broadcast.",goal:1,reward:3},
+    {id:"poetry-signal-2",subject:"poems",title:"Tune the Rhythm",story:"Complete 3 poem activities to clear the transmission.",goal:3,reward:5},
+    {id:"poetry-signal-3",subject:"poems",title:"Rebuild the Memory Beam",story:"Complete 5 poem activities to strengthen recall.",goal:5,reward:6},
+    {id:"poetry-signal-4",subject:"poems",title:"Broadcast the Stanzas",story:"Complete 8 poem activities across the tower.",goal:8,reward:8},
+    {id:"poetry-signal-5",subject:"poems",title:"Restore the Poetry Signal",story:"Complete 10 final activities and send the poem across the arcade.",goal:10,reward:12}
+  ].map(m=>({...m,target:SECTORS[m.subject].target}));
+  const REWARDS = [
+    {at:2,name:"Cyan Armor Trim",icon:"◇"},{at:5,name:"Navigator Badge",icon:"⌖"},{at:8,name:"Energy Orb Trail",icon:"✦"},
+    {at:12,name:"Reactor Glow",icon:"⚡"},{at:16,name:"Archive Crest",icon:"❖"},{at:20,name:"Master Sentinel Emblem",icon:"★"}
   ];
   const defaults = {
     spelling: BUNDLED_SPELLING,
@@ -35,7 +61,13 @@
   catch { store = structuredClone(defaults); }
   store.stats ||= {stars:0, days:{}}; store.stats.days ||= {};
   if (!Array.isArray(store.profiles) || !store.profiles.length) store.profiles = [createProfile("Player 1",store.stats)];
-  store.profiles.forEach(profile=>{profile.name=String(profile.name||"Player").trim()||"Player";profile.stats={...blankStats(),...(profile.stats||{})};profile.stats.days||={};profile.stats.subjects||={};profile.stats.rounds=Array.isArray(profile.stats.rounds)?profile.stats.rounds:[];profile.missions||={};profile.activeMissionId||="state-scan";});
+  store.profiles.forEach(profile=>{
+    profile.name=String(profile.name||"Player").trim()||"Player";
+    profile.stats={...blankStats(),...(profile.stats||{})};
+    profile.stats.days||={};profile.stats.subjects||={};profile.stats.skills||={};profile.stats.mistakes||={};profile.stats.assessments||={};
+    profile.stats.rounds=Array.isArray(profile.stats.rounds)?profile.stats.rounds:[];profile.missions||={};
+    if(!MISSIONS.some(m=>m.id===profile.activeMissionId)) profile.activeMissionId="state-scan-1";
+  });
   if (!store.profiles.some(profile=>profile.id===store.activeProfileId)) store.activeProfileId=store.profiles[0].id;
   const activeProfile = () => store.profiles.find(profile=>profile.id===store.activeProfileId) || store.profiles[0];
   const syncActiveProfile = () => {store.stats=activeProfile().stats;};
@@ -171,12 +203,12 @@
     const profile=activeProfile(),stats=profile.stats;
     const totals=Object.values(stats.subjects).reduce((sum,item)=>({answered:sum.answered+(item.answered||0),correct:sum.correct+(item.correct||0)}),{answered:0,correct:0});
     const accuracy=totals.answered?Math.round(totals.correct/totals.answered*100):0;
-    const mission=MISSIONS.find(item=>(profile.missions[item.id]?.progress||0)<item.goal)||MISSIONS[MISSIONS.length-1];
+    const mission=MISSIONS.find(item=>item.id===profile.activeMissionId&&missionUnlocked(profile,item)&&(profile.missions[item.id]?.progress||0)<item.goal)||MISSIONS.find(item=>missionUnlocked(profile,item)&&(profile.missions[item.id]?.progress||0)<item.goal)||MISSIONS[MISSIONS.length-1];
     const progress=Math.min(profile.missions[mission.id]?.progress||0,mission.goal);
     $("#profileName").textContent=profile.name;
     $("#profileInitial").textContent=profile.name.charAt(0).toUpperCase();
     $("#totalStars").textContent = stats.stars || 0;
-    $("#homeReport").innerHTML=`<div><p class="eyebrow">${esc(profile.name)}'s learning record</p><h2>${totals.answered?`${accuracy}% accuracy across ${totals.answered} answers`:"Ready to begin a learning record"}</h2><p class="helper">Current mission: ${esc(mission.title)} · ${progress}/${mission.goal}</p></div><button class="report-orb" data-go="reports" aria-label="Open reports"><img src="assets/ui/energy-orb.png" alt=""><strong>${stats.rounds.length}</strong><small>rounds</small></button>`;
+    $("#homeReport").innerHTML=`<div><p class="eyebrow">${esc(profile.name)} · ${completedMissionCount(profile)}/20 missions</p><h2>${totals.answered?`${accuracy}% accuracy across ${totals.answered} answers`:"Ready to restore the Learning Arcade"}</h2><p class="helper">Current mission: ${esc(mission.title)} · ${progress}/${mission.goal}</p></div><button class="report-orb" data-go="reports" aria-label="Open reports"><img src="assets/ui/energy-orb.png" alt=""><strong>${stats.rounds.length}</strong><small>rounds</small></button>`;
   }
 
   function modeButtons(current) {
@@ -307,8 +339,8 @@
   function wirePoemModes(poem){$$('[data-poem-mode]',$("#poemModes")).forEach(b=>b.onclick=()=>startPoem(poem,b.dataset.poemMode));}
   function startPoem(poem,mode){
     const lines=poem.text.split("\n").filter(x=>x.trim());
-    if(mode==="read"){playStartCue();session={title:"Poem Power",questions:[{subject:"poem-read",prompt:poem.title,answer:poem.text,detail:poem.author,speech:poem.text,audio:poem.audio||"",poemId:poem.id}],index:0,correct:0,mode:"read",minutes:0};go("session");renderQuestion();return;}
-    if(mode==="recite"){playStartCue();session={title:"Poem Power",questions:[{subject:"poem-recite",prompt:`Recite “${poem.title}” from memory`,answer:poem.text,detail:poem.author}],index:0,correct:0,mode:"parent"};go("session");renderQuestion();return;}
+    if(mode==="read"){startSession("Poem Power",[{subject:"poem-read",prompt:poem.title,answer:poem.text,detail:poem.author,speech:poem.text,audio:poem.audio||"",poemId:poem.id}],"read");return;}
+    if(mode==="recite"){startSession("Poem Power",[{subject:"poem-recite",prompt:`Recite “${poem.title}” from memory`,answer:poem.text,detail:poem.author}],"parent");return;}
     if(mode==="lines"){const qs=lines.slice(0,-1).map((line,i)=>({subject:"poem-line",prompt:line,answer:lines[i+1],detail:`Next line: ${lines[i+1]}`}));startSession("Next-Line Prompts",shuffle(qs).slice(0,8),"type");return;}
     const candidates=lines.map(line=>({line,words:(line.match(/[A-Za-z’']+/g)||[]).filter(w=>w.length>3)})).filter(x=>x.words.length);const qs=shuffle(candidates).slice(0,Math.min(8,candidates.length)).map(({line,words})=>{const word=pick(words);return {subject:"poem-missing",prompt:line.replace(new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\b`,'i'),"_____"),answer:word,detail:`The missing word was “${word}.”`};});startSession("Missing Words",qs,"type");
   }
@@ -322,20 +354,30 @@
   }
   const subjectLabel=subject=>({states:"State Quest",spelling:"Word Wizard",math:"Multiply Mayhem",poems:"Poem Power",other:"Other"}[subject]||subject);
 
+  const completedMissionCount=profile=>MISSIONS.filter(m=>(profile.missions[m.id]?.progress||0)>=m.goal).length;
+  const unlockedRewards=profile=>REWARDS.filter(reward=>completedMissionCount(profile)>=reward.at);
+  function missionUnlocked(profile,mission){const sector=MISSIONS.filter(m=>m.subject===mission.subject),index=sector.findIndex(m=>m.id===mission.id);return index===0||(profile.missions[sector[index-1].id]?.progress||0)>=sector[index-1].goal;}
+  function currentMissionFor(profile,subject){return MISSIONS.find(m=>m.subject===subject&&missionUnlocked(profile,m)&&(profile.missions[m.id]?.progress||0)<m.goal)||MISSIONS.filter(m=>m.subject===subject).at(-1);}
+  function missionSummary(profile,mission){const progress=Math.min(profile.missions[mission.id]?.progress||0,mission.goal);return {progress,pct:Math.round(progress/mission.goal*100),done:progress>=mission.goal,unlocked:missionUnlocked(profile,mission)};}
+
   function renderStory(){
     const profile=activeProfile();
-    const completed=MISSIONS.filter(m=>(profile.missions[m.id]?.progress||0)>=m.goal).length;
-    $("#storyView").innerHTML=`${head("Story Mode",`${profile.name}'s mission map`)}
-      <div class="panel story-intro"><img src="assets/characters/professor-volt.png" alt="Professor Volt"><div><p class="eyebrow">Arcade restoration</p><h2>${completed} of ${MISSIONS.length} missions complete</h2><p class="helper">Practice in any learning game to advance its mission. Completed missions award bonus energy orbs.</p></div><img src="assets/characters/circuit-sentinel-action.png" alt="Circuit Sentinel"></div>
-      <div class="mission-list">${MISSIONS.map((mission,index)=>{const state=profile.missions[mission.id]||{progress:0,complete:false};const progress=Math.min(state.progress||0,mission.goal),done=progress>=mission.goal,pct=Math.round(progress/mission.goal*100);return `<article class="panel mission-card ${done?'mission-complete':''}"><div class="mission-number">${done?'✓':index+1}</div><div class="grow"><p class="eyebrow">Mission ${index+1}</p><h2>${esc(mission.title)}</h2><p class="helper">${esc(mission.story)}</p><div class="mission-progress"><span style="width:${pct}%"></span></div><div class="mission-meta"><strong>${progress}/${mission.goal} activities</strong><span>+${mission.reward} orbs</span></div></div><button class="tiny" data-start-mission="${mission.id}">${done?'Practice again':'Start mission'}</button></article>`;}).join("")}</div>`;
-    $$('[data-start-mission]').forEach(button=>button.onclick=()=>{const mission=MISSIONS.find(item=>item.id===button.dataset.startMission);profile.activeMissionId=mission.id;save();go(mission.target);});
+    const completed=completedMissionCount(profile),rewards=unlockedRewards(profile);
+    $("#storyView").innerHTML=`${head("Story Mode",`${profile.name}'s restoration campaign`)}
+      <div class="mission-map-hero"><div class="mission-map-copy"><p class="eyebrow">Restore the Learning Arcade</p><h2>${completed} of ${MISSIONS.length} missions complete</h2><p>Professor Volt has traced four powerless learning sectors. Help Circuit Sentinel bring every station back online.</p><div class="campaign-meter"><span style="width:${completed/MISSIONS.length*100}%"></span></div></div></div>
+      <div class="panel story-intro"><img src="assets/characters/professor-volt.png" alt="Professor Volt"><div><p class="eyebrow">Mission briefing</p><h2>${completed===MISSIONS.length?'The arcade is fully restored!':'Choose an available sector'}</h2><p class="helper">Correct answers power the current mission. Finish missions to earn bonus orbs and unlock Sentinel rewards.</p></div><img src="assets/characters/circuit-sentinel-action.png" alt="Circuit Sentinel"></div>
+      <div class="reward-strip" aria-label="Unlocked rewards">${REWARDS.map(reward=>{const unlocked=completed>=reward.at;return `<div class="reward-chip ${unlocked?'unlocked':'locked'}"><span>${unlocked?reward.icon:'🔒'}</span><small>${esc(reward.name)}<br>${reward.at} missions</small></div>`;}).join('')}</div>
+      <div class="sector-grid">${Object.entries(SECTORS).map(([key,sector])=>{const missions=MISSIONS.filter(m=>m.subject===key),done=missions.filter(m=>missionSummary(profile,m).done).length;return `<section class="sector-card ${sector.className}"><div class="sector-head"><span class="sector-icon">${sector.icon}</span><div><p class="eyebrow">${esc(sector.subtitle)}</p><h2>${esc(sector.title)}</h2><p>${done}/5 systems online</p></div></div><div class="sector-missions">${missions.map((mission,index)=>{const state=missionSummary(profile,mission),active=profile.activeMissionId===mission.id;return `<article class="mission-node ${state.done?'complete':''} ${!state.unlocked?'locked':''} ${active?'active':''}"><div class="mission-number">${state.done?'✓':state.unlocked?index+1:'🔒'}</div><div class="grow"><strong>${esc(mission.title)}</strong><small>${esc(mission.story)}</small><div class="mission-progress"><span style="width:${state.pct}%"></span></div><div class="mission-meta"><span>${state.progress}/${mission.goal} correct</span><span>+${mission.reward} orbs</span></div></div><button class="tiny" data-start-mission="${mission.id}" ${state.unlocked?'':'disabled'}>${state.done?'Replay':active?'Selected':'Start'}</button></article>`;}).join('')}</div></section>`;}).join('')}</div>
+      ${rewards.length?`<div class="panel"><p class="label">Sentinel locker</p><p class="helper">${rewards.map(r=>`${r.icon} ${esc(r.name)}`).join(' · ')}</p></div>`:''}`;
+    $$('[data-start-mission]').forEach(button=>button.onclick=()=>{const mission=MISSIONS.find(item=>item.id===button.dataset.startMission);if(!missionUnlocked(profile,mission))return;profile.activeMissionId=mission.id;save();go(mission.target);});
   }
 
   function renderProfiles(){
     const current=activeProfile();
+    const completed=completedMissionCount(current),rank=completed>=20?'Master Sentinel':completed>=12?'Senior Sentinel':completed>=5?'Field Sentinel':'Sentinel Cadet';
     $("#profilesView").innerHTML=`${head("Learner Profiles","Progress is stored locally on this device")}
-      <div class="panel profile-hero"><img src="assets/characters/professor-volt.png" alt="Professor Volt"><div><p class="eyebrow">Current learner</p><h2>${esc(current.name)}</h2><p class="helper">Each learner has separate rewards, missions, assessments, and reports.</p></div></div>
-      <div class="panel"><p class="label">Choose a learner</p><div class="profile-list">${store.profiles.map(profile=>`<button class="profile-row ${profile.id===store.activeProfileId?'selected':''}" data-profile="${esc(profile.id)}"><span>${esc(profile.name.charAt(0).toUpperCase())}</span><span class="grow"><strong>${esc(profile.name)}</strong><small>${profile.stats.rounds.length} completed rounds · ${profile.stats.stars||0} orbs</small></span><b>${profile.id===store.activeProfileId?'Active':'Choose'}</b></button>`).join("")}</div></div>
+      <div class="panel profile-hero"><img src="assets/characters/circuit-sentinel-success.png" alt="Circuit Sentinel celebrating"><div><p class="eyebrow">${rank}</p><h2>${esc(current.name)}</h2><p class="helper">${completed}/20 missions · ${unlockedRewards(current).length}/6 rewards · ${current.stats.stars||0} energy orbs</p></div></div>
+      <div class="panel"><p class="label">Choose a learner</p><div class="profile-list">${store.profiles.map(profile=>`<button class="profile-row ${profile.id===store.activeProfileId?'selected':''}" data-profile="${esc(profile.id)}"><span>${esc(profile.name.charAt(0).toUpperCase())}</span><span class="grow"><strong>${esc(profile.name)}</strong><small>${completedMissionCount(profile)} missions · ${profile.stats.rounds.length} rounds · ${profile.stats.stars||0} orbs</small></span><b>${profile.id===store.activeProfileId?'Active':'Choose'}</b></button>`).join("")}</div></div>
       <div class="panel"><p class="label">Add a local profile</p><form id="profileForm" class="profile-form"><input class="answer-input" id="newProfileName" maxlength="24" placeholder="Learner name" autocomplete="off"><button class="primary">Create profile</button></form><p class="helper">Profiles stay on this device and are included in downloaded backups.</p></div>`;
     $$('[data-profile]').forEach(button=>button.onclick=()=>{store.activeProfileId=button.dataset.profile;syncActiveProfile();save();renderProfiles();toast(`${activeProfile().name} selected`);});
     $("#profileForm").onsubmit=event=>{event.preventDefault();const name=$("#newProfileName").value.trim();if(!name)return toast("Enter a learner name");const profile=createProfile(name);store.profiles.push(profile);store.activeProfileId=profile.id;syncActiveProfile();save();renderProfiles();toast(`${name} profile created`);};
@@ -346,20 +388,39 @@
     const groups=["states","spelling","math","poems"];
     const totals=groups.reduce((sum,key)=>{const item=stats.subjects[key]||{};sum.answered+=item.answered||0;sum.correct+=item.correct||0;return sum;},{answered:0,correct:0});
     const accuracy=totals.answered?Math.round(totals.correct/totals.answered*100):0;
-    const subjectRows=groups.map(key=>{const item=stats.subjects[key]||{answered:0,correct:0};const pct=item.answered?Math.round(item.correct/item.answered*100):0;return `<div class="report-row"><strong>${subjectLabel(key)}</strong><span>${item.answered} answered</span><b>${item.answered?`${pct}%`:'—'}</b></div>`;}).join("");
+    const subjectRows=groups.map(key=>{const item=stats.subjects[key]||{answered:0,correct:0,totalMs:0};const pct=item.answered?Math.round(item.correct/item.answered*100):0,pace=item.answered?Math.round((item.totalMs||0)/item.answered/1000):0,level=!item.answered?'Not started':pct>=90&&item.answered>=20?'Mastered':pct>=75?'Proficient':'Practicing';return `<div class="assessment-row"><div><strong>${subjectLabel(key)}</strong><small>${item.answered} answered · ${pace||'—'} sec average</small></div><div class="mastery ${level.toLowerCase().replace(' ','-')}"><b>${item.answered?`${pct}%`:'—'}</b><span>${level}</span></div><button class="tiny" data-assess="${key}">Assess</button></div>`;}).join("");
     const recent=stats.rounds.slice(-8).reverse();
+    const outstanding=Object.values(stats.mistakes||{}).filter(item=>(item.misses||0)>(item.corrected||0)).sort((a,b)=>(b.misses-b.corrected)-(a.misses-a.corrected));
+    const strongest=groups.map(key=>({key,item:stats.subjects[key]||{answered:0,correct:0}})).filter(x=>x.item.answered).sort((a,b)=>(b.item.correct/b.item.answered)-(a.item.correct/a.item.answered))[0],strongestPct=strongest?Math.round(strongest.item.correct/strongest.item.answered*100):0;
+    const nextMission=currentMissionFor(profile,groups.map(key=>({key,left:MISSIONS.filter(m=>m.subject===key&&!missionSummary(profile,m).done).length})).sort((a,b)=>b.left-a.left)[0]?.key||'states');
     $("#reportsView").innerHTML=`${head("Assessments & Reports",`${profile.name}'s saved learning record`)}
       <div class="report-cards"><div class="report-stat"><strong>${totals.answered}</strong><span>Total answers</span></div><div class="report-stat"><strong>${totals.answered?`${accuracy}%`:'—'}</strong><span>Overall accuracy</span></div><div class="report-stat"><strong>${stats.rounds.length}</strong><span>Completed rounds</span></div><div class="report-stat"><strong>${stats.stars||0}</strong><span>Energy orbs</span></div></div>
-      <div class="panel"><p class="label">Subject assessment</p><div class="report-table">${subjectRows}</div></div>
-      <div class="panel"><p class="label">Recent completed rounds</p>${recent.length?`<div class="report-table">${recent.map(round=>`<div class="report-row"><strong>${esc(round.title)}</strong><span>${esc(round.date)}</span><b>${round.correct}/${round.total}</b></div>`).join("")}</div>`:'<div class="empty">Complete a practice round to begin this report.</div>'}</div>`;
+      <div class="panel report-coach"><img src="assets/characters/professor-volt.png" alt="Professor Volt"><div><p class="eyebrow">Professor Volt's assessment</p><h2>${strongest?strongestPct>=75?`${subjectLabel(strongest.key)} is the strongest signal so far.`:`Keep strengthening ${subjectLabel(strongest.key)}.`:'Complete a round to begin an assessment.'}</h2><p class="helper">${outstanding.length?`${outstanding.length} skill${outstanding.length===1?'':'s'} ready for targeted repair.`:`Recommended next mission: ${esc(nextMission.title)}.`}</p></div></div>
+      <div class="panel"><p class="label">Subject mastery</p><div class="assessment-table">${subjectRows}</div><p class="helper">Assessments are focused 10-question checkups and are saved separately from ordinary practice.</p></div>
+      <div class="panel"><div class="panel-title-row"><div><p class="label">Practice mistakes</p><h2>${outstanding.length?`${outstanding.length} items ready`:'No outstanding mistakes'}</h2></div>${outstanding.length?'<button class="tiny" id="practiceMistakes">Start repair round</button>':''}</div>${outstanding.length?`<div class="mistake-list">${outstanding.slice(0,8).map(item=>`<div><strong>${esc(item.prompt)}</strong><span>${esc(item.answer)} · missed ${item.misses}× · repaired ${item.corrected||0}×</span></div>`).join('')}</div>`:'<p class="helper">When an answer is missed, it will appear here until it is answered correctly in a later round.</p>'}</div>
+      <div class="panel"><p class="label">Recent completed rounds</p>${recent.length?`<div class="report-table">${recent.map(round=>`<div class="report-row"><strong>${esc(round.title)}</strong><span>${esc(round.date)}${round.assessment?' · Assessment':''}</span><b>${round.correct}/${round.total}</b></div>`).join("")}</div>`:'<div class="empty">Complete a practice round to begin this report.</div>'}</div>`;
+    $$('[data-assess]').forEach(button=>button.onclick=()=>startAssessment(button.dataset.assess));
+    $("#practiceMistakes")?.addEventListener('click',()=>startMistakeRound(outstanding));
   }
 
-  function startSession(title,questions,mode,minutes=0){playStartCue();session={title,questions,index:0,correct:0,mode,locked:false,minutes,deadline:minutes?Date.now()+minutes*60000:0,timedOut:false};go("session");renderQuestion();}
+  function questionSnapshot(q){return {subject:q.subject,prompt:q.prompt,answer:q.answer,detail:q.detail||q.answer,speech:q.speech||"",a:q.a,b:q.b,map:!!q.map,combined:!!q.combined,answerType:q.answerType||"",stateName:q.state?.name||"",modeOverride:q.modeOverride||""};}
+  function mistakeKey(q){return `${q.subject}|${q.prompt}|${q.answer}`;}
+  function hydrateQuestion(item){const q={subject:item.subject,prompt:item.prompt,answer:item.answer,detail:item.detail,speech:item.speech||"",a:item.a,b:item.b,map:item.map,combined:item.combined,answerType:item.answerType,modeOverride:item.modeOverride||undefined};if(item.stateName){q.state=STATE_DATA.find(state=>state.name===item.stateName);q.pool=STATE_DATA;}else if(item.subject==="spelling")q.pool=store.spelling;return q;}
+  function startMistakeRound(items){const questions=shuffle(items).slice(0,20).map(hydrateQuestion).filter(q=>q.answer&&(!q.stateName||q.state));if(!questions.length)return toast("No mistakes are waiting for practice");startSession("Mistake Repair",questions,"mixed",0,{repair:true});}
+  function startAssessment(subject){let questions=[],mode="mixed";
+    if(subject==="states")questions=shuffle(stateQuestionBank(STATE_DATA.filter(s=>!s.district),"facts")).slice(0,10);
+    if(subject==="spelling")questions=shuffle(store.spelling).slice(0,10).map((word,index)=>({subject:"spelling",prompt:"Spell the word you hear",answer:word,speech:word,detail:word,pool:store.spelling,modeOverride:index%2?"type":"choice"}));
+    if(subject==="math")questions=shuffle(Array.from({length:100},(_,i)=>{const a=Math.floor(i/10),b=i%10;return {subject:"math",prompt:`${a} × ${b}`,answer:String(a*b),detail:`${a} × ${b} = ${a*b}`,a,b};})).slice(0,10);
+    if(subject==="poems"){mode="type";const poem=store.poems[0],lines=poem.text.split("\n").filter(Boolean),candidates=lines.map(line=>({line,words:(line.match(/[A-Za-z’']+/g)||[]).filter(w=>w.length>3)})).filter(x=>x.words.length);questions=shuffle(candidates).slice(0,10).map(({line,words})=>{const word=pick(words);return {subject:"poem-missing",prompt:line.replace(new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\b`,'i'),"_____"),answer:word,detail:`The missing word was “${word}.”`};});}
+    if(!questions.length)return toast("Add learning material before starting this assessment");
+    startSession(`${subjectLabel(subject)} Assessment`,questions,mode,0,{assessment:true,assessmentSubject:subject});
+  }
+  function startSession(title,questions,mode,minutes=0,options={}){playStartCue();session={title,questions,index:0,correct:0,mode,locked:false,minutes,deadline:minutes?Date.now()+minutes*60000:0,timedOut:false,startedAt:Date.now(),earnedOrbs:0,wrongQuestions:[],completedMissions:[],newRewards:[],...options};go("session");renderQuestion();}
   function resolvedMode(){return session.questions[session.index]?.modeOverride || (session.mode==="mixed"?pick(["choice","type"]):session.mode);}
   function updateTimer(){if(!session?.deadline)return;const left=Math.max(0,session.deadline-Date.now()),seconds=Math.ceil(left/1000),el=$("#timer");if(el)el.textContent=`${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;if(left<=0){clearInterval(session.timerId);session.timedOut=true;renderFinish();}}
   function renderQuestion(){
     clearInterval(session?.timerId);const view=$("#sessionView");const q=session.questions[session.index];if(!q){renderFinish();return;}session.locked=false;session.currentMode=resolvedMode();
-    setAudioScene("level");
+    setAudioScene("level");session.questionStarted=Date.now();
     const pct=(session.index/session.questions.length)*100;
     view.innerHTML=`<div class="quiz-shell"><div class="quiz-top"><button class="back" data-end-session aria-label="End round">×</button><div class="quiz-progress"><span style="width:${pct}%"></span></div>${session.deadline?'<div class="timer" id="timer">0:00</div>':''}<div class="score"><img src="assets/ui/energy-orb.png" alt="">${session.correct}</div></div><div class="flash-card ${q.map?'map-card':''}" id="flashCard"><p class="prompt-label">${esc(session.title)} · ${session.index+1} of ${session.questions.length}</p><div id="questionBody"></div></div></div>`;
     $('[data-end-session]').onclick=()=>{clearInterval(session?.timerId);session=null;go('home');};
@@ -406,20 +467,39 @@
     else{it.innerHTML=`<form id="answerForm" class="stack"><input class="answer-input" id="typedAnswer" aria-label="Your answer" placeholder="Type your answer" autocomplete="off" autocapitalize="words"><button class="primary">Check answer</button></form><div id="feedback"></div>`;$("#answerForm").onsubmit=e=>{e.preventDefault();finishAnswer(norm($("#typedAnswer").value)===norm(q.answer),q);};setTimeout(()=>$("#typedAnswer")?.focus(),80);}}
 
   function finishAnswer(ok,q){if(session.locked)return;session.locked=true;playAnswerSound();const feedback=$("#feedback")||$("#interaction");const correction=q.subject==="math"&&!ok?`${q.a} groups of ${q.b}: ${Array(q.a).fill(q.b).join(" + ") || "0"} = ${q.answer}`:q.detail||`Answer: ${q.answer}`;const message=ok?pick(["Nice work!","You got it!","Great recall!","Level up!"]):`Good try. ${esc(correction)}`;feedback.innerHTML=`<div class="feedback ${ok?'good':'try'} mascot-feedback"><img src="assets/characters/circuit-sentinel-${ok?'success':'thinking'}.png" alt=""><span>${message}</span></div><button class="primary" style="margin-top:10px" data-next>${session.index===session.questions.length-1?'See results':'Next question'}</button>`;$('[data-next]').onclick=()=>grade(ok,false);}
-  function recordAnswer(ok,q){
-    const stats=activeProfile().stats,group=subjectGroup(q?.subject||"");
+  function recordAnswer(ok,q,elapsed=0){
+    const profile=activeProfile(),stats=profile.stats,group=subjectGroup(q?.subject||"");
     const day=stats.days[today()]||{answered:0,correct:0};day.answered++;if(ok)day.correct++;stats.days[today()]=day;
-    const subject=stats.subjects[group]||{answered:0,correct:0};subject.answered++;if(ok)subject.correct++;stats.subjects[group]=subject;
-    if(ok)stats.stars=(stats.stars||0)+1;
-    const mission=MISSIONS.find(item=>item.subject===group);
-    if(mission){const state=activeProfile().missions[mission.id]||{progress:0,complete:false};if(!state.complete){state.progress=Math.min(mission.goal,(state.progress||0)+1);if(state.progress>=mission.goal){state.complete=true;stats.stars=(stats.stars||0)+mission.reward;toast(`Mission complete! +${mission.reward} bonus orbs`);}activeProfile().missions[mission.id]=state;}}
+    const subject=stats.subjects[group]||{answered:0,correct:0,totalMs:0};subject.answered++;subject.totalMs=(subject.totalMs||0)+elapsed;if(ok)subject.correct++;stats.subjects[group]=subject;
+    const skillId=mistakeKey(q),skill=stats.skills[skillId]||{subject:group,prompt:q.prompt,answer:q.answer,answered:0,correct:0};skill.answered++;if(ok)skill.correct++;stats.skills[skillId]=skill;
+    const existing=stats.mistakes[skillId];
+    if(ok&&existing)existing.corrected=(existing.corrected||0)+1;
+    if(!ok){const snapshot=questionSnapshot(q),mistake=existing||{...snapshot,misses:0,corrected:0};mistake.misses=(mistake.misses||0)+1;mistake.lastSeen=today();stats.mistakes[skillId]=mistake;session.wrongQuestions.push(snapshot);}
+    if(ok){stats.stars=(stats.stars||0)+1;session.earnedOrbs=(session.earnedOrbs||0)+1;}
+    const selected=MISSIONS.find(m=>m.id===profile.activeMissionId&&m.subject===group&&missionUnlocked(profile,m)&&(profile.missions[m.id]?.progress||0)<m.goal);
+    const mission=selected||currentMissionFor(profile,group);
+    if(ok&&mission){const beforeRewards=unlockedRewards(profile).map(r=>r.name),state=profile.missions[mission.id]||{progress:0,complete:false};if(!state.complete){state.progress=Math.min(mission.goal,(state.progress||0)+1);profile.missions[mission.id]=state;if(state.progress>=mission.goal){state.complete=true;stats.stars=(stats.stars||0)+mission.reward;session.earnedOrbs+=mission.reward;session.completedMissions.push(mission);const next=MISSIONS.find(m=>m.subject===group&&missionUnlocked(profile,m)&&(profile.missions[m.id]?.progress||0)<m.goal);if(next)profile.activeMissionId=next.id;}const afterRewards=unlockedRewards(profile).filter(r=>!beforeRewards.includes(r.name));session.newRewards.push(...afterRewards);}}
     syncActiveProfile();
   }
-  function grade(ok,withSound=true){if(withSound)playAnswerSound();const q=session.questions[session.index];if(ok)session.correct++;recordAnswer(ok,q);save();session.index++;renderQuestion();}
+  function grade(ok,withSound=true){if(withSound)playAnswerSound();const q=session.questions[session.index],elapsed=Math.max(0,Date.now()-(session.questionStarted||Date.now()));if(ok)session.correct++;recordAnswer(ok,q,elapsed);save();session.index++;renderQuestion();}
   function wireSwipe(){let startX=0;const card=$("#flashCard");card.addEventListener('touchstart',e=>startX=e.touches[0].clientX,{passive:true});card.addEventListener('touchend',e=>{if($("#revealed")?.hidden)return;const d=e.changedTouches[0].clientX-startX;if(Math.abs(d)>70)grade(d>0);},{passive:true});}
 
   async function renderStateMap(state){const stage=$("#mapStage");try{if(!mapTopology){const res=await fetch("vendor/states-10m.json");mapTopology=await res.json();}const features=topojson.feature(mapTopology,mapTopology.objects.states).features;const feature=features.find(f=>String(f.id).padStart(2,'0')===state.id);const projection=d3.geoIdentity().reflectY(true).fitExtent([[18,14],[332,218]],feature);const path=d3.geoPath(projection);stage.innerHTML=`<svg viewBox="0 0 350 232" role="img" aria-label="Unlabeled state outline"><path d="${path(feature)}"></path></svg>`;}catch{stage.innerHTML=`<div class="feedback try">This state outline could not load. Try reopening the app.</div>`;}}
-  function renderFinish(){clearInterval(session?.timerId);setAudioScene("finished");const total=session.timedOut?session.index:session.questions.length,correct=session.correct,pct=Math.round(correct/Math.max(1,total)*100),pose=pct>=60?'success':'thinking';if(!session.roundSaved){const stats=activeProfile().stats;stats.rounds.push({date:today(),title:session.title,total,correct,accuracy:pct});stats.rounds=stats.rounds.slice(-100);session.roundSaved=true;save();}$("#sessionView").innerHTML=`${head(session.timedOut?"Time's up!":"Round complete!",session.title,"home")}<div class="panel finish-panel"><img class="finish-mascot" src="assets/characters/circuit-sentinel-${pose}.png" alt="Circuit Sentinel"><div><img class="finish-orb" src="assets/ui/energy-orb.png" alt="Energy orb reward"><h1>${correct} of ${total}</h1><p class="helper">${session.timedOut?`You answered ${total} before the timer ended. `:''}${pct>=80?'Fantastic focus!':pct>=60?'Strong work—one more round will make it stick.':'Every practice round grows your brain.'}</p></div></div><div class="stack"><button class="primary" data-again>Practice again</button><button class="secondary" data-go="reports">View report</button><button class="secondary" data-go="home">Back to quests</button></div>`;$('[data-again]').onclick=()=>{session.index=0;session.correct=0;session.roundSaved=false;session.timedOut=false;session.deadline=session.minutes?Date.now()+session.minutes*60000:0;session.questions=shuffle(session.questions);renderQuestion();};}
+  function renderFinish(){
+    clearInterval(session?.timerId);setAudioScene("finished");
+    const total=session.timedOut?session.index:session.questions.length,correct=session.correct,pct=Math.round(correct/Math.max(1,total)*100),pose=pct>=60?'success':'thinking';
+    const missed=[...new Map((session.wrongQuestions||[]).map(q=>[mistakeKey(q),q])).values()];
+    if(!session.roundSaved){const stats=activeProfile().stats,round={date:today(),title:session.title,total,correct,accuracy:pct,durationMs:Date.now()-(session.startedAt||Date.now()),assessment:!!session.assessment};stats.rounds.push(round);stats.rounds=stats.rounds.slice(-100);if(session.assessment&&session.assessmentSubject)stats.assessments[session.assessmentSubject]=round;session.roundSaved=true;save();}
+    const completed=session.completedMissions||[],newRewards=session.newRewards||[];
+    $("#sessionView").innerHTML=`${head(session.timedOut?"Time's up!":session.assessment?"Assessment complete!":"Mission round complete!",session.title,"home")}
+      <div class="result-hero ${pct>=80?'victory':'practice'}"><div class="result-burst"></div><img class="result-mascot" src="assets/characters/circuit-sentinel-${pose}.png" alt="Circuit Sentinel ${pct>=60?'celebrating':'thinking'}"><div class="result-copy"><p class="eyebrow">${pct>=90?'Gold signal':pct>=75?'Strong signal':'Signal training'}</p><h1>${correct} of ${total}</h1><div class="result-stars" aria-label="Performance rating">${[1,2,3].map((star,i)=>`<span class="${pct>=[60,75,90][i]?'lit':''}">★</span>`).join('')}</div><p>${session.timedOut?`You answered ${total} before time ended. `:''}${pct>=90?'Outstanding work—the sector is glowing!':pct>=75?'Great progress. Your recall is getting stronger.':pct>=60?'Solid practice. Repair the missed signals next.':'Every repaired mistake makes the Sentinel stronger.'}</p></div></div>
+      <div class="result-rewards"><div><img src="assets/ui/energy-orb.png" alt=""><strong>+${session.earnedOrbs||0}</strong><span>Energy orbs</span></div><div><strong>${pct}%</strong><span>Accuracy</span></div><div><strong>${missed.length}</strong><span>To repair</span></div></div>
+      ${completed.map(mission=>`<div class="panel mission-celebration"><img src="assets/characters/professor-volt.png" alt="Professor Volt"><div><p class="eyebrow">Mission complete</p><h2>${esc(mission.title)}</h2><p class="helper">Professor Volt restored another arcade system. Bonus: ${mission.reward} orbs.</p></div></div>`).join('')}
+      ${newRewards.map(reward=>`<div class="unlock-banner"><span>${reward.icon}</span><div><p class="eyebrow">New Sentinel reward</p><h2>${esc(reward.name)}</h2></div></div>`).join('')}
+      <div class="stack">${missed.length?'<button class="primary" data-repair>Practice missed answers</button>':''}<button class="${missed.length?'secondary':'primary'}" data-again>Practice this round again</button><button class="secondary" data-go="story">Open mission map</button><button class="secondary" data-go="reports">View assessment report</button><button class="secondary" data-go="home">Back to quests</button></div>`;
+    $('[data-repair]')?.addEventListener('click',()=>startMistakeRound(missed));
+    $('[data-again]').onclick=()=>{session.index=0;session.correct=0;session.roundSaved=false;session.timedOut=false;session.startedAt=Date.now();session.earnedOrbs=0;session.wrongQuestions=[];session.completedMissions=[];session.newRewards=[];session.deadline=session.minutes?Date.now()+session.minutes*60000:0;session.questions=shuffle(session.questions);renderQuestion();};
+  }
 
   function renderSettings(){
     $("#settingsView").innerHTML=`${head("Parent Setup","Update weekly practice without rebuilding the app")}

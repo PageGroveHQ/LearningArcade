@@ -6,7 +6,10 @@ A mobile-first, installable learning app for:
 - Weekly spelling word banks
 - Multiplication facts from 0 × 0 through 9 × 9
 - Editable poem memorization and recitation practice
-- Local learner profiles, story missions, and progress reports
+- Local learner profiles and a 20-mission four-sector story campaign
+- Energy-orb progression, Sentinel reward unlocks, and animated results
+- Question-level mistake tracking with targeted repair rounds
+- Ten-question subject assessments and cumulative parent reports
 
 Everything is static and can be hosted on GitHub Pages. Practice data is stored only in the browser on the current device.
 
