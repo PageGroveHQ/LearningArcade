@@ -174,7 +174,7 @@
   let audioScene = "menu";
   let musicDucked = false;
   let questionAudioDucked = false;
-  let openingPlayed = false;
+  let openingPlayed = false, openingAttempting = false;
   let audioContext = null, masterGain = null, musicGain = null, effectsGain = null, voiceGain = null;
   const mediaSources = new WeakMap();
   const MUSIC = {menu:"audio/interface/game-select.mp3",level:"audio/interface/level-play.mp3",finished:"audio/interface/round-finished.mp3"};
@@ -182,7 +182,7 @@
   const backgroundMusic = new Audio(); backgroundMusic.loop=true; backgroundMusic.preload="auto";
   const answerSound = new Audio("audio/interface/answer-selected.wav"); answerSound.preload="auto";
   const wrongAnswerSound = new Audio("audio/interface/wrong-answer.mp3"); wrongAnswerSound.preload="auto";
-  const voiceCue = new Audio(); voiceCue.preload="auto";
+  const voiceCue = new Audio(CUES.opening); voiceCue.preload="auto";
 
   const clampVolume=value=>Math.max(0,Math.min(1,Number(value)||0));
   function masterVolume(){return clampVolume(store.audioPrefs.master);}
@@ -212,9 +212,10 @@
   }
   function duckMusic(duck=true){musicDucked=duck;applySoundVolumes();}
   function setQuestionAudioDuck(duck=false){questionAudioDucked=duck;applySoundVolumes();}
-  function playVoiceCue(source){if(!store.audioPrefs.enabled||!audioUnlocked)return;ensureAudioGraph();voiceCue.pause();voiceCue.src=source;voiceCue.currentTime=0;duckMusic(true);voiceCue.onended=()=>duckMusic(false);voiceCue.onerror=()=>duckMusic(false);voiceCue.play().catch(()=>duckMusic(false));}
+  function playVoiceCue(source){if(!store.audioPrefs.enabled||!audioUnlocked)return Promise.resolve(false);ensureAudioGraph();voiceCue.pause();if(voiceCue.getAttribute("src")!==source){voiceCue.src=source;voiceCue.load();}voiceCue.currentTime=0;duckMusic(true);voiceCue.onended=()=>duckMusic(false);voiceCue.onerror=()=>duckMusic(false);return voiceCue.play().then(()=>true).catch(()=>{duckMusic(false);return false;});}
+  function tryOpeningCue(){if(openingPlayed||openingAttempting||!store.audioPrefs.enabled||!$("[data-screen='home']").classList.contains("active"))return;openingAttempting=true;playVoiceCue(CUES.opening).then(started=>{openingAttempting=false;if(started)openingPlayed=true;});}
   function playStartCue(){playVoiceCue(CUES.start);}
-  function wireSoundControls(){const enabled=$("#soundEnabled"),volume=$("#soundVolume");enabled.checked=store.audioPrefs.enabled;volume.value=Math.round(masterVolume()*100);enabled.onchange=()=>{audioUnlocked=true;ensureAudioGraph();store.audioPrefs.enabled=enabled.checked;if(!enabled.checked){activeAudio?.pause();voiceCue.pause();window.speechSynthesis?.cancel();duckMusic(false);}save();applySoundVolumes();setAudioScene(audioScene);if(enabled.checked&&!openingPlayed&&$("[data-screen='home']").classList.contains("active")){openingPlayed=true;playVoiceCue(CUES.opening);}};volume.oninput=()=>{audioUnlocked=true;ensureAudioGraph();store.audioPrefs.master=Number(volume.value)/100;applySoundVolumes();save();syncMixerControls();if(store.audioPrefs.enabled&&backgroundMusic.paused&&audioScene!=="silent")setAudioScene(audioScene);};document.addEventListener("pointerdown",()=>{audioUnlocked=true;ensureAudioGraph();setAudioScene(audioScene);if(store.audioPrefs.enabled&&!openingPlayed&&$("[data-screen='home']").classList.contains("active")){openingPlayed=true;playVoiceCue(CUES.opening);}},{once:true,capture:true});}
+  function wireSoundControls(){const enabled=$("#soundEnabled"),volume=$("#soundVolume");enabled.checked=store.audioPrefs.enabled;volume.value=Math.round(masterVolume()*100);enabled.onchange=()=>{audioUnlocked=true;ensureAudioGraph();store.audioPrefs.enabled=enabled.checked;if(!enabled.checked){activeAudio?.pause();voiceCue.pause();window.speechSynthesis?.cancel();duckMusic(false);}save();applySoundVolumes();setAudioScene(audioScene);if(enabled.checked)tryOpeningCue();};volume.oninput=()=>{audioUnlocked=true;ensureAudioGraph();store.audioPrefs.master=Number(volume.value)/100;applySoundVolumes();save();syncMixerControls();if(store.audioPrefs.enabled&&backgroundMusic.paused&&audioScene!=="silent")setAudioScene(audioScene);};document.addEventListener("pointerdown",()=>{audioUnlocked=true;ensureAudioGraph();setAudioScene(audioScene);tryOpeningCue();},{capture:true});}
 
   function refreshVoices() { availableVoices = window.speechSynthesis?.getVoices?.().filter(v => /^en([-_]|$)/i.test(v.lang)) || []; }
   refreshVoices();
