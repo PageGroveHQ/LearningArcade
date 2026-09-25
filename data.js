@@ -72,9 +72,9 @@ window.AUDIO_PACKS = {
   },
   "circuit-sentinel": {
     label:"Circuit Sentinel",
-    sampleWord:"",
-    words:[],
-    spelling:{},
+    sampleWord:"police",
+    words:window.BUNDLED_SPELLING_WORDS,
+    spelling:Object.fromEntries(window.BUNDLED_SPELLING_WORDS.map(word=>[word,`audio/circuit-sentinel/spelling/${word}.mp3`])),
     poems:{"the-crocodile":"audio/circuit-sentinel/poems/the-crocodile.mp3"}
   }
 };
