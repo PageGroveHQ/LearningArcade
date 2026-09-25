@@ -6,19 +6,19 @@
   <meta name="theme-color" content="#17143b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Learning Arcade">
+  <meta name="apple-mobile-web-app-title" content="Sentinel Arcade">
   <meta name="description" content="An installable learning arcade for states, spelling, multiplication, poems, missions, and progress reports.">
-  <title>Learning Arcade</title>
-  <link rel="manifest" href="manifest.webmanifest?v=17">
-  <link rel="icon" type="image/svg+xml" href="icon.svg?v=17">
-  <link rel="apple-touch-icon" href="icon.svg?v=17">
-  <link rel="stylesheet" href="styles.css?v=17">
+  <title>Circuit Sentinel's Learning Arcade</title>
+  <link rel="manifest" href="manifest.webmanifest?v=18">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/app-icon-192.png?v=18">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/app-icon-180.png?v=18">
+  <link rel="stylesheet" href="styles.css?v=18">
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
       <button class="brand" type="button" data-go="home" aria-label="Go home">
-        <span class="brand-mark">L</span><span>Learning Arcade</span>
+        <img class="brand-icon" src="assets/icons/app-icon-192.png" alt=""><span>Learning Arcade</span>
       </button>
       <div class="top-actions"><button class="profile-button" type="button" data-go="profiles" aria-label="Choose profile"><span id="profileInitial">P</span><strong id="profileName">Player 1</strong></button><div class="sound-controls" aria-label="Sound controls"><label class="sound-toggle" title="Sound on or off"><input type="checkbox" id="soundEnabled" aria-label="Turn game sound on or off" checked><span aria-hidden="true">♫</span></label><input type="range" id="soundVolume" min="0" max="100" value="45" aria-label="Game sound volume"></div><button class="icon-button" type="button" data-go="settings" aria-label="Open parent setup">⚙</button></div>
     </header>
@@ -69,7 +69,7 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="vendor/d3.min.js"></script>
   <script src="vendor/topojson-client.min.js"></script>
-  <script src="data.js?v=17"></script>
-  <script src="app.js?v=17"></script>
+  <script src="data.js?v=18"></script>
+  <script src="app.js?v=18"></script>
 </body>
 </html>

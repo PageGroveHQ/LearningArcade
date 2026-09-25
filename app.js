@@ -52,7 +52,7 @@
     mathPrefs: {tables:[0,1,2,3,4,5,6,7,8,9], mode:"mixed", count:"10", timer:"0"},
     spellingPrefs: {mode:"mixed", count:"max"},
     voicePrefs: {source:"circuit-sentinel", voiceURI:"", style:"bright"},
-    audioPrefs: {enabled:true,volume:.45},
+    audioPrefs: {enabled:true,master:.7,music:.45,effects:.8},
     profiles: [],
     activeProfileId: ""
   };
@@ -78,7 +78,10 @@
   store.mathPrefs = {...defaults.mathPrefs, ...(store.mathPrefs || {})};
   store.spellingPrefs = {...defaults.spellingPrefs, ...(store.spellingPrefs || {})};
   store.voicePrefs = {...defaults.voicePrefs, ...(store.voicePrefs || {})};
-  store.audioPrefs = {...defaults.audioPrefs, ...(store.audioPrefs || {})};
+  const savedAudioPrefs=store.audioPrefs||{};
+  store.audioPrefs = {...defaults.audioPrefs, ...savedAudioPrefs};
+  if(!Object.prototype.hasOwnProperty.call(savedAudioPrefs,"master"))store.audioPrefs.master=Number.isFinite(Number(savedAudioPrefs.volume))?Number(savedAudioPrefs.volume):defaults.audioPrefs.master;
+  store.audioPrefs.master=Math.max(0,Math.min(1,Number(store.audioPrefs.master)));store.audioPrefs.music=Math.max(0,Math.min(1,Number(store.audioPrefs.music)));store.audioPrefs.effects=Math.max(0,Math.min(1,Number(store.audioPrefs.effects)));
   const sameWords = (a,b) => a.length === b.length && a.every((word,index)=>norm(word)===norm(b[index]));
   if (!store.audioContentV1) {
     if (sameWords(store.spelling, ORIGINAL_SPELLING)) store.spelling = [...BUNDLED_SPELLING];
@@ -113,21 +116,31 @@
   let audioUnlocked = false;
   let audioScene = "menu";
   let musicDucked = false;
+  let questionAudioDucked = false;
   let openingPlayed = false;
+  let audioContext = null, masterGain = null, musicGain = null, effectsGain = null, voiceGain = null;
+  const mediaSources = new WeakMap();
   const MUSIC = {menu:"audio/interface/game-select.mp3",level:"audio/interface/level-play.mp3",finished:"audio/interface/round-finished.mp3"};
   const CUES = {opening:"audio/interface/professor-opening.mp3",start:"audio/interface/sentinel-start.mp3"};
   const backgroundMusic = new Audio(); backgroundMusic.loop=true; backgroundMusic.preload="auto";
   const answerSound = new Audio("audio/interface/answer-selected.wav"); answerSound.preload="auto";
+  const wrongAnswerSound = new Audio("audio/interface/wrong-answer.mp3"); wrongAnswerSound.preload="auto";
   const voiceCue = new Audio(); voiceCue.preload="auto";
 
-  function masterVolume(){return Math.max(0,Math.min(1,Number(store.audioPrefs.volume)||0));}
-  function applySoundVolumes(){backgroundMusic.volume=masterVolume()*(musicDucked?.16:1);answerSound.volume=masterVolume();voiceCue.volume=masterVolume();if(activeAudio)activeAudio.volume=masterVolume();}
-  function setAudioScene(scene){audioScene=scene;document.body.dataset.audioScene=scene;document.body.dataset.soundEnabled=String(store.audioPrefs.enabled);const source=MUSIC[scene]||MUSIC.menu;if(backgroundMusic.getAttribute("src")!==source){backgroundMusic.src=source;backgroundMusic.load();}applySoundVolumes();if(!store.audioPrefs.enabled||!audioUnlocked){backgroundMusic.pause();return;}backgroundMusic.play().catch(()=>{});}
-  function playAnswerSound(){if(!store.audioPrefs.enabled||!audioUnlocked)return;answerSound.currentTime=0;answerSound.volume=masterVolume();answerSound.play().catch(()=>{});}
+  const clampVolume=value=>Math.max(0,Math.min(1,Number(value)||0));
+  function masterVolume(){return clampVolume(store.audioPrefs.master);}
+  function musicVolume(){return clampVolume(store.audioPrefs.music);}
+  function effectsVolume(){return clampVolume(store.audioPrefs.effects);}
+  function connectMedia(media,gain){if(!audioContext||!gain||mediaSources.has(media))return;const source=audioContext.createMediaElementSource(media);source.connect(gain);mediaSources.set(media,source);media.volume=1;}
+  function ensureAudioGraph(){const AudioContextClass=window.AudioContext||window.webkitAudioContext;if(!AudioContextClass)return;try{if(!audioContext){audioContext=new AudioContextClass();masterGain=audioContext.createGain();musicGain=audioContext.createGain();effectsGain=audioContext.createGain();voiceGain=audioContext.createGain();musicGain.connect(masterGain);effectsGain.connect(masterGain);voiceGain.connect(masterGain);masterGain.connect(audioContext.destination);connectMedia(backgroundMusic,musicGain);connectMedia(answerSound,effectsGain);connectMedia(wrongAnswerSound,effectsGain);connectMedia(voiceCue,voiceGain);if(activeAudio)connectMedia(activeAudio,voiceGain);}if(audioContext.state==="suspended")audioContext.resume().catch(()=>{});applySoundVolumes();}catch{audioContext=null;masterGain=musicGain=effectsGain=voiceGain=null;}}
+  function applySoundVolumes(){const duck=musicDucked?.05:questionAudioDucked?.16:1,master=store.audioPrefs.enabled?masterVolume():0,music=musicVolume()*duck,effects=effectsVolume();document.body.dataset.masterVolume=String(masterVolume());document.body.dataset.musicVolume=String(musicVolume());document.body.dataset.effectsVolume=String(effectsVolume());document.body.dataset.effectiveMusicVolume=String(master*music);if(audioContext&&masterGain){masterGain.gain.value=master;musicGain.gain.value=music;effectsGain.gain.value=effects;voiceGain.gain.value=1;[backgroundMusic,answerSound,wrongAnswerSound,voiceCue,activeAudio].filter(Boolean).forEach(media=>media.volume=1);}else{backgroundMusic.volume=master*music;answerSound.volume=master*effects;wrongAnswerSound.volume=master*effects;voiceCue.volume=master;if(activeAudio)activeAudio.volume=master;}}
+  function setAudioScene(scene){audioScene=scene;document.body.dataset.audioScene=scene;document.body.dataset.soundEnabled=String(store.audioPrefs.enabled);if(scene==="silent"){backgroundMusic.pause();applySoundVolumes();return;}const source=MUSIC[scene]||MUSIC.menu;if(backgroundMusic.getAttribute("src")!==source){backgroundMusic.src=source;backgroundMusic.load();}applySoundVolumes();if(!store.audioPrefs.enabled||!audioUnlocked){backgroundMusic.pause();return;}ensureAudioGraph();backgroundMusic.play().catch(()=>{});}
+  function playAnswerSound(ok=true){if(!store.audioPrefs.enabled||!audioUnlocked)return;ensureAudioGraph();const sound=ok?answerSound:wrongAnswerSound;sound.currentTime=0;sound.play().catch(()=>{});}
   function duckMusic(duck=true){musicDucked=duck;applySoundVolumes();}
-  function playVoiceCue(source){if(!store.audioPrefs.enabled||!audioUnlocked)return;voiceCue.pause();voiceCue.src=source;voiceCue.currentTime=0;duckMusic(true);voiceCue.onended=()=>duckMusic(false);voiceCue.onerror=()=>duckMusic(false);voiceCue.play().catch(()=>duckMusic(false));}
+  function setQuestionAudioDuck(duck=false){questionAudioDucked=duck;applySoundVolumes();}
+  function playVoiceCue(source){if(!store.audioPrefs.enabled||!audioUnlocked)return;ensureAudioGraph();voiceCue.pause();voiceCue.src=source;voiceCue.currentTime=0;duckMusic(true);voiceCue.onended=()=>duckMusic(false);voiceCue.onerror=()=>duckMusic(false);voiceCue.play().catch(()=>duckMusic(false));}
   function playStartCue(){playVoiceCue(CUES.start);}
-  function wireSoundControls(){const enabled=$("#soundEnabled"),volume=$("#soundVolume");enabled.checked=store.audioPrefs.enabled;volume.value=Math.round(masterVolume()*100);enabled.onchange=()=>{audioUnlocked=true;store.audioPrefs.enabled=enabled.checked;if(!enabled.checked){activeAudio?.pause();voiceCue.pause();window.speechSynthesis?.cancel();duckMusic(false);}save();setAudioScene(audioScene);if(enabled.checked&&!openingPlayed&&$("[data-screen='home']").classList.contains("active")){openingPlayed=true;playVoiceCue(CUES.opening);}};volume.oninput=()=>{audioUnlocked=true;store.audioPrefs.volume=Number(volume.value)/100;applySoundVolumes();save();if(store.audioPrefs.enabled&&backgroundMusic.paused)setAudioScene(audioScene);};document.addEventListener("pointerdown",()=>{audioUnlocked=true;setAudioScene(audioScene);if(store.audioPrefs.enabled&&!openingPlayed&&$("[data-screen='home']").classList.contains("active")){openingPlayed=true;playVoiceCue(CUES.opening);}},{once:true,capture:true});}
+  function wireSoundControls(){const enabled=$("#soundEnabled"),volume=$("#soundVolume");enabled.checked=store.audioPrefs.enabled;volume.value=Math.round(masterVolume()*100);enabled.onchange=()=>{audioUnlocked=true;ensureAudioGraph();store.audioPrefs.enabled=enabled.checked;if(!enabled.checked){activeAudio?.pause();voiceCue.pause();window.speechSynthesis?.cancel();duckMusic(false);}save();applySoundVolumes();setAudioScene(audioScene);if(enabled.checked&&!openingPlayed&&$("[data-screen='home']").classList.contains("active")){openingPlayed=true;playVoiceCue(CUES.opening);}};volume.oninput=()=>{audioUnlocked=true;ensureAudioGraph();store.audioPrefs.master=Number(volume.value)/100;applySoundVolumes();save();syncMixerControls();if(store.audioPrefs.enabled&&backgroundMusic.paused&&audioScene!=="silent")setAudioScene(audioScene);};document.addEventListener("pointerdown",()=>{audioUnlocked=true;ensureAudioGraph();setAudioScene(audioScene);if(store.audioPrefs.enabled&&!openingPlayed&&$("[data-screen='home']").classList.contains("active")){openingPlayed=true;playVoiceCue(CUES.opening);}},{once:true,capture:true});}
 
   function refreshVoices() { availableVoices = window.speechSynthesis?.getVoices?.().filter(v => /^en([-_]|$)/i.test(v.lang)) || []; }
   refreshVoices();
@@ -159,7 +172,7 @@
     window.speechSynthesis?.cancel();
     if (activeAudio) activeAudio.pause();
     activeAudio = new Audio(audioPath);
-    activeAudio.volume=masterVolume();duckMusic(true);activeAudio.onended=()=>duckMusic(false);activeAudio.onerror=()=>duckMusic(false);activeAudio.play().catch(()=>{duckMusic(false);speakText(text);});
+    ensureAudioGraph();connectMedia(activeAudio,voiceGain);applySoundVolumes();duckMusic(true);activeAudio.onended=()=>duckMusic(false);activeAudio.onerror=()=>duckMusic(false);activeAudio.play().catch(()=>{duckMusic(false);speakText(text);});
   }
 
   function voicePanelMarkup() {
@@ -191,7 +204,8 @@
     if (name === "profiles") renderProfiles();
     if (name === "reports") renderReports();
     if (name === "settings") renderSettings();
-    setAudioScene(name === "session" ? "level" : "menu");
+    if(name!=="session")setQuestionAudioDuck(false);
+    setAudioScene(name === "session" ? (session?.silentMusic?"silent":"level") : "menu");
   }
 
   function head(title, subtitle, back = "home") {
@@ -339,7 +353,7 @@
   function wirePoemModes(poem){$$('[data-poem-mode]',$("#poemModes")).forEach(b=>b.onclick=()=>startPoem(poem,b.dataset.poemMode));}
   function startPoem(poem,mode){
     const lines=poem.text.split("\n").filter(x=>x.trim());
-    if(mode==="read"){startSession("Poem Power",[{subject:"poem-read",prompt:poem.title,answer:poem.text,detail:poem.author,speech:poem.text,audio:poem.audio||"",poemId:poem.id}],"read");return;}
+    if(mode==="read"){startSession("Poem Power",[{subject:"poem-read",prompt:poem.title,answer:poem.text,detail:poem.author,speech:poem.text,audio:poem.audio||"",poemId:poem.id}],"read",0,{silentMusic:true});return;}
     if(mode==="recite"){startSession("Poem Power",[{subject:"poem-recite",prompt:`Recite “${poem.title}” from memory`,answer:poem.text,detail:poem.author}],"parent");return;}
     if(mode==="lines"){const qs=lines.slice(0,-1).map((line,i)=>({subject:"poem-line",prompt:line,answer:lines[i+1],detail:`Next line: ${lines[i+1]}`}));startSession("Next-Line Prompts",shuffle(qs).slice(0,8),"type");return;}
     const candidates=lines.map(line=>({line,words:(line.match(/[A-Za-z’']+/g)||[]).filter(w=>w.length>3)})).filter(x=>x.words.length);const qs=shuffle(candidates).slice(0,Math.min(8,candidates.length)).map(({line,words})=>{const word=pick(words);return {subject:"poem-missing",prompt:line.replace(new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\b`,'i'),"_____"),answer:word,detail:`The missing word was “${word}.”`};});startSession("Missing Words",qs,"type");
@@ -420,7 +434,7 @@
   function updateTimer(){if(!session?.deadline)return;const left=Math.max(0,session.deadline-Date.now()),seconds=Math.ceil(left/1000),el=$("#timer");if(el)el.textContent=`${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;if(left<=0){clearInterval(session.timerId);session.timedOut=true;renderFinish();}}
   function renderQuestion(){
     clearInterval(session?.timerId);const view=$("#sessionView");const q=session.questions[session.index];if(!q){renderFinish();return;}session.locked=false;session.currentMode=resolvedMode();
-    setAudioScene("level");session.questionStarted=Date.now();
+    setQuestionAudioDuck(!!q.speech);setAudioScene(session.silentMusic?"silent":"level");session.questionStarted=Date.now();
     const pct=(session.index/session.questions.length)*100;
     view.innerHTML=`<div class="quiz-shell"><div class="quiz-top"><button class="back" data-end-session aria-label="End round">×</button><div class="quiz-progress"><span style="width:${pct}%"></span></div>${session.deadline?'<div class="timer" id="timer">0:00</div>':''}<div class="score"><img src="assets/ui/energy-orb.png" alt="">${session.correct}</div></div><div class="flash-card ${q.map?'map-card':''}" id="flashCard"><p class="prompt-label">${esc(session.title)} · ${session.index+1} of ${session.questions.length}</p><div id="questionBody"></div></div></div>`;
     $('[data-end-session]').onclick=()=>{clearInterval(session?.timerId);session=null;go('home');};
@@ -466,7 +480,7 @@
   function renderTyped(q){const it=$("#interaction");if(q.combined){const labels=q.map?["State","Abbreviation","Capital"]:["Abbreviation","Capital"];it.innerHTML=`<div class="stack">${labels.map((l,i)=>`<input class="answer-input" data-part="${i}" aria-label="${l}" placeholder="${l}" autocapitalize="words">`).join("")}<button class="primary" data-check>Check answer</button></div><div id="feedback"></div>`;$('[data-check]').onclick=()=>{const vals=$$('[data-part]').map(x=>x.value);const expected=q.map?[q.state.name,q.state.abbr,q.state.capital]:[q.state.abbr,q.state.capital];finishAnswer(vals.every((v,i)=>norm(v)===norm(expected[i])),q);};}
     else{it.innerHTML=`<form id="answerForm" class="stack"><input class="answer-input" id="typedAnswer" aria-label="Your answer" placeholder="Type your answer" autocomplete="off" autocapitalize="words"><button class="primary">Check answer</button></form><div id="feedback"></div>`;$("#answerForm").onsubmit=e=>{e.preventDefault();finishAnswer(norm($("#typedAnswer").value)===norm(q.answer),q);};setTimeout(()=>$("#typedAnswer")?.focus(),80);}}
 
-  function finishAnswer(ok,q){if(session.locked)return;session.locked=true;playAnswerSound();const feedback=$("#feedback")||$("#interaction");const correction=q.subject==="math"&&!ok?`${q.a} groups of ${q.b}: ${Array(q.a).fill(q.b).join(" + ") || "0"} = ${q.answer}`:q.detail||`Answer: ${q.answer}`;const message=ok?pick(["Nice work!","You got it!","Great recall!","Level up!"]):`Good try. ${esc(correction)}`;feedback.innerHTML=`<div class="feedback ${ok?'good':'try'} mascot-feedback"><img src="assets/characters/circuit-sentinel-${ok?'success':'thinking'}.png" alt=""><span>${message}</span></div><button class="primary" style="margin-top:10px" data-next>${session.index===session.questions.length-1?'See results':'Next question'}</button>`;$('[data-next]').onclick=()=>grade(ok,false);}
+  function finishAnswer(ok,q){if(session.locked)return;session.locked=true;playAnswerSound(ok);const feedback=$("#feedback")||$("#interaction");const correction=q.subject==="math"&&!ok?`${q.a} groups of ${q.b}: ${Array(q.a).fill(q.b).join(" + ") || "0"} = ${q.answer}`:q.detail||`Answer: ${q.answer}`;const message=ok?pick(["Nice work!","You got it!","Great recall!","Level up!"]):`Good try. ${esc(correction)}`;feedback.innerHTML=`<div class="feedback ${ok?'good':'try'} mascot-feedback"><img src="assets/characters/circuit-sentinel-${ok?'success':'thinking'}.png" alt=""><span>${message}</span></div><button class="primary" style="margin-top:10px" data-next>${session.index===session.questions.length-1?'See results':'Next question'}</button>`;$('[data-next]').onclick=()=>grade(ok,false);}
   function recordAnswer(ok,q,elapsed=0){
     const profile=activeProfile(),stats=profile.stats,group=subjectGroup(q?.subject||"");
     const day=stats.days[today()]||{answered:0,correct:0};day.answered++;if(ok)day.correct++;stats.days[today()]=day;
@@ -481,12 +495,12 @@
     if(ok&&mission){const beforeRewards=unlockedRewards(profile).map(r=>r.name),state=profile.missions[mission.id]||{progress:0,complete:false};if(!state.complete){state.progress=Math.min(mission.goal,(state.progress||0)+1);profile.missions[mission.id]=state;if(state.progress>=mission.goal){state.complete=true;stats.stars=(stats.stars||0)+mission.reward;session.earnedOrbs+=mission.reward;session.completedMissions.push(mission);const next=MISSIONS.find(m=>m.subject===group&&missionUnlocked(profile,m)&&(profile.missions[m.id]?.progress||0)<m.goal);if(next)profile.activeMissionId=next.id;}const afterRewards=unlockedRewards(profile).filter(r=>!beforeRewards.includes(r.name));session.newRewards.push(...afterRewards);}}
     syncActiveProfile();
   }
-  function grade(ok,withSound=true){if(withSound)playAnswerSound();const q=session.questions[session.index],elapsed=Math.max(0,Date.now()-(session.questionStarted||Date.now()));if(ok)session.correct++;recordAnswer(ok,q,elapsed);save();session.index++;renderQuestion();}
+  function grade(ok,withSound=true){if(withSound)playAnswerSound(ok);const q=session.questions[session.index],elapsed=Math.max(0,Date.now()-(session.questionStarted||Date.now()));if(ok)session.correct++;recordAnswer(ok,q,elapsed);save();session.index++;renderQuestion();}
   function wireSwipe(){let startX=0;const card=$("#flashCard");card.addEventListener('touchstart',e=>startX=e.touches[0].clientX,{passive:true});card.addEventListener('touchend',e=>{if($("#revealed")?.hidden)return;const d=e.changedTouches[0].clientX-startX;if(Math.abs(d)>70)grade(d>0);},{passive:true});}
 
   async function renderStateMap(state){const stage=$("#mapStage");try{if(!mapTopology){const res=await fetch("vendor/states-10m.json");mapTopology=await res.json();}const features=topojson.feature(mapTopology,mapTopology.objects.states).features;const feature=features.find(f=>String(f.id).padStart(2,'0')===state.id);const projection=d3.geoIdentity().reflectY(true).fitExtent([[18,14],[332,218]],feature);const path=d3.geoPath(projection);stage.innerHTML=`<svg viewBox="0 0 350 232" role="img" aria-label="Unlabeled state outline"><path d="${path(feature)}"></path></svg>`;}catch{stage.innerHTML=`<div class="feedback try">This state outline could not load. Try reopening the app.</div>`;}}
   function renderFinish(){
-    clearInterval(session?.timerId);setAudioScene("finished");
+    clearInterval(session?.timerId);setQuestionAudioDuck(false);setAudioScene("finished");
     const total=session.timedOut?session.index:session.questions.length,correct=session.correct,pct=Math.round(correct/Math.max(1,total)*100),pose=pct>=60?'success':'thinking';
     const missed=[...new Map((session.wrongQuestions||[]).map(q=>[mistakeKey(q),q])).values()];
     if(!session.roundSaved){const stats=activeProfile().stats,round={date:today(),title:session.title,total,correct,accuracy:pct,durationMs:Date.now()-(session.startedAt||Date.now()),assessment:!!session.assessment};stats.rounds.push(round);stats.rounds=stats.rounds.slice(-100);if(session.assessment&&session.assessmentSubject)stats.assessments[session.assessmentSubject]=round;session.roundSaved=true;save();}
@@ -504,22 +518,26 @@
   function renderSettings(){
     $("#settingsView").innerHTML=`${head("Parent Setup","Update weekly practice without rebuilding the app")}
       <div class="panel"><h2>Learner profiles</h2><p class="helper">Create or switch local profiles so reports and missions stay separate for each learner.</p><button class="secondary" data-go="profiles">Manage profiles</button></div>
+      <div class="panel audio-mixer"><div class="panel-title-row"><div><p class="label">Audio mixer</p><h2>Sound levels</h2></div><label class="settings-sound-toggle"><input type="checkbox" id="settingsSoundEnabled" ${store.audioPrefs.enabled?'checked':''}> Sound on</label></div><p class="helper">Master Volume controls everything. Music and sound effects can be balanced separately.</p>${[['master','Master Volume'],['music','Music Volume'],['effects','Sound Effect Volume']].map(([key,label])=>`<label class="mixer-row"><span>${label}</span><input type="range" min="0" max="100" value="${Math.round(store.audioPrefs[key]*100)}" data-mixer="${key}" aria-label="${label}"><output data-mixer-output="${key}">${Math.round(store.audioPrefs[key]*100)}%</output></label>`).join('')}</div>
       <div class="panel" id="spellingSettings"><h2>Spelling word bank</h2><p class="helper">Enter one word per line or separate words with commas.</p><div class="field"><textarea id="wordBank">${esc(store.spelling.join("\n"))}</textarea></div><button class="primary" id="saveWords">Save word bank</button></div>
       <div class="panel" id="poemSettings"><h2>Poems</h2><div class="stack">${store.poems.map((p,i)=>`<div class="list-item"><span class="grow"><strong>${esc(p.title)}</strong><small>${esc(p.author||"")}</small></span><button class="tiny" data-edit-poem="${i}">Edit</button></div>`).join("")}</div><button class="secondary" style="margin-top:10px" id="addPoem">Add a poem</button><div id="poemEditor"></div></div>
       <div class="panel"><h2>Save protection</h2><p class="helper">Progress is saved on this device. Download a backup before deleting and re-adding the home-screen app.</p><div class="two"><button class="secondary" id="exportData">Download backup</button><button class="secondary" id="importData">Import backup</button></div><input type="file" id="importFile" accept="application/json" hidden></div>
-      <div class="panel"><h2>Home-screen updates</h2><p class="helper">Keep the existing icon. Open this page online and tap “Check for update” to load the newest version without replacing saved progress.</p><button class="secondary" id="checkUpdate">Check for update</button></div>`;
+      <div class="panel"><h2>Home-screen updates</h2><p class="helper">Tap “Check for update” to load the newest code without replacing saved progress. iPhone may require removing and re-adding the home-screen shortcut before a new app icon appears.</p><button class="secondary" id="checkUpdate">Check for update</button></div>`;
+    wireMixerControls();
     $("#saveWords").onclick=()=>{store.spelling=$("#wordBank").value.split(/[\n,]+/).map(w=>w.trim()).filter(Boolean);save();toast(`${store.spelling.length} spelling words saved`);};
     $("#addPoem").onclick=()=>renderPoemEditor();$$('[data-edit-poem]').forEach(b=>b.onclick=()=>renderPoemEditor(+b.dataset.editPoem));
     $("#exportData").onclick=exportData;$("#importData").onclick=()=>$("#importFile").click();$("#importFile").onchange=importData;
     $("#checkUpdate").onclick=async()=>{if(!('serviceWorker'in navigator)){toast('No update is waiting');return;}const reg=await navigator.serviceWorker.getRegistration();await reg?.update();toast('Update check complete');};
   }
+  function syncMixerControls(){const top=$("#soundVolume");if(top)top.value=Math.round(masterVolume()*100);['master','music','effects'].forEach(key=>{const input=$(`[data-mixer="${key}"]`),output=$(`[data-mixer-output="${key}"]`);if(input)input.value=Math.round(store.audioPrefs[key]*100);if(output)output.textContent=`${Math.round(store.audioPrefs[key]*100)}%`;});const toggle=$("#settingsSoundEnabled");if(toggle)toggle.checked=store.audioPrefs.enabled;}
+  function wireMixerControls(){syncMixerControls();$$('[data-mixer]').forEach(input=>input.oninput=()=>{audioUnlocked=true;ensureAudioGraph();store.audioPrefs[input.dataset.mixer]=Number(input.value)/100;applySoundVolumes();save();syncMixerControls();if(store.audioPrefs.enabled&&backgroundMusic.paused&&audioScene!=="silent")setAudioScene(audioScene);});const toggle=$("#settingsSoundEnabled");if(toggle)toggle.onchange=()=>{store.audioPrefs.enabled=toggle.checked;$("#soundEnabled").checked=toggle.checked;audioUnlocked=true;ensureAudioGraph();if(!toggle.checked){activeAudio?.pause();voiceCue.pause();window.speechSynthesis?.cancel();}applySoundVolumes();save();setAudioScene(audioScene);};}
   function renderPoemEditor(index){const poem=Number.isInteger(index)?store.poems[index]:{title:"",author:"",text:""};$("#poemEditor").innerHTML=`<div class="field"><label>Title</label><input id="poemTitle" value="${esc(poem.title)}"></div><div class="field"><label>Author</label><input id="poemAuthor" value="${esc(poem.author)}"></div><div class="field"><label>Poem text</label><textarea id="poemText">${esc(poem.text)}</textarea></div><div class="two"><button class="primary" id="savePoem">Save poem</button>${Number.isInteger(index)?'<button class="danger-btn" id="deletePoem">Delete</button>':''}</div>`;$("#poemTitle").focus();$("#savePoem").onclick=()=>{const title=$("#poemTitle").value.trim(),text=$("#poemText").value.trim();if(!title||!text){toast('Add a title and poem text');return;}const next={id:(poem.id||title.toLowerCase().replace(/[^a-z0-9]+/g,'-'))+(!Number.isInteger(index)?`-${Date.now()}`:''),title,author:$("#poemAuthor").value.trim(),text,...(poem.audio?{audio:poem.audio}:{})};if(Number.isInteger(index))store.poems[index]=next;else store.poems.push(next);save();renderSettings();toast('Poem saved');};if(Number.isInteger(index))$("#deletePoem").onclick=()=>{if(store.poems.length===1){toast('Keep at least one poem');return;}store.poems.splice(index,1);save();renderSettings();};}
   function exportData(){const blob=new Blob([JSON.stringify(store,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`learning-arcade-backup-${today()}.json`;a.click();URL.revokeObjectURL(a.href);}
   function importData(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const parsed=JSON.parse(reader.result);store={...defaults,...parsed};localStorage.setItem(STORE,JSON.stringify(store));location.reload();}catch{toast('That backup could not be read');}};reader.readAsText(file);}
 
   document.addEventListener("click", e => {const nav=e.target.closest("[data-go]");if(nav)go(nav.dataset.go);});
   window.addEventListener("hashchange",()=>go(location.hash.slice(1)||"home"));
-  if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=16"));
+  if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=18"));
   if (document.modelContext?.registerTool) {
     const register = tool => Promise.resolve(document.modelContext.registerTool(tool)).catch(() => {});
     register({name:"read_learning_sets",title:"Read learning sets",description:"Read the current spelling words and poem titles configured in Learning Arcade.",inputSchema:{type:"object",properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({spellingWords:[...store.spelling],poems:store.poems.map(p=>({id:p.id,title:p.title,author:p.author}))})});

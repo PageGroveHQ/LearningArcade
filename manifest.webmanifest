@@ -1,6 +1,6 @@
 {
-  "name": "Learning Arcade",
-  "short_name": "Learning Arcade",
+  "name": "Circuit Sentinel's Learning Arcade",
+  "short_name": "Sentinel Arcade",
   "description": "Learning games, story missions, profiles, and progress reports.",
   "start_url": "./",
   "scope": "./",
@@ -8,6 +8,8 @@
   "background_color": "#f8f7ff",
   "theme_color": "#17143b",
   "icons": [
-    {"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+    {"src":"assets/icons/app-icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"assets/icons/app-icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},
+    {"src":"assets/icons/app-icon-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
   ]
 }
