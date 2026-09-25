@@ -1,4 +1,4 @@
-const CACHE = "learning-arcade-v19";
+const CACHE = "learning-arcade-v20";
 const PACKS = {"cartoon-dog-heeler":["sheaf","were","between","extreme","turkey","trolley","wheat","feast","copy","astronomy","complete","envy","money","sincere","speech","kneel","tease","freeze","barley","empty"],"william-cypher":["police","promise","reply","slight","behind","child","mire","cyclone","sighing","satisfy","lightning","die","rind","thy","untie","whine","divide","decide","sign","thigh"],"circuit-sentinel":["police","promise","reply","slight","behind","child","mire","cyclone","sighing","satisfy","lightning","die","rind","thy","untie","whine","divide","decide","sign","thigh"]};
 const AUDIO = Object.entries(PACKS).flatMap(([pack,words])=>[`./audio/${pack}/poems/the-crocodile.mp3`,...words.map(word=>`./audio/${pack}/spelling/${word}.mp3`)]);
 const SKINS = ["core","ember","frost","volt","cyclone","prism"].flatMap(form=>["idle","success","thinking"].map(pose=>`./assets/characters/skins/${form}-${pose}.png`));
