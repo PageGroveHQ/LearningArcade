@@ -9,10 +9,10 @@
   <meta name="apple-mobile-web-app-title" content="Sentinel Arcade">
   <meta name="description" content="An installable learning arcade for states, spelling, multiplication, poems, missions, and progress reports.">
   <title>Circuit Sentinel's Learning Arcade</title>
-  <link rel="manifest" href="manifest.webmanifest?v=18">
-  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/app-icon-192.png?v=18">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/app-icon-180.png?v=18">
-  <link rel="stylesheet" href="styles.css?v=18">
+  <link rel="manifest" href="manifest.webmanifest?v=19">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/app-icon-192.png?v=19">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/app-icon-180.png?v=19">
+  <link rel="stylesheet" href="styles.css?v=19">
 </head>
 <body>
   <div class="app-shell">
@@ -35,7 +35,7 @@
         <section class="home-cast" aria-label="Your learning guides">
           <img class="home-professor" src="assets/characters/professor-volt.png" alt="Professor Volt">
           <div class="cast-copy"><p class="eyebrow">Mission control</p><h2>Professor Volt and Circuit Sentinel are ready!</h2></div>
-          <img class="home-robot" src="assets/characters/circuit-sentinel-action.png" alt="Circuit Sentinel">
+          <img class="home-robot" src="assets/characters/skins/core-idle.png" alt="Core Sentinel Circuit Sentinel">
         </section>
         <div class="subject-grid">
           <button class="subject-card states" data-go="states">
@@ -51,7 +51,7 @@
             <span class="subject-icon">❝</span><span class="subject-copy"><strong>Poem Power</strong><small>Read · remember · recite</small></span><span class="arrow">›</span>
           </button>
         </div>
-        <div class="adventure-grid"><button class="adventure-card mission-link" data-go="story"><span>MISSION MAP</span><strong>Story Mode</strong><small>Complete goals and restore the arcade</small></button><button class="adventure-card report-link" data-go="reports"><span>LEARNING RECORD</span><strong>Assessments & Reports</strong><small>Accuracy, subjects, and recent rounds</small></button></div>
+        <div class="adventure-grid"><button class="adventure-card mission-link" data-go="story"><span>MISSION MAP</span><strong>Story Mode</strong><small>Animated chapters and restoration goals</small></button><button class="adventure-card armory-link" data-go="armory"><span>ORBS & FORMS</span><strong>Shop & Locker</strong><small>Unlock and equip Sentinel forms</small></button><button class="adventure-card report-link" data-go="reports"><span>LEARNING RECORD</span><strong>Assessments & Reports</strong><small>Accuracy, subjects, and recent rounds</small></button></div>
         <section class="progress-panel" id="homeReport"></section>
       </section>
 
@@ -60,6 +60,8 @@
       <section class="screen" data-screen="math"><div id="mathView"></div></section>
       <section class="screen" data-screen="poems"><div id="poemsView"></div></section>
       <section class="screen" data-screen="story"><div id="storyView"></div></section>
+      <section class="screen" data-screen="chapter"><div id="chapterView"></div></section>
+      <section class="screen" data-screen="armory"><div id="armoryView"></div></section>
       <section class="screen" data-screen="profiles"><div id="profilesView"></div></section>
       <section class="screen" data-screen="reports"><div id="reportsView"></div></section>
       <section class="screen" data-screen="session"><div id="sessionView"></div></section>
@@ -69,7 +71,7 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="vendor/d3.min.js"></script>
   <script src="vendor/topojson-client.min.js"></script>
-  <script src="data.js?v=18"></script>
-  <script src="app.js?v=18"></script>
+  <script src="data.js?v=19"></script>
+  <script src="app.js?v=19"></script>
 </body>
 </html>

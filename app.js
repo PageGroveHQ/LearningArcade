@@ -11,7 +11,7 @@
   const ORIGINAL_SPELLING = ["because", "friend", "school", "people", "favorite", "different", "thought", "through"];
   const BUNDLED_SPELLING = window.BUNDLED_SPELLING_WORDS || [];
   const blankStats = () => ({stars:0,days:{},subjects:{},rounds:[],mistakes:{},skills:{},assessments:{}});
-  const createProfile = (name="Player 1", stats=blankStats()) => ({id:`profile-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,name,stats,missions:{},activeMissionId:"state-scan-1"});
+  const createProfile = (name="Player 1", stats=blankStats()) => ({id:`profile-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,name,stats,missions:{},activeMissionId:"state-scan-1",inventory:["core"],equippedWeapon:"core",seenChapters:[]});
   const SECTORS = {
     states:{title:"Atlas Station",subtitle:"State Quest",icon:"⌖",className:"atlas",target:"states"},
     spelling:{title:"Word Workshop",subtitle:"Word Wizard",icon:"Aa",className:"words",target:"spelling"},
@@ -44,6 +44,46 @@
     {at:2,name:"Cyan Armor Trim",icon:"◇"},{at:5,name:"Navigator Badge",icon:"⌖"},{at:8,name:"Energy Orb Trail",icon:"✦"},
     {at:12,name:"Reactor Glow",icon:"⚡"},{at:16,name:"Archive Crest",icon:"❖"},{at:20,name:"Master Sentinel Emblem",icon:"★"}
   ];
+  const WEAPONS = [
+    {id:"core",name:"Core Sentinel",cost:0,element:"Balanced",color:"#27c9e8",power:3,speed:3,guard:3,description:"The dependable original armor. Calibrated for every learning mission.",ability:"Core Pulse"},
+    {id:"ember",name:"Ember Cannon",cost:250,element:"Focus",color:"#ff5b3d",power:5,speed:3,guard:2,description:"A bright heat-energy form forged for bold starts and determined finishes.",ability:"Blazing Recall"},
+    {id:"frost",name:"Frost Lance",cost:250,element:"Patience",color:"#50d8ff",power:4,speed:2,guard:5,description:"A cool, steady form that rewards careful thinking before every answer.",ability:"Crystal Focus"},
+    {id:"volt",name:"Volt Disc",cost:250,element:"Speed",color:"#9b62ff",power:4,speed:5,guard:2,description:"A fast electric form built for fluency streaks and quick recall.",ability:"Flash Circuit"},
+    {id:"cyclone",name:"Cyclone Boomerang",cost:250,element:"Agility",color:"#20c97a",power:3,speed:5,guard:3,description:"A sweeping wind form that always circles back to repair missed skills.",ability:"Return Current"},
+    {id:"prism",name:"Prism Shield",cost:250,element:"Confidence",color:"#ef46b5",power:3,speed:2,guard:5,description:"A radiant barrier form that turns steady practice into brilliant confidence.",ability:"Spectrum Guard"}
+  ];
+  const CHAPTERS = [
+    {id:"blackout",at:0,number:"Prologue",title:"The Great Arcade Blackout",summary:"A mysterious static storm drains every learning sector.",accent:"#59d9f3",scenes:[
+      {speaker:"Professor Volt",pose:"idle",text:"The Learning Arcade has gone dark. Atlas, Words, Math, and Poetry have all lost their signal!"},
+      {speaker:"Circuit Sentinel",pose:"thinking",text:"I can still sense four weak energy trails. If we learn our way through them, we can bring every station back."},
+      {speaker:"Professor Volt",pose:"success",text:"Then the restoration begins now. Every correct answer will create an Energy Orb—and every Orb will make our hero stronger."}
+    ]},
+    {id:"first-light",at:4,number:"Chapter 1",title:"First Light",summary:"The first restored systems reveal a hidden transmission.",accent:"#f6c85f",scenes:[
+      {speaker:"Professor Volt",pose:"idle",text:"Four systems are glowing again. Their signals are joining into a message buried beneath the arcade."},
+      {speaker:"Circuit Sentinel",pose:"thinking",text:"It says, “Knowledge opens every locked circuit.” Someone wanted us to find this—but who?"},
+      {speaker:"Circuit Sentinel",pose:"success",text:"No matter who sent it, we keep moving. The next sector is already calling!"}
+    ]},
+    {id:"signal-thief",at:8,number:"Chapter 2",title:"The Signal Thief",summary:"A shadow signal steals power from newly repaired stations.",accent:"#9b62ff",scenes:[
+      {speaker:"Professor Volt",pose:"thinking",text:"A strange echo is copying our signals and carrying their power deeper into the grid."},
+      {speaker:"Circuit Sentinel",pose:"idle",text:"Then we will follow the echo. Every fact, word, state, and verse gives us a clearer trail."},
+      {speaker:"Professor Volt",pose:"success",text:"Excellent deduction! Repair eight more systems and the thief will have nowhere left to hide."}
+    ]},
+    {id:"core-storm",at:12,number:"Chapter 3",title:"The Core Storm",summary:"The stolen energy erupts into a storm around the central reactor.",accent:"#ff6a55",scenes:[
+      {speaker:"Circuit Sentinel",pose:"thinking",text:"The signal thief was not a person. It was a runaway program feeding on unfinished challenges."},
+      {speaker:"Professor Volt",pose:"idle",text:"It grows whenever learners give up—but careful practice weakens it. Mistakes repaired are stronger than answers never attempted."},
+      {speaker:"Circuit Sentinel",pose:"success",text:"Then this storm picked the wrong arcade. We know how to try again!"}
+    ]},
+    {id:"archive-awakens",at:16,number:"Chapter 4",title:"The Archive Awakens",summary:"An ancient library of learning tools comes back online.",accent:"#20c997",scenes:[
+      {speaker:"Professor Volt",pose:"idle",text:"Sixteen systems restored! The Grand Archive is opening for the first time in years."},
+      {speaker:"Circuit Sentinel",pose:"thinking",text:"Its records say the runaway program has a name: the Doubt Cloud. It cannot survive a fully powered learner signal."},
+      {speaker:"Professor Volt",pose:"success",text:"Four final systems remain. Trust what you know, learn what you do not, and the path will clear."}
+    ]},
+    {id:"arcade-reborn",at:20,number:"Finale",title:"The Learning Arcade Reborn",summary:"Every restored sector combines to clear the Doubt Cloud.",accent:"#ffd85a",scenes:[
+      {speaker:"Circuit Sentinel",pose:"idle",text:"All twenty systems are online. Atlas gives us direction, Words give us a voice, Math gives us power, and Poetry gives us imagination."},
+      {speaker:"Professor Volt",pose:"success",text:"The Doubt Cloud is gone. You did not win by never making mistakes—you won by returning stronger each time."},
+      {speaker:"Circuit Sentinel",pose:"success",text:"The arcade is restored, but our journey is only beginning. There will always be a new skill to discover!"}
+    ]}
+  ];
   const defaults = {
     spelling: BUNDLED_SPELLING,
     poems: window.DEFAULT_POEMS,
@@ -66,10 +106,15 @@
     profile.stats={...blankStats(),...(profile.stats||{})};
     profile.stats.days||={};profile.stats.subjects||={};profile.stats.skills||={};profile.stats.mistakes||={};profile.stats.assessments||={};
     profile.stats.rounds=Array.isArray(profile.stats.rounds)?profile.stats.rounds:[];profile.missions||={};
+    profile.inventory=Array.isArray(profile.inventory)?[...new Set(["core",...profile.inventory.filter(id=>WEAPONS.some(weapon=>weapon.id===id))])]:["core"];
+    profile.equippedWeapon=profile.inventory.includes(profile.equippedWeapon)&&WEAPONS.some(weapon=>weapon.id===profile.equippedWeapon)?profile.equippedWeapon:"core";
+    profile.seenChapters=Array.isArray(profile.seenChapters)?profile.seenChapters.filter(id=>CHAPTERS.some(chapter=>chapter.id===id)):[];
     if(!MISSIONS.some(m=>m.id===profile.activeMissionId)) profile.activeMissionId="state-scan-1";
   });
   if (!store.profiles.some(profile=>profile.id===store.activeProfileId)) store.activeProfileId=store.profiles[0].id;
   const activeProfile = () => store.profiles.find(profile=>profile.id===store.activeProfileId) || store.profiles[0];
+  const activeWeapon = (profile=activeProfile()) => WEAPONS.find(weapon=>weapon.id===profile.equippedWeapon) || WEAPONS[0];
+  const sentinelArt = (pose="idle",profile=activeProfile()) => `assets/characters/skins/${activeWeapon(profile).id}-${pose}.png`;
   const syncActiveProfile = () => {store.stats=activeProfile().stats;};
   syncActiveProfile();
   store.poems = Array.isArray(store.poems) && store.poems.length ? store.poems : window.DEFAULT_POEMS;
@@ -110,6 +155,8 @@
   const save = () => localStorage.setItem(STORE, JSON.stringify(store));
   function saveSoon(){setTimeout(()=>localStorage.setItem(STORE,JSON.stringify(store)),0);}
   let session = null;
+  let activeChapterId = "blackout";
+  let chapterStep = 0;
   let mapTopology = null;
   let availableVoices = [];
   let activeAudio = null;
@@ -201,6 +248,8 @@
     if (name === "math") renderMath();
     if (name === "poems") renderPoems();
     if (name === "story") renderStory();
+    if (name === "chapter") renderChapter();
+    if (name === "armory") renderArmory();
     if (name === "profiles") renderProfiles();
     if (name === "reports") renderReports();
     if (name === "settings") renderSettings();
@@ -209,7 +258,7 @@
   }
 
   function head(title, subtitle, back = "home") {
-    return `<div class="page-head"><button class="back" data-go="${back}" aria-label="Go back">‹</button><div class="page-title"><h1>${esc(title)}</h1>${subtitle ? `<p>${esc(subtitle)}</p>` : ""}</div><div class="menu-cast" aria-hidden="true"><img src="assets/characters/professor-volt.png" alt=""><img src="assets/characters/circuit-sentinel-action.png" alt=""></div></div>`;
+    return `<div class="page-head"><button class="back" data-go="${back}" aria-label="Go back">‹</button><div class="page-title"><h1>${esc(title)}</h1>${subtitle ? `<p>${esc(subtitle)}</p>` : ""}</div><div class="menu-cast" aria-hidden="true"><img src="assets/characters/professor-volt.png" alt=""><img src="${sentinelArt()}" alt=""></div></div>`;
   }
 
   function renderHome() {
@@ -222,6 +271,8 @@
     $("#profileName").textContent=profile.name;
     $("#profileInitial").textContent=profile.name.charAt(0).toUpperCase();
     $("#totalStars").textContent = stats.stars || 0;
+    $(".home-robot").src=sentinelArt("idle",profile);
+    $(".home-robot").alt=`${activeWeapon(profile).name} Circuit Sentinel`;
     $("#homeReport").innerHTML=`<div><p class="eyebrow">${esc(profile.name)} · ${completedMissionCount(profile)}/20 missions</p><h2>${totals.answered?`${accuracy}% accuracy across ${totals.answered} answers`:"Ready to restore the Learning Arcade"}</h2><p class="helper">Current mission: ${esc(mission.title)} · ${progress}/${mission.goal}</p></div><button class="report-orb" data-go="reports" aria-label="Open reports"><img src="assets/ui/energy-orb.png" alt=""><strong>${stats.rounds.length}</strong><small>rounds</small></button>`;
   }
 
@@ -373,24 +424,51 @@
   function missionUnlocked(profile,mission){const sector=MISSIONS.filter(m=>m.subject===mission.subject),index=sector.findIndex(m=>m.id===mission.id);return index===0||(profile.missions[sector[index-1].id]?.progress||0)>=sector[index-1].goal;}
   function currentMissionFor(profile,subject){return MISSIONS.find(m=>m.subject===subject&&missionUnlocked(profile,m)&&(profile.missions[m.id]?.progress||0)<m.goal)||MISSIONS.filter(m=>m.subject===subject).at(-1);}
   function missionSummary(profile,mission){const progress=Math.min(profile.missions[mission.id]?.progress||0,mission.goal);return {progress,pct:Math.round(progress/mission.goal*100),done:progress>=mission.goal,unlocked:missionUnlocked(profile,mission)};}
+  const chapterUnlocked=(profile,chapter)=>completedMissionCount(profile)>=chapter.at;
+  function openChapter(id){const chapter=CHAPTERS.find(item=>item.id===id);if(!chapter||!chapterUnlocked(activeProfile(),chapter))return toast("Complete more missions to unlock this chapter");activeChapterId=id;chapterStep=0;go("chapter");}
 
   function renderStory(){
     const profile=activeProfile();
     const completed=completedMissionCount(profile),rewards=unlockedRewards(profile);
     $("#storyView").innerHTML=`${head("Story Mode",`${profile.name}'s restoration campaign`)}
       <div class="mission-map-hero"><div class="mission-map-copy"><p class="eyebrow">Restore the Learning Arcade</p><h2>${completed} of ${MISSIONS.length} missions complete</h2><p>Professor Volt has traced four powerless learning sectors. Help Circuit Sentinel bring every station back online.</p><div class="campaign-meter"><span style="width:${completed/MISSIONS.length*100}%"></span></div></div></div>
-      <div class="panel story-intro"><img src="assets/characters/professor-volt.png" alt="Professor Volt"><div><p class="eyebrow">Mission briefing</p><h2>${completed===MISSIONS.length?'The arcade is fully restored!':'Choose an available sector'}</h2><p class="helper">Correct answers power the current mission. Finish missions to earn bonus orbs and unlock Sentinel rewards.</p></div><img src="assets/characters/circuit-sentinel-action.png" alt="Circuit Sentinel"></div>
+      <div class="panel story-intro"><img src="assets/characters/professor-volt.png" alt="Professor Volt"><div><p class="eyebrow">Mission briefing</p><h2>${completed===MISSIONS.length?'The arcade is fully restored!':'Choose an available sector'}</h2><p class="helper">Correct answers power the current mission. Finish missions to unlock animated chapters, earn bonus orbs, and build Sentinel's armory.</p></div><img src="${sentinelArt()}" alt="${esc(activeWeapon(profile).name)} Circuit Sentinel"></div>
+      <section class="chapter-log"><div class="section-heading"><div><p class="eyebrow">Transmission archive</p><h2>Story chapters</h2></div><span>${CHAPTERS.filter(chapter=>chapterUnlocked(profile,chapter)).length}/${CHAPTERS.length} unlocked</span></div><div class="chapter-grid">${CHAPTERS.map(chapter=>{const unlocked=chapterUnlocked(profile,chapter),seen=profile.seenChapters.includes(chapter.id);return `<button class="chapter-card ${unlocked?'unlocked':'locked'} ${unlocked&&!seen?'new':''}" data-chapter="${chapter.id}" ${unlocked?'':'disabled'} style="--chapter-accent:${chapter.accent}"><span class="chapter-number">${unlocked?esc(chapter.number):'🔒'}</span><strong>${unlocked?esc(chapter.title):`${chapter.at} missions`}</strong><small>${unlocked?esc(chapter.summary):'Restore more systems to reveal this transmission.'}</small>${unlocked&&!seen?'<b>NEW</b>':''}</button>`;}).join('')}</div></section>
       <div class="reward-strip" aria-label="Unlocked rewards">${REWARDS.map(reward=>{const unlocked=completed>=reward.at;return `<div class="reward-chip ${unlocked?'unlocked':'locked'}"><span>${unlocked?reward.icon:'🔒'}</span><small>${esc(reward.name)}<br>${reward.at} missions</small></div>`;}).join('')}</div>
       <div class="sector-grid">${Object.entries(SECTORS).map(([key,sector])=>{const missions=MISSIONS.filter(m=>m.subject===key),done=missions.filter(m=>missionSummary(profile,m).done).length;return `<section class="sector-card ${sector.className}"><div class="sector-head"><span class="sector-icon">${sector.icon}</span><div><p class="eyebrow">${esc(sector.subtitle)}</p><h2>${esc(sector.title)}</h2><p>${done}/5 systems online</p></div></div><div class="sector-missions">${missions.map((mission,index)=>{const state=missionSummary(profile,mission),active=profile.activeMissionId===mission.id;return `<article class="mission-node ${state.done?'complete':''} ${!state.unlocked?'locked':''} ${active?'active':''}"><div class="mission-number">${state.done?'✓':state.unlocked?index+1:'🔒'}</div><div class="grow"><strong>${esc(mission.title)}</strong><small>${esc(mission.story)}</small><div class="mission-progress"><span style="width:${state.pct}%"></span></div><div class="mission-meta"><span>${state.progress}/${mission.goal} correct</span><span>+${mission.reward} orbs</span></div></div><button class="tiny" data-start-mission="${mission.id}" ${state.unlocked?'':'disabled'}>${state.done?'Replay':active?'Selected':'Start'}</button></article>`;}).join('')}</div></section>`;}).join('')}</div>
-      ${rewards.length?`<div class="panel"><p class="label">Sentinel locker</p><p class="helper">${rewards.map(r=>`${r.icon} ${esc(r.name)}`).join(' · ')}</p></div>`:''}`;
+      <div class="panel locker-callout"><img src="${sentinelArt()}" alt=""><div class="grow"><p class="label">Orb Shop & Locker</p><h2>${esc(activeWeapon(profile).name)} equipped</h2><p class="helper">Spend Energy Orbs on five original Sentinel forms, then switch your look at any time.</p></div><button class="secondary" data-go="armory">Open armory</button></div>
+      ${rewards.length?`<div class="panel"><p class="label">Campaign honors</p><p class="helper">${rewards.map(r=>`${r.icon} ${esc(r.name)}`).join(' · ')}</p></div>`:''}`;
+    $$('[data-chapter]').forEach(button=>button.onclick=()=>openChapter(button.dataset.chapter));
     $$('[data-start-mission]').forEach(button=>button.onclick=()=>{const mission=MISSIONS.find(item=>item.id===button.dataset.startMission);if(!missionUnlocked(profile,mission))return;profile.activeMissionId=mission.id;save();go(mission.target);});
+  }
+
+  function renderChapter(){
+    const profile=activeProfile(),chapter=CHAPTERS.find(item=>item.id===activeChapterId)||CHAPTERS[0];
+    if(!chapterUnlocked(profile,chapter)){go("story");return;}
+    const scene=chapter.scenes[chapterStep]||chapter.scenes[0],isProfessor=scene.speaker==="Professor Volt",last=chapterStep===chapter.scenes.length-1;
+    const art=isProfessor?"assets/characters/professor-volt.png":sentinelArt(scene.pose||"idle",profile);
+    $("#chapterView").innerHTML=`${head(chapter.title,`${chapter.number} · Transmission ${chapterStep+1} of ${chapter.scenes.length}`,"story")}
+      <article class="story-scene" style="--chapter-accent:${chapter.accent}"><div class="story-circuit-lines" aria-hidden="true"></div><div class="scene-location">Learning Arcade · Central Grid</div><img class="scene-character ${isProfessor?'professor':'sentinel'}" src="${art}" alt="${esc(scene.speaker)}"><div class="scene-dialogue"><p class="eyebrow">${esc(scene.speaker)}</p><p>${esc(scene.text)}</p></div><div class="scene-dots">${chapter.scenes.map((_,index)=>`<span class="${index===chapterStep?'active':''}"></span>`).join('')}</div></article>
+      <div class="chapter-controls">${chapterStep?'<button class="secondary" data-chapter-prev>Previous</button>':''}<button class="primary" data-chapter-next>${last?'Finish chapter':'Continue'}</button></div>`;
+    $('[data-chapter-prev]')?.addEventListener('click',()=>{chapterStep--;renderChapter();});
+    $('[data-chapter-next]').onclick=()=>{if(last){if(!profile.seenChapters.includes(chapter.id))profile.seenChapters.push(chapter.id);save();go("story");toast(`${chapter.title} added to the archive`);}else{chapterStep++;renderChapter();}};
+  }
+
+  function renderArmory(){
+    const profile=activeProfile(),weapon=activeWeapon(profile),orbs=profile.stats.stars||0;
+    $("#armoryView").innerHTML=`${head("Orb Shop & Locker",`${profile.name}'s cosmetic Sentinel forms`)}
+      <section class="armory-console" style="--weapon-color:${weapon.color}"><div class="armory-scan" aria-hidden="true"></div><div class="selected-form"><p class="eyebrow">CURRENT FORM</p><img src="${sentinelArt("idle",profile)}" alt="${esc(weapon.name)}"><div class="form-name"><span>${esc(weapon.element)} system</span><h2>${esc(weapon.name)}</h2></div></div><div class="weapon-spec"><div class="orb-wallet"><img src="assets/ui/energy-orb.png" alt=""><strong>${orbs}</strong><span>available orbs</span></div><p class="eyebrow">SPECIAL PROGRAM</p><h2>${esc(weapon.ability)}</h2><p>${esc(weapon.description)}</p>${[["Power",weapon.power],["Speed",weapon.speed],["Guard",weapon.guard]].map(([label,value])=>`<div class="spec-row"><span>${label}</span><i><b style="width:${value*20}%"></b></i></div>`).join('')}<small>Forms are cosmetic rewards. They do not change question difficulty or scoring.</small></div></section>
+      <div class="section-heading"><div><p class="eyebrow">FORM SELECT</p><h2>Choose your Sentinel</h2></div><span>${profile.inventory.length}/${WEAPONS.length} owned</span></div>
+      <div class="weapon-grid">${WEAPONS.map(item=>{const owned=profile.inventory.includes(item.id),equipped=profile.equippedWeapon===item.id;return `<article class="weapon-card ${equipped?'equipped':''}" style="--weapon-color:${item.color}"><div class="weapon-preview"><img src="assets/characters/skins/${item.id}-idle.png" alt="${esc(item.name)}"><span>${esc(item.element)}</span></div><div class="weapon-card-copy"><h3>${esc(item.name)}</h3><small>${esc(item.ability)}</small>${equipped?'<button class="tiny equipped-label" disabled>Equipped</button>':owned?`<button class="secondary" data-equip-weapon="${item.id}">Equip</button>`:`<button class="primary" data-buy-weapon="${item.id}"><img src="assets/ui/energy-orb.png" alt=""> ${item.cost}</button>`}</div></article>`;}).join('')}</div>`;
+    $$('[data-equip-weapon]').forEach(button=>button.onclick=()=>{profile.equippedWeapon=button.dataset.equipWeapon;playAnswerSound(true);save();renderArmory();toast(`${activeWeapon(profile).name} equipped`);});
+    $$('[data-buy-weapon]').forEach(button=>button.onclick=()=>{const item=WEAPONS.find(candidate=>candidate.id===button.dataset.buyWeapon);if(!item||profile.inventory.includes(item.id))return;if((profile.stats.stars||0)<item.cost)return toast(`You need ${item.cost-(profile.stats.stars||0)} more orbs`);profile.stats.stars-=item.cost;profile.inventory.push(item.id);profile.equippedWeapon=item.id;syncActiveProfile();playAnswerSound(true);save();renderArmory();toast(`${item.name} unlocked and equipped!`);});
   }
 
   function renderProfiles(){
     const current=activeProfile();
     const completed=completedMissionCount(current),rank=completed>=20?'Master Sentinel':completed>=12?'Senior Sentinel':completed>=5?'Field Sentinel':'Sentinel Cadet';
     $("#profilesView").innerHTML=`${head("Learner Profiles","Progress is stored locally on this device")}
-      <div class="panel profile-hero"><img src="assets/characters/circuit-sentinel-success.png" alt="Circuit Sentinel celebrating"><div><p class="eyebrow">${rank}</p><h2>${esc(current.name)}</h2><p class="helper">${completed}/20 missions · ${unlockedRewards(current).length}/6 rewards · ${current.stats.stars||0} energy orbs</p></div></div>
+      <div class="panel profile-hero"><img src="${sentinelArt("success",current)}" alt="${esc(activeWeapon(current).name)} Circuit Sentinel celebrating"><div><p class="eyebrow">${rank}</p><h2>${esc(current.name)}</h2><p class="helper">${completed}/20 missions · ${unlockedRewards(current).length}/6 rewards · ${current.stats.stars||0} energy orbs</p><button class="tiny" data-go="armory">${esc(activeWeapon(current).name)} equipped</button></div></div>
       <div class="panel"><p class="label">Choose a learner</p><div class="profile-list">${store.profiles.map(profile=>`<button class="profile-row ${profile.id===store.activeProfileId?'selected':''}" data-profile="${esc(profile.id)}"><span>${esc(profile.name.charAt(0).toUpperCase())}</span><span class="grow"><strong>${esc(profile.name)}</strong><small>${completedMissionCount(profile)} missions · ${profile.stats.rounds.length} rounds · ${profile.stats.stars||0} orbs</small></span><b>${profile.id===store.activeProfileId?'Active':'Choose'}</b></button>`).join("")}</div></div>
       <div class="panel"><p class="label">Add a local profile</p><form id="profileForm" class="profile-form"><input class="answer-input" id="newProfileName" maxlength="24" placeholder="Learner name" autocomplete="off"><button class="primary">Create profile</button></form><p class="helper">Profiles stay on this device and are included in downloaded backups.</p></div>`;
     $$('[data-profile]').forEach(button=>button.onclick=()=>{store.activeProfileId=button.dataset.profile;syncActiveProfile();save();renderProfiles();toast(`${activeProfile().name} selected`);});
@@ -429,7 +507,7 @@
     if(!questions.length)return toast("Add learning material before starting this assessment");
     startSession(`${subjectLabel(subject)} Assessment`,questions,mode,0,{assessment:true,assessmentSubject:subject});
   }
-  function startSession(title,questions,mode,minutes=0,options={}){playStartCue();session={title,questions,index:0,correct:0,mode,locked:false,minutes,deadline:minutes?Date.now()+minutes*60000:0,timedOut:false,startedAt:Date.now(),earnedOrbs:0,wrongQuestions:[],completedMissions:[],newRewards:[],...options};go("session");renderQuestion();}
+  function startSession(title,questions,mode,minutes=0,options={}){playStartCue();session={title,questions,index:0,correct:0,mode,locked:false,minutes,deadline:minutes?Date.now()+minutes*60000:0,timedOut:false,startedAt:Date.now(),earnedOrbs:0,wrongQuestions:[],completedMissions:[],newRewards:[],newChapters:[],...options};go("session");renderQuestion();}
   function resolvedMode(){return session.questions[session.index]?.modeOverride || (session.mode==="mixed"?pick(["choice","type"]):session.mode);}
   function updateTimer(){if(!session?.deadline)return;const left=Math.max(0,session.deadline-Date.now()),seconds=Math.ceil(left/1000),el=$("#timer");if(el)el.textContent=`${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;if(left<=0){clearInterval(session.timerId);session.timedOut=true;renderFinish();}}
   function renderQuestion(){
@@ -480,7 +558,7 @@
   function renderTyped(q){const it=$("#interaction");if(q.combined){const labels=q.map?["State","Abbreviation","Capital"]:["Abbreviation","Capital"];it.innerHTML=`<div class="stack">${labels.map((l,i)=>`<input class="answer-input" data-part="${i}" aria-label="${l}" placeholder="${l}" autocapitalize="words">`).join("")}<button class="primary" data-check>Check answer</button></div><div id="feedback"></div>`;$('[data-check]').onclick=()=>{const vals=$$('[data-part]').map(x=>x.value);const expected=q.map?[q.state.name,q.state.abbr,q.state.capital]:[q.state.abbr,q.state.capital];finishAnswer(vals.every((v,i)=>norm(v)===norm(expected[i])),q);};}
     else{it.innerHTML=`<form id="answerForm" class="stack"><input class="answer-input" id="typedAnswer" aria-label="Your answer" placeholder="Type your answer" autocomplete="off" autocapitalize="words"><button class="primary">Check answer</button></form><div id="feedback"></div>`;$("#answerForm").onsubmit=e=>{e.preventDefault();finishAnswer(norm($("#typedAnswer").value)===norm(q.answer),q);};setTimeout(()=>$("#typedAnswer")?.focus(),80);}}
 
-  function finishAnswer(ok,q){if(session.locked)return;session.locked=true;playAnswerSound(ok);const feedback=$("#feedback")||$("#interaction");const correction=q.subject==="math"&&!ok?`${q.a} groups of ${q.b}: ${Array(q.a).fill(q.b).join(" + ") || "0"} = ${q.answer}`:q.detail||`Answer: ${q.answer}`;const message=ok?pick(["Nice work!","You got it!","Great recall!","Level up!"]):`Good try. ${esc(correction)}`;feedback.innerHTML=`<div class="feedback ${ok?'good':'try'} mascot-feedback"><img src="assets/characters/circuit-sentinel-${ok?'success':'thinking'}.png" alt=""><span>${message}</span></div><button class="primary" style="margin-top:10px" data-next>${session.index===session.questions.length-1?'See results':'Next question'}</button>`;$('[data-next]').onclick=()=>grade(ok,false);}
+  function finishAnswer(ok,q){if(session.locked)return;session.locked=true;playAnswerSound(ok);const feedback=$("#feedback")||$("#interaction");const correction=q.subject==="math"&&!ok?`${q.a} groups of ${q.b}: ${Array(q.a).fill(q.b).join(" + ") || "0"} = ${q.answer}`:q.detail||`Answer: ${q.answer}`;const message=ok?pick(["Nice work!","You got it!","Great recall!","Level up!"]):`Good try. ${esc(correction)}`;feedback.innerHTML=`<div class="feedback ${ok?'good':'try'} mascot-feedback"><img src="${sentinelArt(ok?'success':'thinking')}" alt=""><span>${message}</span></div><button class="primary" style="margin-top:10px" data-next>${session.index===session.questions.length-1?'See results':'Next question'}</button>`;$('[data-next]').onclick=()=>grade(ok,false);}
   function recordAnswer(ok,q,elapsed=0){
     const profile=activeProfile(),stats=profile.stats,group=subjectGroup(q?.subject||"");
     const day=stats.days[today()]||{answered:0,correct:0};day.answered++;if(ok)day.correct++;stats.days[today()]=day;
@@ -492,7 +570,7 @@
     if(ok){stats.stars=(stats.stars||0)+1;session.earnedOrbs=(session.earnedOrbs||0)+1;}
     const selected=MISSIONS.find(m=>m.id===profile.activeMissionId&&m.subject===group&&missionUnlocked(profile,m)&&(profile.missions[m.id]?.progress||0)<m.goal);
     const mission=selected||currentMissionFor(profile,group);
-    if(ok&&mission){const beforeRewards=unlockedRewards(profile).map(r=>r.name),state=profile.missions[mission.id]||{progress:0,complete:false};if(!state.complete){state.progress=Math.min(mission.goal,(state.progress||0)+1);profile.missions[mission.id]=state;if(state.progress>=mission.goal){state.complete=true;stats.stars=(stats.stars||0)+mission.reward;session.earnedOrbs+=mission.reward;session.completedMissions.push(mission);const next=MISSIONS.find(m=>m.subject===group&&missionUnlocked(profile,m)&&(profile.missions[m.id]?.progress||0)<m.goal);if(next)profile.activeMissionId=next.id;}const afterRewards=unlockedRewards(profile).filter(r=>!beforeRewards.includes(r.name));session.newRewards.push(...afterRewards);}}
+    if(ok&&mission){const beforeRewards=unlockedRewards(profile).map(r=>r.name),beforeChapters=CHAPTERS.filter(chapter=>chapterUnlocked(profile,chapter)).map(chapter=>chapter.id),state=profile.missions[mission.id]||{progress:0,complete:false};if(!state.complete){state.progress=Math.min(mission.goal,(state.progress||0)+1);profile.missions[mission.id]=state;if(state.progress>=mission.goal){state.complete=true;stats.stars=(stats.stars||0)+mission.reward;session.earnedOrbs+=mission.reward;session.completedMissions.push(mission);const next=MISSIONS.find(m=>m.subject===group&&missionUnlocked(profile,m)&&(profile.missions[m.id]?.progress||0)<m.goal);if(next)profile.activeMissionId=next.id;}const afterRewards=unlockedRewards(profile).filter(r=>!beforeRewards.includes(r.name));session.newRewards.push(...afterRewards);const newChapters=CHAPTERS.filter(chapter=>chapterUnlocked(profile,chapter)&&!beforeChapters.includes(chapter.id));session.newChapters.push(...newChapters);}}
     syncActiveProfile();
   }
   function grade(ok,withSound=true){if(withSound)playAnswerSound(ok);const q=session.questions[session.index],elapsed=Math.max(0,Date.now()-(session.questionStarted||Date.now()));if(ok)session.correct++;recordAnswer(ok,q,elapsed);save();session.index++;renderQuestion();}
@@ -504,15 +582,17 @@
     const total=session.timedOut?session.index:session.questions.length,correct=session.correct,pct=Math.round(correct/Math.max(1,total)*100),pose=pct>=60?'success':'thinking';
     const missed=[...new Map((session.wrongQuestions||[]).map(q=>[mistakeKey(q),q])).values()];
     if(!session.roundSaved){const stats=activeProfile().stats,round={date:today(),title:session.title,total,correct,accuracy:pct,durationMs:Date.now()-(session.startedAt||Date.now()),assessment:!!session.assessment};stats.rounds.push(round);stats.rounds=stats.rounds.slice(-100);if(session.assessment&&session.assessmentSubject)stats.assessments[session.assessmentSubject]=round;session.roundSaved=true;save();}
-    const completed=session.completedMissions||[],newRewards=session.newRewards||[];
+    const completed=session.completedMissions||[],newRewards=session.newRewards||[],newChapters=session.newChapters||[];
     $("#sessionView").innerHTML=`${head(session.timedOut?"Time's up!":session.assessment?"Assessment complete!":"Mission round complete!",session.title,"home")}
-      <div class="result-hero ${pct>=80?'victory':'practice'}"><div class="result-burst"></div><img class="result-mascot" src="assets/characters/circuit-sentinel-${pose}.png" alt="Circuit Sentinel ${pct>=60?'celebrating':'thinking'}"><div class="result-copy"><p class="eyebrow">${pct>=90?'Gold signal':pct>=75?'Strong signal':'Signal training'}</p><h1>${correct} of ${total}</h1><div class="result-stars" aria-label="Performance rating">${[1,2,3].map((star,i)=>`<span class="${pct>=[60,75,90][i]?'lit':''}">★</span>`).join('')}</div><p>${session.timedOut?`You answered ${total} before time ended. `:''}${pct>=90?'Outstanding work—the sector is glowing!':pct>=75?'Great progress. Your recall is getting stronger.':pct>=60?'Solid practice. Repair the missed signals next.':'Every repaired mistake makes the Sentinel stronger.'}</p></div></div>
+      <div class="result-hero ${pct>=80?'victory':'practice'}"><div class="result-burst"></div><img class="result-mascot" src="${sentinelArt(pose)}" alt="Circuit Sentinel ${pct>=60?'celebrating':'thinking'}"><div class="result-copy"><p class="eyebrow">${pct>=90?'Gold signal':pct>=75?'Strong signal':'Signal training'}</p><h1>${correct} of ${total}</h1><div class="result-stars" aria-label="Performance rating">${[1,2,3].map((star,i)=>`<span class="${pct>=[60,75,90][i]?'lit':''}">★</span>`).join('')}</div><p>${session.timedOut?`You answered ${total} before time ended. `:''}${pct>=90?'Outstanding work—the sector is glowing!':pct>=75?'Great progress. Your recall is getting stronger.':pct>=60?'Solid practice. Repair the missed signals next.':'Every repaired mistake makes the Sentinel stronger.'}</p></div></div>
       <div class="result-rewards"><div><img src="assets/ui/energy-orb.png" alt=""><strong>+${session.earnedOrbs||0}</strong><span>Energy orbs</span></div><div><strong>${pct}%</strong><span>Accuracy</span></div><div><strong>${missed.length}</strong><span>To repair</span></div></div>
       ${completed.map(mission=>`<div class="panel mission-celebration"><img src="assets/characters/professor-volt.png" alt="Professor Volt"><div><p class="eyebrow">Mission complete</p><h2>${esc(mission.title)}</h2><p class="helper">Professor Volt restored another arcade system. Bonus: ${mission.reward} orbs.</p></div></div>`).join('')}
       ${newRewards.map(reward=>`<div class="unlock-banner"><span>${reward.icon}</span><div><p class="eyebrow">New Sentinel reward</p><h2>${esc(reward.name)}</h2></div></div>`).join('')}
-      <div class="stack">${missed.length?'<button class="primary" data-repair>Practice missed answers</button>':''}<button class="${missed.length?'secondary':'primary'}" data-again>Practice this round again</button><button class="secondary" data-go="story">Open mission map</button><button class="secondary" data-go="reports">View assessment report</button><button class="secondary" data-go="home">Back to quests</button></div>`;
+      ${newChapters.map(chapter=>`<button class="chapter-unlock" data-chapter="${chapter.id}" style="--chapter-accent:${chapter.accent}"><span>NEW STORY</span><strong>${esc(chapter.number)} · ${esc(chapter.title)}</strong><small>Play the new animated transmission ›</small></button>`).join('')}
+      <div class="stack">${missed.length?'<button class="primary" data-repair>Practice missed answers</button>':''}<button class="${missed.length?'secondary':'primary'}" data-again>Practice this round again</button><button class="secondary" data-go="armory">Open Orb Shop & Locker</button><button class="secondary" data-go="story">Open mission map</button><button class="secondary" data-go="reports">View assessment report</button><button class="secondary" data-go="home">Back to quests</button></div>`;
     $('[data-repair]')?.addEventListener('click',()=>startMistakeRound(missed));
-    $('[data-again]').onclick=()=>{session.index=0;session.correct=0;session.roundSaved=false;session.timedOut=false;session.startedAt=Date.now();session.earnedOrbs=0;session.wrongQuestions=[];session.completedMissions=[];session.newRewards=[];session.deadline=session.minutes?Date.now()+session.minutes*60000:0;session.questions=shuffle(session.questions);renderQuestion();};
+    $$('[data-chapter]').forEach(button=>button.onclick=()=>openChapter(button.dataset.chapter));
+    $('[data-again]').onclick=()=>{session.index=0;session.correct=0;session.roundSaved=false;session.timedOut=false;session.startedAt=Date.now();session.earnedOrbs=0;session.wrongQuestions=[];session.completedMissions=[];session.newRewards=[];session.newChapters=[];session.deadline=session.minutes?Date.now()+session.minutes*60000:0;session.questions=shuffle(session.questions);renderQuestion();};
   }
 
   function renderSettings(){
@@ -537,7 +617,7 @@
 
   document.addEventListener("click", e => {const nav=e.target.closest("[data-go]");if(nav)go(nav.dataset.go);});
   window.addEventListener("hashchange",()=>go(location.hash.slice(1)||"home"));
-  if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=18"));
+  if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=19"));
   if (document.modelContext?.registerTool) {
     const register = tool => Promise.resolve(document.modelContext.registerTool(tool)).catch(() => {});
     register({name:"read_learning_sets",title:"Read learning sets",description:"Read the current spelling words and poem titles configured in Learning Arcade.",inputSchema:{type:"object",properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({spellingWords:[...store.spelling],poems:store.poems.map(p=>({id:p.id,title:p.title,author:p.author}))})});
