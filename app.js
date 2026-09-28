@@ -92,13 +92,13 @@
     {id:"doubt-cloud",subject:"final",name:"The Doubt Cloud",sector:"Central Grid",goal:12,questions:18,reward:100,color:"#d68cff",art:"assets/characters/bosses/doubt-cloud.png",brief:"The program feeding on unfinished challenges has gathered above the restored arcade.",hint:"Combine every skill you have repaired. The Cloud weakens each time you try with confidence."}
   ];
   const defaults = {
-    spelling: BUNDLED_SPELLING,
+    spelling: [],
     poems: window.DEFAULT_POEMS,
     stats: {stars: 0, days: {}},
-    statePrefs: {region:"Northeast Region", division:"All", mode:"mixed", kind:"mixed", count:"10"},
+    statePrefs: {region:"Northeast Region", division:"All", customStates:[], mode:"mixed", kind:"mixed", count:"10"},
     mathPrefs: {tables:[0,1,2,3,4,5,6,7,8,9], mode:"mixed", count:"10", timer:"0"},
     spellingPrefs: {mode:"mixed", count:"max"},
-    voicePrefs: {source:"circuit-sentinel", voiceURI:"", style:"bright"},
+    voicePrefs: {source:"system", voiceURI:"", style:"bright"},
     audioPrefs: {enabled:true,master:.7,music:.45,effects:.8},
     profiles: [],
     activeProfileId: ""
@@ -129,7 +129,9 @@
   applyEquippedTheme();
   store.poems = Array.isArray(store.poems) && store.poems.length ? store.poems : window.DEFAULT_POEMS;
   store.spelling = Array.isArray(store.spelling) ? store.spelling : defaults.spelling;
-  if (!store.statePrefs || !["All 50","Northeast Region","Midwest Region","South Region","West Region"].includes(store.statePrefs.region)) store.statePrefs = {...defaults.statePrefs};
+  if (!store.statePrefs || !["All 50","Northeast Region","Midwest Region","South Region","West Region","Custom selection"].includes(store.statePrefs.region)) store.statePrefs = {...defaults.statePrefs};
+  store.statePrefs = {...defaults.statePrefs, ...store.statePrefs};
+  store.statePrefs.customStates = Array.isArray(store.statePrefs.customStates) ? store.statePrefs.customStates.filter(abbr=>STATE_DATA.some(state=>state.abbr===abbr)) : [];
   store.mathPrefs = {...defaults.mathPrefs, ...(store.mathPrefs || {})};
   store.spellingPrefs = {...defaults.spellingPrefs, ...(store.spellingPrefs || {})};
   store.voicePrefs = {...defaults.voicePrefs, ...(store.voicePrefs || {})};
@@ -156,7 +158,6 @@
   if (!store.audioContentV3) {
     const crocodile=store.poems.find(poem=>poem.id==="the-crocodile");
     if(crocodile){crocodile.text=crocodile.text.replace(/ev[’']ry/gi,"every");crocodile.audio="audio/circuit-sentinel/poems/the-crocodile.mp3";}
-    store.voicePrefs.source="circuit-sentinel";
     store.audioContentV3=true;
     saveSoon();
   }
@@ -325,28 +326,37 @@
 
   function renderStates() {
     const p = store.statePrefs || defaults.statePrefs;
-    const regions = ["All 50","Northeast Region","Midwest Region","South Region","West Region"];
-    const divisions = p.region === "All 50" ? [] : [...new Set(STATE_DATA.filter(s=>s.region===p.region).map(s=>s.division))];
+    const regions = ["All 50","Northeast Region","Midwest Region","South Region","West Region","Custom selection"];
+    const divisions = ["All 50","Custom selection"].includes(p.region) ? [] : [...new Set(STATE_DATA.filter(s=>s.region===p.region).map(s=>s.division))];
     if (p.division !== "All" && !divisions.includes(p.division)) p.division = "All";
-    const setSize = activeStates(p.region,p.division).length;
-    const maxCount = stateQuestionBank(activeStates(p.region,p.division),p.kind).length;
+    const selectedStates = activeStates(p.region,p.division,p.customStates);
+    const setSize = selectedStates.length;
+    const maxCount = stateQuestionBank(selectedStates,p.kind).length;
     if (p.count !== 'max' && +p.count > maxCount) { p.count = 'max'; store.statePrefs = p; save(); }
     $("#statesView").innerHTML = `${head("State Quest","Connect every state, capital, abbreviation, and shape")}
-      <div class="panel"><p class="label">Study set</p><div class="field"><label>Region</label><select id="stateRegion">${regions.map(r=>`<option ${p.region===r?'selected':''}>${r}</option>`).join("")}</select></div><div class="field"><label>Division</label><select id="stateDivision"><option>All</option>${divisions.map(d=>`<option ${p.division===d?'selected':''}>${d}</option>`).join("")}</select></div><p class="helper">${setSize} location${setSize===1?'':'s'} in this study set${p.region==='South Region'?', including Washington, D.C.':'.'}</p></div>
+      <div class="panel"><p class="label">Study set</p><div class="field"><label>Region</label><select id="stateRegion">${regions.map(r=>`<option ${p.region===r?'selected':''}>${r}</option>`).join("")}</select></div><div class="field"><label>${p.region==='Custom selection'?'Selection':'Division'}</label><select id="stateDivision" ${p.region==='Custom selection'?'disabled':''}><option>${p.region==='Custom selection'?'Choose locations below':'All'}</option>${divisions.map(d=>`<option ${p.division===d?'selected':''}>${d}</option>`).join("")}</select></div><p class="helper">${setSize} location${setSize===1?'':'s'} in this study set${p.region==='South Region'?', including Washington, D.C.':'.'}</p></div>
+      ${p.region==='Custom selection'?customStatePickerMarkup(p.customStates):''}
       <div class="panel"><p class="label">Question style</p><div class="option-grid" data-choice-group="kind">
         <button class="choice ${p.kind === "mixed" ? "selected" : ""}" data-value="mixed">Mixed clues</button><button class="choice ${p.kind === "map" ? "selected" : ""}" data-value="map">Map shapes</button>
         <button class="choice ${p.kind === "facts" ? "selected" : ""}" data-value="facts">Names & capitals</button><button class="choice ${p.kind === "triples" ? "selected" : ""}" data-value="triples">Three-way match</button><button class="choice ${p.kind === "spelling" ? "selected" : ""}" data-value="spelling">Spell state & capital</button>
       </div></div>
       <div class="panel"><p class="label">Round length</p><div class="option-grid" data-choice-group="count"><button class="choice ${p.count==='10'?'selected':''}" data-value="10">10 questions</button><button class="choice ${p.count==='25'?'selected':''}" data-value="25">25 questions</button><button class="choice ${p.count==='max'?'selected':''}" data-value="max">Max · ${maxCount}</button></div></div>
       <div class="panel"><p class="label">Who is holding the phone?</p>${modeButtons(p.mode)}</div>
-      <button class="primary" id="startStates">Start ${p.count==='max'?maxCount:Math.min(+p.count,maxCount)}-question quest</button>`;
-    $("#stateRegion").onchange=e=>{p.region=e.target.value;p.division="All";store.statePrefs=p;save();renderStates();};
+      <button class="primary" id="startStates" ${setSize?'':'disabled'}>${setSize?`Start ${p.count==='max'?maxCount:Math.min(+p.count,maxCount)}-question quest`:'Choose at least one location'}</button>`;
+    $("#stateRegion").onchange=e=>{const previous=activeStates(p.region,p.division,p.customStates);p.region=e.target.value;p.division="All";if(p.region==='Custom selection'&&!p.customStates.length)p.customStates=previous.map(state=>state.abbr);store.statePrefs=p;save();renderStates();};
     $("#stateDivision").onchange=e=>{p.division=e.target.value;store.statePrefs=p;save();renderStates();};
+    $("#customStatePicker")?.addEventListener("change",e=>{const input=e.target.closest("[data-state-abbr]");if(!input)return;p.customStates=input.checked?[...new Set([...p.customStates,input.dataset.stateAbbr])]:p.customStates.filter(abbr=>abbr!==input.dataset.stateAbbr);store.statePrefs=p;save();renderStates();});
+    $$('[data-state-preset]',$("#statesView")).forEach(button=>button.onclick=()=>{if(button.dataset.statePreset==='clear')p.customStates=[];else if(button.dataset.statePreset==='all')p.customStates=STATE_DATA.map(state=>state.abbr);else p.customStates=[...new Set([...p.customStates,...STATE_DATA.filter(state=>state.region===button.dataset.statePreset).map(state=>state.abbr)])];store.statePrefs=p;save();renderStates();});
     wireChoices($("#statesView"), (group, value) => { p[group] = value; store.statePrefs = p; save(); renderStates(); });
     $("#startStates").onclick = () => startStates(p);
   }
 
-  function activeStates(region,division="All") { const regional=region === "All 50" ? STATE_DATA.filter(s=>!s.district) : STATE_DATA.filter(s => s.region === region); return division === "All" ? regional : regional.filter(s=>s.division===division); }
+  function customStatePickerMarkup(selected=[]) {
+    const regions=["Northeast Region","Midwest Region","South Region","West Region"];
+    return `<div class="panel custom-state-panel"><div class="panel-title-row"><div><p class="label">Custom locations</p><h2>Choose only what is being taught</h2></div><span class="selection-count">${selected.length} selected</span></div><div class="custom-state-actions"><button class="tiny" data-state-preset="all">Select all</button><button class="tiny" data-state-preset="clear">Clear all</button></div><div id="customStatePicker" class="state-picker">${regions.map(region=>`<section class="state-region-group"><div class="state-region-heading"><strong>${esc(region.replace(" Region",""))}</strong><button class="tiny" data-state-preset="${esc(region)}">Select region</button></div>${[...new Set(STATE_DATA.filter(state=>state.region===region).map(state=>state.division))].map(division=>`<div class="state-division-group"><span>${esc(division)}</span><div class="state-check-grid">${STATE_DATA.filter(state=>state.region===region&&state.division===division).map(state=>`<label class="state-check ${selected.includes(state.abbr)?'selected':''}"><input type="checkbox" data-state-abbr="${esc(state.abbr)}" ${selected.includes(state.abbr)?'checked':''}><b>${esc(state.abbr)}</b><small>${esc(state.name)}</small></label>`).join("")}</div></div>`).join("")}</section>`).join("")}</div></div>`;
+  }
+
+  function activeStates(region,division="All",customStates=[]) { if(region==="Custom selection")return STATE_DATA.filter(state=>customStates.includes(state.abbr));const regional=region === "All 50" ? STATE_DATA.filter(s=>!s.district) : STATE_DATA.filter(s => s.region === region); return division === "All" ? regional : regional.filter(s=>s.division===division); }
   function stateQuestion(state, kind, direction) {
     if (kind === "map") return {subject:"states", state, map:true, prompt:"Which state is this?", answer:`${state.name} · ${state.abbr} · ${state.capital}`, accepts:[state.name,state.abbr,state.capital], combined:true, detail:`${state.name} — ${state.abbr} — ${state.capital}`};
     if (kind === "triples") return {subject:"states", state, prompt:`Complete the set for ${state.name}`, answer:`${state.abbr} · ${state.capital}`, accepts:[state.abbr,state.capital], combined:true, detail:`${state.name} — ${state.abbr} — ${state.capital}`};
@@ -375,7 +385,7 @@
   }
 
   function startStates(p) {
-    const states = activeStates(p.region,p.division); const bank=shuffle(stateQuestionBank(states,p.kind)); const wanted=p.count==='max'?bank.length:Math.min(+p.count,bank.length); const questions=bank.slice(0,wanted);
+    const states = activeStates(p.region,p.division,p.customStates); if(!states.length)return toast("Choose at least one location"); const bank=shuffle(stateQuestionBank(states,p.kind)); const wanted=p.count==='max'?bank.length:Math.min(+p.count,bank.length); const questions=bank.slice(0,wanted);
     startSession("State Quest", questions, p.mode);
   }
 
@@ -388,12 +398,10 @@
       <div class="panel"><p class="label">Practice mode</p>${modeButtons(p.mode)}</div>
       <div class="panel"><p class="label">Round length</p><div class="option-grid" data-choice-group="count"><button class="choice ${p.count==='10'?'selected':''}" data-value="10">10 questions</button><button class="choice ${p.count==='20'?'selected':''}" data-value="20">20 questions</button><button class="choice ${p.count==='max'?'selected':''}" data-value="max">Max · ${maxCount}</button></div></div>
       ${voicePanelMarkup()}
-      <button class="secondary" id="loadAudioWords" style="margin-bottom:14px">Load the William Cypher word list</button>
       <div class="panel"><p class="helper"><strong>Listen mode:</strong> in child play, tap the speaker to hear each word. In parent mode, the spelling stays visible only to the person holding the phone.</p></div>
       <button class="primary" id="startSpelling" ${store.spelling.length ? "" : "disabled"}>Start spelling round</button>`;
     wireChoices($("#spellingView"), (group,value) => { p[group]=value; store.spellingPrefs=p; save(); renderSpelling(); });
     wireVoicePanel($("#spellingView"));
-    $("#loadAudioWords").onclick=()=>{store.spelling=[...BUNDLED_SPELLING];save();renderSpelling();toast("20 recorded words loaded");};
     $("#startSpelling").onclick = () => {
       const makeQuestion=(word,modeOverride)=>({subject:"spelling",prompt:"Spell the word you hear",answer:word,speech:word,detail:word,pool:store.spelling,modeOverride});
       const bank=p.mode==="mixed"?store.spelling.flatMap(word=>[makeQuestion(word,"choice"),makeQuestion(word,"type")]):store.spelling.map(word=>makeQuestion(word,p.mode));
@@ -521,9 +529,10 @@
     const completed=completedMissionCount(current),rank=completed>=20?'Master Sentinel':completed>=12?'Senior Sentinel':completed>=5?'Field Sentinel':'Sentinel Cadet';
     $("#profilesView").innerHTML=`${head("Learner Profiles","Progress is stored locally on this device")}
       <div class="panel profile-hero"><img src="${sentinelArt("success",current)}" alt="${esc(activeWeapon(current).name)} Circuit Sentinel celebrating"><div><p class="eyebrow">${rank}</p><h2>${esc(current.name)}</h2><p class="helper">${completed}/20 missions · ${unlockedRewards(current).length}/6 rewards · ${current.stats.stars||0} energy orbs</p><button class="tiny" data-go="armory">${esc(activeWeapon(current).name)} equipped</button></div></div>
-      <div class="panel"><p class="label">Choose a learner</p><div class="profile-list">${store.profiles.map(profile=>`<button class="profile-row ${profile.id===store.activeProfileId?'selected':''}" data-profile="${esc(profile.id)}"><span>${esc(profile.name.charAt(0).toUpperCase())}</span><span class="grow"><strong>${esc(profile.name)}</strong><small>${completedMissionCount(profile)} missions · ${profile.stats.rounds.length} rounds · ${profile.stats.stars||0} orbs</small></span><b>${profile.id===store.activeProfileId?'Active':'Choose'}</b></button>`).join("")}</div></div>
+      <div class="panel"><p class="label">Choose a learner</p><div class="profile-list">${store.profiles.map(profile=>`<div class="profile-row-wrap"><button class="profile-row ${profile.id===store.activeProfileId?'selected':''}" data-profile="${esc(profile.id)}"><span>${esc(profile.name.charAt(0).toUpperCase())}</span><span class="grow"><strong>${esc(profile.name)}</strong><small>${completedMissionCount(profile)} missions · ${profile.stats.rounds.length} rounds · ${profile.stats.stars||0} orbs</small></span><b>${profile.id===store.activeProfileId?'Active':'Choose'}</b></button><button class="profile-delete" data-delete-profile="${esc(profile.id)}" aria-label="Delete ${esc(profile.name)} profile" ${store.profiles.length===1?'disabled':''}>Delete</button></div>`).join("")}</div>${store.profiles.length===1?'<p class="helper profile-delete-note">Create another profile before deleting this one.</p>':''}</div>
       <div class="panel"><p class="label">Add a local profile</p><form id="profileForm" class="profile-form"><input class="answer-input" id="newProfileName" maxlength="24" placeholder="Learner name" autocomplete="off"><button class="primary">Create profile</button></form><p class="helper">Profiles stay on this device and are included in downloaded backups.</p></div>`;
     $$('[data-profile]').forEach(button=>button.onclick=()=>{store.activeProfileId=button.dataset.profile;syncActiveProfile();applyEquippedTheme();save();renderProfiles();toast(`${activeProfile().name} selected`);});
+    $$('[data-delete-profile]').forEach(button=>button.onclick=()=>{if(store.profiles.length===1)return toast("Keep at least one learner profile");const profile=store.profiles.find(item=>item.id===button.dataset.deleteProfile);if(!profile)return;if(!confirm(`Delete ${profile.name}'s profile and all saved progress on this device?`))return;store.profiles=store.profiles.filter(item=>item.id!==profile.id);if(store.activeProfileId===profile.id)store.activeProfileId=store.profiles[0].id;syncActiveProfile();applyEquippedTheme();save();renderProfiles();toast(`${profile.name}'s profile deleted`);});
     $("#profileForm").onsubmit=event=>{event.preventDefault();const name=$("#newProfileName").value.trim();if(!name)return toast("Enter a learner name");const profile=createProfile(name);store.profiles.push(profile);store.activeProfileId=profile.id;syncActiveProfile();save();renderProfiles();toast(`${name} profile created`);};
   }
 
