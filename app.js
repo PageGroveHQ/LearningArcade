@@ -186,6 +186,7 @@
   let parentUnlocked = false;
   let homeMode = "student";
   let pendingOnboardingPin = "";
+  let pendingParentAction = null;
   let activeChapterId = "blackout";
   let chapterStep = 0;
   let mapTopology = null;
@@ -266,6 +267,19 @@
     profileStep.onsubmit=event=>{event.preventDefault();const childName=name.value.trim();if(!childName)return toast("Enter the child's display name");let profile;if(choice.value==="new"){profile=createProfile(childName);store.profiles.push(profile);}else{profile=store.profiles.find(item=>item.id===choice.value)||activeProfile();profile.name=childName;}store.activeProfileId=profile.id;store.parentControls.pinHash=pendingOnboardingPin;store.onboardingVersion=1;pendingOnboardingPin="";parentUnlocked=false;homeMode="student";syncActiveProfile();applyEquippedTheme();save();$("#onboardingGate").hidden=true;document.body.classList.remove("onboarding-active");renderHome();toast("Parent Portal and Student Arcade are ready");};
   }
 
+  function requestParentAccess(callback,always=false){
+    if(!store.parentControls.pinHash){showRequiredOnboarding();return;}
+    if(parentUnlocked&&!always){callback();return;}
+    pendingParentAction=callback;const gate=$("#parentPinGate"),entry=$("#parentPinEntry"),error=$("#parentPinError");error.textContent="";entry.value="";gate.hidden=false;document.body.classList.add("pin-active");setTimeout(()=>entry.focus(),80);
+  }
+
+  function wireParentPinGate(){
+    const gate=$("#parentPinGate"),form=$("#parentPinForm"),entry=$("#parentPinEntry"),error=$("#parentPinError");if(!gate||!form)return;
+    const close=()=>{gate.hidden=true;document.body.classList.remove("pin-active");pendingParentAction=null;};
+    $("#parentPinCancel").onclick=close;
+    form.onsubmit=event=>{event.preventDefault();if(pinHash(entry.value.trim())!==store.parentControls.pinHash){error.textContent="That PIN was not correct. Try again.";entry.select();return;}parentUnlocked=true;const action=pendingParentAction;gate.hidden=true;document.body.classList.remove("pin-active");pendingParentAction=null;action?.();};
+  }
+
   function refreshVoices() { availableVoices = window.speechSynthesis?.getVoices?.().filter(v => /^en([-_]|$)/i.test(v.lang)) || []; }
   refreshVoices();
   if (window.speechSynthesis) speechSynthesis.onvoiceschanged = refreshVoices;
@@ -326,7 +340,7 @@
   function parseCSV(text){const rows=[];let row=[],cell="",quoted=false;for(let i=0;i<text.length;i++){const char=text[i],next=text[i+1];if(char==='"'&&quoted&&next==='"'){cell+='"';i++;}else if(char==='"')quoted=!quoted;else if(char===','&&!quoted){row.push(cell);cell="";}else if((char==='\n'||char==='\r')&&!quoted){if(char==='\r'&&next==='\n')i++;row.push(cell);if(row.some(value=>value.trim()))rows.push(row);row=[];cell="";}else cell+=char;}row.push(cell);if(row.some(value=>value.trim()))rows.push(row);return rows;}
 
   function go(name) {
-    if(name==="settings"&&!ensureParentAccess())return;
+    if(name==="settings"&&!parentUnlocked){requestParentAccess(()=>go("settings"));return;}
     $$(".screen").forEach(s => s.classList.toggle("active", s.dataset.screen === name));
     window.scrollTo(0, 0); $("#app").focus({preventScroll:true});
     if (name === "home") renderHome();
@@ -367,7 +381,7 @@
     $("#storyLaunchStatus").textContent=`${completedMissionCount(profile)}/20 systems restored · ${Object.keys(profile.bosses||{}).filter(id=>profile.bosses[id]?.defeated).length}/5 bosses cleared`;
     $("#homeReport").innerHTML=`<div><p class="eyebrow">${esc(profile.name)} · ${completedMissionCount(profile)}/20 missions</p><h2>${totals.answered?`${accuracy}% accuracy across ${totals.answered} answers`:"Ready to restore the Learning Arcade"}</h2><p class="helper">Current mission: ${esc(mission.title)} · ${progress}/${mission.goal}</p></div><button class="report-orb" data-go="reports" aria-label="Open reports"><img src="assets/ui/energy-orb.png" alt=""><strong>${stats.rounds.length}</strong><small>rounds</small></button>`;
     renderHomeMode();
-    $$('[data-home-mode]').forEach(button=>button.onclick=()=>{const next=button.dataset.homeMode;if(next==="parent"&&!ensureParentAccess(true))return;if(next==="student")parentUnlocked=false;homeMode=next;renderHomeMode();});
+    $$('[data-home-mode]').forEach(button=>button.onclick=()=>{const next=button.dataset.homeMode;if(next==="parent"){requestParentAccess(()=>{homeMode="parent";renderHomeMode();},true);return;}parentUnlocked=false;homeMode="student";renderHomeMode();});
   }
 
   function renderHomeMode(){const parent=homeMode==="parent";$$('[data-home-panel]').forEach(panel=>panel.hidden=panel.dataset.homePanel!==homeMode);$$('.dashboard-switch [data-home-mode]').forEach(button=>button.classList.toggle('selected',button.dataset.homeMode===homeMode));$(".home-cast").hidden=parent;$("#homeEyebrow").textContent=parent?"Parent Command":"Choose a quest";$("#homeTitle").textContent=parent?"What should we manage?":"What should we practice?";document.body.dataset.homeMode=homeMode;}
@@ -843,5 +857,5 @@
     register({name:"update_spelling_words",title:"Update spelling words",description:"Replace the weekly spelling word bank and update the visible app.",inputSchema:{type:"object",properties:{words:{type:"array",items:{type:"string",minLength:1},minItems:1}},required:["words"],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:true},execute:({words})=>{if(!Array.isArray(words)||!words.length)throw new Error("At least one word is required");store.spelling=[...new Set(words.map(w=>String(w).trim()).filter(Boolean))];save();if($("[data-screen='settings']").classList.contains("active"))renderSettings();return{saved:true,count:store.spelling.length};}});
     register({name:"add_practice_poem",title:"Add practice poem",description:"Add a poem to the memorization and recitation list.",inputSchema:{type:"object",properties:{title:{type:"string",minLength:1},author:{type:"string"},text:{type:"string",minLength:1}},required:["title","text"],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:true},execute:({title,author="",text})=>{if(!String(title).trim()||!String(text).trim())throw new Error("Title and poem text are required");const poem={id:`poem-${Date.now()}`,title:String(title).trim(),author:String(author).trim(),text:String(text).trim()};store.poems.push(poem);save();if($("[data-screen='poems']").classList.contains("active"))renderPoems();return{saved:true,id:poem.id,title:poem.title};}});
   }
-  wireSoundControls();wireStartupGate();wireOnboarding();renderHome();setAudioScene("menu");
+  wireSoundControls();wireStartupGate();wireOnboarding();wireParentPinGate();renderHome();setAudioScene("menu");
 })();

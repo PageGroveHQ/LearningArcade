@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=20">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/app-icon-192.png?v=20">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/app-icon-180.png?v=20">
-  <link rel="stylesheet" href="styles.css?v=27">
+  <link rel="stylesheet" href="styles.css?v=28">
 </head>
 <body class="intro-active">
   <section class="startup-gate" id="startupGate" aria-label="Learning Arcade startup">
@@ -35,6 +35,14 @@
       <form id="onboardingProfileStep" class="onboarding-step" hidden><p class="label">Step 2 · Student Arcade</p><h2>Confirm the child profile</h2><p class="helper">You can keep an existing learner and all progress, or create a fresh child profile.</p><div class="field"><label>Profile choice</label><select id="onboardingProfileChoice"></select></div><div class="field"><label>Child's display name</label><input id="onboardingChildName" maxlength="24" autocomplete="off" placeholder="Learner name"></div><button class="primary">Finish setup and open Student Arcade</button><button class="tiny onboarding-back" type="button" id="onboardingBack">Back to PIN</button></form>
       <p class="onboarding-note">All information stays locally on this device and is included in full-app backups.</p>
     </div>
+  </section>
+  <section class="pin-gate" id="parentPinGate" hidden aria-label="Unlock Parent Command">
+    <form class="pin-console" id="parentPinForm">
+      <button class="pin-close" type="button" id="parentPinCancel" aria-label="Cancel">×</button>
+      <div class="pin-emblem">⌁</div><p class="eyebrow">Protected area</p><h1>Parent Command</h1><p>Enter the parent PIN to open planning and management tools.</p>
+      <div class="field"><label>Parent PIN</label><input id="parentPinEntry" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="••••" aria-label="Parent PIN"></div>
+      <p class="pin-error" id="parentPinError" aria-live="polite"></p><button class="primary">Unlock Parent Command</button>
+    </form>
   </section>
   <div class="app-shell">
     <header class="topbar">
@@ -101,6 +109,6 @@
   <script src="vendor/d3.min.js"></script>
   <script src="vendor/topojson-client.min.js"></script>
   <script src="data.js?v=20"></script>
-  <script src="app.js?v=27"></script>
+  <script src="app.js?v=28"></script>
 </body>
 </html>
