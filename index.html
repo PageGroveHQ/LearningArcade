@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=20">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/app-icon-192.png?v=20">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/app-icon-180.png?v=20">
-  <link rel="stylesheet" href="styles.css?v=24">
+  <link rel="stylesheet" href="styles.css?v=25">
 </head>
 <body>
   <div class="app-shell">
@@ -55,7 +55,7 @@
             <span class="subject-icon">❝</span><span class="subject-copy"><strong>Poem Power</strong><small>Read · remember · recite</small></span><span class="arrow">›</span>
           </button>
         </div>
-        <div class="adventure-grid"><button class="adventure-card mission-link" data-go="story"><span>MISSION MAP</span><strong>Story Mode</strong><small>Animated chapters and restoration goals</small></button><button class="adventure-card armory-link" data-go="armory"><span>ORBS & FORMS</span><strong>Shop & Locker</strong><small>Unlock and equip Sentinel forms</small></button><button class="adventure-card report-link" data-go="reports"><span>LEARNING RECORD</span><strong>Assessments & Reports</strong><small>Accuracy, subjects, and recent rounds</small></button></div>
+        <div class="adventure-grid"><button class="adventure-card study-link" data-go="study"><span>CUSTOM PRACTICE</span><strong>Study Lab</strong><small>Create flashcards, quizzes, and assessments</small></button><button class="adventure-card homework-link" data-go="homework"><span>WEEKLY PLAN</span><strong>Mission Board</strong><small>Track assignments Monday through Sunday</small></button><button class="adventure-card mission-link" data-go="story"><span>MISSION MAP</span><strong>Story Mode</strong><small>Animated chapters and restoration goals</small></button><button class="adventure-card armory-link" data-go="armory"><span>ORBS & FORMS</span><strong>Shop & Locker</strong><small>Unlock and equip Sentinel forms</small></button><button class="adventure-card report-link" data-go="reports"><span>LEARNING RECORD</span><strong>Assessments & Reports</strong><small>Accuracy, subjects, and recent rounds</small></button></div>
         <section class="progress-panel" id="homeReport"></section>
       </section>
 
@@ -68,6 +68,9 @@
       <section class="screen" data-screen="armory"><div id="armoryView"></div></section>
       <section class="screen" data-screen="profiles"><div id="profilesView"></div></section>
       <section class="screen" data-screen="reports"><div id="reportsView"></div></section>
+      <section class="screen" data-screen="study"><div id="studyView"></div></section>
+      <section class="screen" data-screen="study-editor"><div id="studyEditorView"></div></section>
+      <section class="screen" data-screen="homework"><div id="homeworkView"></div></section>
       <section class="screen" data-screen="session"><div id="sessionView"></div></section>
       <section class="screen" data-screen="settings"><div id="settingsView"></div></section>
     </main>
@@ -76,6 +79,6 @@
   <script src="vendor/d3.min.js"></script>
   <script src="vendor/topojson-client.min.js"></script>
   <script src="data.js?v=20"></script>
-  <script src="app.js?v=24"></script>
+  <script src="app.js?v=25"></script>
 </body>
 </html>

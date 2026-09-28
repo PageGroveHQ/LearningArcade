@@ -13,10 +13,21 @@ A mobile-first, installable learning app for:
 - Selector, success, and thinking artwork that follows the equipped Sentinel form throughout the app
 - Question-level mistake tracking with targeted repair rounds
 - Ten-question subject assessments and cumulative parent reports
+- A reusable Study Lab for parent-created flashcards, multiple choice, typed answers, and mixed practice
+- CSV import/export for Study Lab sets, with a downloadable weekly-use template
+- A per-profile Monday-through-Sunday Mission Board with completion, parent verification, and optional weekly rewards
+- Named State Quest selections for repeatedly practicing a teacher's current group of states
+- Optional, fully reversible Smart Review rounds based on unrepaired mistakes
+- Optional local parent PIN controls for editing tools, with practice and the Orb Shop left open
+- Versioned full-app backups with restore previews and a two-week backup reminder
 - Separate master, music, and sound-effect controls powered through a mobile-safe audio mixer
 - A Circuit Sentinel home-screen icon sized for iPhone and installable-app use
 
 Everything is static and can be hosted on GitHub Pages. Practice data is stored only in the browser on the current device.
+
+## Study Lab imports
+
+The included `templates/study-lab-import-template.csv` opens in Excel, Numbers, or Google Sheets. Each row is one question. `set_title`, `question`, and `answer` are required; optional alternate answers and multiple-choice distractors use semicolons inside their cells. Multiple rows with the same set title become one reusable study set.
 
 ## Publish with GitHub Pages
 
