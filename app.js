@@ -104,6 +104,7 @@
     statePresets: [],
     smartReview: {enabled:false,count:10},
     parentControls: {pinHash:""},
+    onboardingVersion: 0,
     backupMeta: {lastBackupAt:""},
     profiles: [],
     activeProfileId: ""
@@ -146,6 +147,7 @@
   store.statePresets = Array.isArray(store.statePresets) ? store.statePresets : [];
   store.smartReview = {...defaults.smartReview, ...(store.smartReview || {})};
   store.parentControls = {...defaults.parentControls, ...(store.parentControls || {})};
+  store.onboardingVersion = Number(store.onboardingVersion)||0;
   store.backupMeta = {...defaults.backupMeta, ...(store.backupMeta || {})};
   const savedAudioPrefs=store.audioPrefs||{};
   store.audioPrefs = {...defaults.audioPrefs, ...savedAudioPrefs};
@@ -183,6 +185,7 @@
   let editingHomeworkId = "";
   let parentUnlocked = false;
   let homeMode = "student";
+  let pendingOnboardingPin = "";
   let activeChapterId = "blackout";
   let chapterStep = 0;
   let mapTopology = null;
@@ -242,9 +245,25 @@
       gate.classList.add("launching");button.disabled=true;status.textContent="INITIALIZING CENTRAL GRID";message.textContent=store.audioPrefs.enabled?"Professor Volt is opening the Learning Arcade…":"Initializing the Learning Arcade…";
       audioUnlocked=true;ensureAudioGraph();backgroundMusic.pause();audioScene="silent";openingAttempting=true;openingPlayed=true;
       let finished=false,fallback;
-      const finish=()=>{if(finished)return;finished=true;clearTimeout(fallback);openingAttempting=false;status.textContent="SYSTEMS READY";gate.classList.add("complete");setTimeout(()=>{document.body.classList.remove("intro-active");gate.hidden=true;setAudioScene("menu");},420);};
+      const finish=()=>{if(finished)return;finished=true;clearTimeout(fallback);openingAttempting=false;status.textContent="SYSTEMS READY";gate.classList.add("complete");setTimeout(()=>{document.body.classList.remove("intro-active");gate.hidden=true;setAudioScene("menu");showRequiredOnboarding();},420);};
       if(store.audioPrefs.enabled){voiceCue.pause();voiceCue.src=CUES.opening;voiceCue.currentTime=0;applySoundVolumes();voiceCue.onended=finish;voiceCue.onerror=finish;voiceCue.play().catch(()=>setTimeout(finish,1400));fallback=setTimeout(finish,5200);}else fallback=setTimeout(finish,1800);
     };
+  }
+
+  function showRequiredOnboarding(){
+    if(store.onboardingVersion>=1)return;
+    const gate=$("#onboardingGate"),choice=$("#onboardingProfileChoice"),name=$("#onboardingChildName");if(!gate)return;
+    choice.innerHTML=store.profiles.map(profile=>`<option value="${esc(profile.id)}" ${profile.id===store.activeProfileId?'selected':''}>Keep ${esc(profile.name)} and saved progress</option>`).join("")+`<option value="new">Create a fresh child profile</option>`;
+    name.value=activeProfile().name==="Player 1"?"":activeProfile().name;gate.hidden=false;document.body.classList.add("onboarding-active");
+  }
+
+  function wireOnboarding(){
+    const pinStep=$("#onboardingPinStep"),profileStep=$("#onboardingProfileStep"),choice=$("#onboardingProfileChoice"),name=$("#onboardingChildName");if(!pinStep||!profileStep)return;
+    const showStep=step=>{pinStep.hidden=step!==1;profileStep.hidden=step!==2;$$('[data-onboarding-dot]').forEach(dot=>dot.classList.toggle('active',+dot.dataset.onboardingDot<=step));};
+    pinStep.onsubmit=event=>{event.preventDefault();const pin=$("#onboardingPin").value.trim(),confirmation=$("#onboardingPinConfirm").value.trim();if(!/^\d{4,8}$/.test(pin))return toast("Use a 4–8 digit PIN");if(pin!==confirmation)return toast("The PINs do not match");pendingOnboardingPin=pinHash(pin);showStep(2);setTimeout(()=>name.focus(),80);};
+    choice.onchange=()=>{const profile=store.profiles.find(item=>item.id===choice.value);name.value=profile&&profile.name!=="Player 1"?profile.name:"";};
+    $("#onboardingBack").onclick=()=>showStep(1);
+    profileStep.onsubmit=event=>{event.preventDefault();const childName=name.value.trim();if(!childName)return toast("Enter the child's display name");let profile;if(choice.value==="new"){profile=createProfile(childName);store.profiles.push(profile);}else{profile=store.profiles.find(item=>item.id===choice.value)||activeProfile();profile.name=childName;}store.activeProfileId=profile.id;store.parentControls.pinHash=pendingOnboardingPin;store.onboardingVersion=1;pendingOnboardingPin="";parentUnlocked=false;homeMode="student";syncActiveProfile();applyEquippedTheme();save();$("#onboardingGate").hidden=true;document.body.classList.remove("onboarding-active");renderHome();toast("Parent Portal and Student Arcade are ready");};
   }
 
   function refreshVoices() { availableVoices = window.speechSynthesis?.getVoices?.().filter(v => /^en([-_]|$)/i.test(v.lang)) || []; }
@@ -298,7 +317,7 @@
   }
 
   function pinHash(value=""){let hash=2166136261;for(const char of String(value)){hash^=char.charCodeAt(0);hash=Math.imul(hash,16777619);}return (hash>>>0).toString(36);}
-  function ensureParentAccess(){if(!store.parentControls.pinHash||parentUnlocked)return true;const entered=prompt("Enter the parent PIN");if(entered===null)return false;if(pinHash(entered)===store.parentControls.pinHash){parentUnlocked=true;return true;}toast("That PIN was not correct");return false;}
+  function ensureParentAccess(always=false){if(!store.parentControls.pinHash){toast("Complete Parent Portal setup first");return false;}if(parentUnlocked&&!always)return true;const entered=prompt("Enter the parent PIN");if(entered===null)return false;if(pinHash(entered)===store.parentControls.pinHash){parentUnlocked=true;return true;}toast("That PIN was not correct");return false;}
   function isoLocal(date){const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,"0"),d=String(date.getDate()).padStart(2,"0");return `${y}-${m}-${d}`;}
   function weekStart(offset=0){const date=new Date(),day=(date.getDay()+6)%7;date.setHours(12,0,0,0);date.setDate(date.getDate()-day+(offset*7));return date;}
   function addDays(date,days){const next=new Date(date);next.setDate(next.getDate()+days);return next;}
@@ -348,10 +367,10 @@
     $("#storyLaunchStatus").textContent=`${completedMissionCount(profile)}/20 systems restored · ${Object.keys(profile.bosses||{}).filter(id=>profile.bosses[id]?.defeated).length}/5 bosses cleared`;
     $("#homeReport").innerHTML=`<div><p class="eyebrow">${esc(profile.name)} · ${completedMissionCount(profile)}/20 missions</p><h2>${totals.answered?`${accuracy}% accuracy across ${totals.answered} answers`:"Ready to restore the Learning Arcade"}</h2><p class="helper">Current mission: ${esc(mission.title)} · ${progress}/${mission.goal}</p></div><button class="report-orb" data-go="reports" aria-label="Open reports"><img src="assets/ui/energy-orb.png" alt=""><strong>${stats.rounds.length}</strong><small>rounds</small></button>`;
     renderHomeMode();
-    $$('[data-home-mode]').forEach(button=>button.onclick=()=>{const next=button.dataset.homeMode;if(next==="parent"&&!ensureParentAccess())return;homeMode=next;renderHomeMode();});
+    $$('[data-home-mode]').forEach(button=>button.onclick=()=>{const next=button.dataset.homeMode;if(next==="parent"&&!ensureParentAccess(true))return;if(next==="student")parentUnlocked=false;homeMode=next;renderHomeMode();});
   }
 
-  function renderHomeMode(){const parent=homeMode==="parent";$$('[data-home-panel]').forEach(panel=>panel.hidden=panel.dataset.homePanel!==homeMode);$$('.dashboard-switch [data-home-mode]').forEach(button=>button.classList.toggle('selected',button.dataset.homeMode===homeMode));$("#homeEyebrow").textContent=parent?"Parent Command":"Choose a quest";$("#homeTitle").textContent=parent?"What should we manage?":"What should we practice?";document.body.dataset.homeMode=homeMode;}
+  function renderHomeMode(){const parent=homeMode==="parent";$$('[data-home-panel]').forEach(panel=>panel.hidden=panel.dataset.homePanel!==homeMode);$$('.dashboard-switch [data-home-mode]').forEach(button=>button.classList.toggle('selected',button.dataset.homeMode===homeMode));$(".home-cast").hidden=parent;$("#homeEyebrow").textContent=parent?"Parent Command":"Choose a quest";$("#homeTitle").textContent=parent?"What should we manage?":"What should we practice?";document.body.dataset.homeMode=homeMode;}
 
   function modeButtons(current) {
     return `<div class="option-grid" data-choice-group="mode">
@@ -792,7 +811,7 @@
     const lastBackup=store.backupMeta.lastBackupAt?new Date(store.backupMeta.lastBackupAt):null,backupAge=lastBackup?Math.floor((Date.now()-lastBackup.getTime())/86400000):Infinity,backupStatus=!lastBackup?"No full backup downloaded yet":backupAge>14?`Last full backup was ${backupAge} days ago`:`Last full backup: ${lastBackup.toLocaleDateString()}`;
     $("#settingsView").innerHTML=`${head("Parent Setup","Update weekly practice without rebuilding the app")}
       <div class="panel"><h2>Learner profiles</h2><p class="helper">Create or switch local profiles so reports and missions stay separate for each learner.</p><button class="secondary" data-go="profiles">Manage profiles</button></div>
-      <div class="panel parent-controls"><div class="panel-title-row"><div><p class="label">Parent controls</p><h2>${store.parentControls.pinHash?'Parent PIN is on':'Add an optional PIN'}</h2></div><span class="status-pill ${store.parentControls.pinHash?'on':''}">${store.parentControls.pinHash?'Protected':'Off'}</span></div><p class="helper">The PIN protects editing, importing, deleting profiles, and planning tools on this device. Practice, profile switching, reports, and the Orb Shop stay open.</p><div class="two"><div class="field"><label>${store.parentControls.pinHash?'New PIN':'4–8 digit PIN'}</label><input id="parentPin" type="password" inputmode="numeric" maxlength="8" placeholder="••••"></div><div class="field"><label>Confirm PIN</label><input id="parentPinConfirm" type="password" inputmode="numeric" maxlength="8" placeholder="••••"></div></div><div class="two"><button class="primary" id="saveParentPin">${store.parentControls.pinHash?'Change PIN':'Turn on PIN'}</button>${store.parentControls.pinHash?'<button class="secondary" id="removeParentPin">Remove PIN</button>':''}</div>${store.parentControls.pinHash?'<button class="tiny lock-now" id="lockParentNow">Lock parent tools now</button>':''}</div>
+      <div class="panel parent-controls"><div class="panel-title-row"><div><p class="label">Parent controls</p><h2>Parent PIN is on</h2></div><span class="status-pill on">Protected</span></div><p class="helper">The required PIN protects Parent Command, editing, imports, profile changes, and planning tools on this device. Practice, reports, and the Orb Shop stay open in Student Arcade.</p><div class="two"><div class="field"><label>New PIN</label><input id="parentPin" type="password" inputmode="numeric" maxlength="8" placeholder="••••"></div><div class="field"><label>Confirm PIN</label><input id="parentPinConfirm" type="password" inputmode="numeric" maxlength="8" placeholder="••••"></div></div><button class="primary" id="saveParentPin">Change PIN</button><button class="tiny lock-now" id="lockParentNow">Lock Parent Command now</button></div>
       <div class="panel"><div class="panel-title-row"><div><p class="label">Smart Review</p><h2>Optional mistake practice</h2></div><label class="settings-sound-toggle"><input type="checkbox" id="smartReviewEnabled" ${store.smartReview.enabled?'checked':''}> Enabled</label></div><p class="helper">When enabled, Study Lab offers a short round built from answers that still need repair. Turning it off immediately removes the suggestion but keeps normal learning history intact.</p><label class="mixer-row"><span>Questions per review</span><select id="smartReviewCount"><option value="5" ${+store.smartReview.count===5?'selected':''}>5</option><option value="10" ${+store.smartReview.count===10?'selected':''}>10</option><option value="20" ${+store.smartReview.count===20?'selected':''}>20</option></select></label></div>
       <div class="panel audio-mixer"><div class="panel-title-row"><div><p class="label">Audio mixer</p><h2>Sound levels</h2></div><label class="settings-sound-toggle"><input type="checkbox" id="settingsSoundEnabled" ${store.audioPrefs.enabled?'checked':''}> Sound on</label></div><p class="helper">Master Volume controls everything. Music and sound effects can be balanced separately.</p>${[['master','Master Volume'],['music','Music Volume'],['effects','Sound Effect Volume']].map(([key,label])=>`<label class="mixer-row"><span>${label}</span><input type="range" min="0" max="100" value="${Math.round(store.audioPrefs[key]*100)}" data-mixer="${key}" aria-label="${label}"><output data-mixer-output="${key}">${Math.round(store.audioPrefs[key]*100)}%</output></label>`).join('')}</div>
       <div class="panel" id="spellingSettings"><h2>Spelling word bank</h2><p class="helper">Enter one word per line or separate words with commas.</p><div class="field"><textarea id="wordBank">${esc(store.spelling.join("\n"))}</textarea></div><button class="primary" id="saveWords">Save word bank</button></div>
@@ -801,8 +820,7 @@
       <div class="panel"><h2>Home-screen updates</h2><p class="helper">Tap “Check for update” to load the newest code without replacing saved progress. iPhone may require removing and re-adding the home-screen shortcut before a new app icon appears.</p><button class="secondary" id="checkUpdate">Check for update</button></div>`;
     wireMixerControls();
     $("#saveParentPin").onclick=()=>{const pin=$("#parentPin").value.trim(),confirmation=$("#parentPinConfirm").value.trim();if(!/^\d{4,8}$/.test(pin))return toast("Use a 4–8 digit PIN");if(pin!==confirmation)return toast("The PINs do not match");store.parentControls.pinHash=pinHash(pin);parentUnlocked=true;save();renderSettings();toast("Parent PIN saved");};
-    $("#removeParentPin")?.addEventListener("click",()=>{if(!confirm("Remove the parent PIN from this device?"))return;store.parentControls.pinHash="";parentUnlocked=false;save();renderSettings();toast("Parent PIN removed");});
-    $("#lockParentNow")?.addEventListener("click",()=>{parentUnlocked=false;go("home");toast("Parent tools locked");});
+    $("#lockParentNow")?.addEventListener("click",()=>{parentUnlocked=false;homeMode="student";go("home");toast("Parent Command locked");});
     $("#smartReviewEnabled").onchange=e=>{store.smartReview.enabled=e.target.checked;save();toast(e.target.checked?"Smart Review enabled":"Smart Review turned off");};
     $("#smartReviewCount").onchange=e=>{store.smartReview.count=+e.target.value;save();};
     $("#saveWords").onclick=()=>{store.spelling=$("#wordBank").value.split(/[\n,]+/).map(w=>w.trim()).filter(Boolean);save();toast(`${store.spelling.length} spelling words saved`);};
@@ -825,5 +843,5 @@
     register({name:"update_spelling_words",title:"Update spelling words",description:"Replace the weekly spelling word bank and update the visible app.",inputSchema:{type:"object",properties:{words:{type:"array",items:{type:"string",minLength:1},minItems:1}},required:["words"],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:true},execute:({words})=>{if(!Array.isArray(words)||!words.length)throw new Error("At least one word is required");store.spelling=[...new Set(words.map(w=>String(w).trim()).filter(Boolean))];save();if($("[data-screen='settings']").classList.contains("active"))renderSettings();return{saved:true,count:store.spelling.length};}});
     register({name:"add_practice_poem",title:"Add practice poem",description:"Add a poem to the memorization and recitation list.",inputSchema:{type:"object",properties:{title:{type:"string",minLength:1},author:{type:"string"},text:{type:"string",minLength:1}},required:["title","text"],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:true},execute:({title,author="",text})=>{if(!String(title).trim()||!String(text).trim())throw new Error("Title and poem text are required");const poem={id:`poem-${Date.now()}`,title:String(title).trim(),author:String(author).trim(),text:String(text).trim()};store.poems.push(poem);save();if($("[data-screen='poems']").classList.contains("active"))renderPoems();return{saved:true,id:poem.id,title:poem.title};}});
   }
-  wireSoundControls();wireStartupGate();renderHome();setAudioScene("menu");
+  wireSoundControls();wireStartupGate();wireOnboarding();renderHome();setAudioScene("menu");
 })();

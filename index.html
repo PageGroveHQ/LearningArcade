@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=20">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/app-icon-192.png?v=20">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/app-icon-180.png?v=20">
-  <link rel="stylesheet" href="styles.css?v=26">
+  <link rel="stylesheet" href="styles.css?v=27">
 </head>
 <body class="intro-active">
   <section class="startup-gate" id="startupGate" aria-label="Learning Arcade startup">
@@ -25,6 +25,15 @@
       <button class="startup-enter" id="enterArcade"><span>▶</span> Enter the Arcade</button>
       <div class="startup-progress" aria-hidden="true"><i></i></div>
       <small class="startup-status" id="startupStatus">AWAITING PILOT</small>
+    </div>
+  </section>
+  <section class="onboarding-gate" id="onboardingGate" hidden aria-label="Required Parent Portal setup">
+    <div class="onboarding-console">
+      <div class="onboarding-brand"><img src="assets/characters/professor-volt.png" alt="Professor Volt"><div><p class="eyebrow">Required first-time setup</p><h1>Parent Portal</h1><p>Set up the protected parent area before opening Student Arcade.</p></div></div>
+      <div class="onboarding-steps" aria-label="Setup progress"><span class="active" data-onboarding-dot="1">1</span><i></i><span data-onboarding-dot="2">2</span></div>
+      <form id="onboardingPinStep" class="onboarding-step"><p class="label">Step 1 · Protect Parent Command</p><h2>Create a parent PIN</h2><p class="helper">This 4–8 digit PIN will be requested whenever Parent Command is opened from Student Arcade.</p><div class="two"><div class="field"><label>Parent PIN</label><input id="onboardingPin" type="password" inputmode="numeric" maxlength="8" autocomplete="new-password" placeholder="4–8 digits"></div><div class="field"><label>Confirm PIN</label><input id="onboardingPinConfirm" type="password" inputmode="numeric" maxlength="8" autocomplete="new-password" placeholder="Repeat PIN"></div></div><button class="primary">Continue to child profile</button></form>
+      <form id="onboardingProfileStep" class="onboarding-step" hidden><p class="label">Step 2 · Student Arcade</p><h2>Confirm the child profile</h2><p class="helper">You can keep an existing learner and all progress, or create a fresh child profile.</p><div class="field"><label>Profile choice</label><select id="onboardingProfileChoice"></select></div><div class="field"><label>Child's display name</label><input id="onboardingChildName" maxlength="24" autocomplete="off" placeholder="Learner name"></div><button class="primary">Finish setup and open Student Arcade</button><button class="tiny onboarding-back" type="button" id="onboardingBack">Back to PIN</button></form>
+      <p class="onboarding-note">All information stays locally on this device and is included in full-app backups.</p>
     </div>
   </section>
   <div class="app-shell">
@@ -92,6 +101,6 @@
   <script src="vendor/d3.min.js"></script>
   <script src="vendor/topojson-client.min.js"></script>
   <script src="data.js?v=20"></script>
-  <script src="app.js?v=26"></script>
+  <script src="app.js?v=27"></script>
 </body>
 </html>

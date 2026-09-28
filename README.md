@@ -18,7 +18,8 @@ A mobile-first, installable learning app for:
 - A per-profile Monday-through-Sunday Mission Board with completion, parent verification, and optional weekly rewards
 - Named State Quest selections for repeatedly practicing a teacher's current group of states
 - Optional, fully reversible Smart Review rounds based on unrepaired mistakes
-- Optional local parent PIN controls for editing tools, with practice and the Orb Shop left open
+- Required Parent Portal PIN controls for editing tools, with practice and the Orb Shop left open
+- One-time onboarding that establishes the PIN and child profile before Student Arcade opens
 - Versioned full-app backups with restore previews and a two-week backup reminder
 - Separate master, music, and sound-effect controls powered through a mobile-safe audio mixer
 - A Circuit Sentinel home-screen icon sized for iPhone and installable-app use
