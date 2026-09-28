@@ -13,10 +13,12 @@ A mobile-first, installable learning app for:
 - Selector, success, and thinking artwork that follows the equipped Sentinel form throughout the app
 - Question-level mistake tracking with targeted repair rounds
 - Ten-question subject assessments and cumulative parent reports
+- Optional three-life missions with shields, repairs, retries, clues, and an Emergency Reboot
 - A reusable Study Lab for parent-created flashcards, multiple choice, typed answers, and mixed practice
 - CSV import/export for Study Lab sets, with a downloadable weekly-use template
 - A per-profile Monday-through-Sunday Mission Board with completion, parent verification, and optional weekly rewards
 - Named State Quest selections for repeatedly practicing a teacher's current group of states
+- State placement, neighboring-state, region/division sorting, capital speed-run, odd-one-out, and discovery modes
 - Optional, fully reversible Smart Review rounds based on unrepaired mistakes
 - Required Parent Portal PIN controls for editing tools, with practice and the Orb Shop left open
 - One-time onboarding that establishes the PIN and child profile before Student Arcade opens
@@ -44,6 +46,8 @@ Ordinary updates do not require replacing the home-screen shortcut. When changin
 - The prologue is available immediately. Additional chapters unlock after 4, 8, 12, 16, and 20 completed missions.
 - Core Sentinel is included automatically. Ember Cannon, Frost Lance, Volt Disc, Cyclone Boomerang, and Prism Shield each cost 250 Energy Orbs.
 - Purchases, ownership, equipped form, story progress, and viewed chapters are saved separately for each local learner profile.
-- Sentinel forms are cosmetic rewards and do not change question difficulty or scoring.
+- Math Mayhem currently opens the Multiplication Reactor; Division Drive, Addition Array, and Subtraction Circuit are reserved as future sectors.
+- The Orb Shop includes consumable support items, permanent interface cosmetics, ten unlockable mission soundtracks, and full Sentinel forms.
+- Sentinel forms and permanent cosmetics do not change question difficulty or scoring. Support items are limited-use inventory.
 
 The armory and story assets are original Circuit Sentinel designs created for this project.

@@ -11,11 +11,11 @@
   const ORIGINAL_SPELLING = ["because", "friend", "school", "people", "favorite", "different", "thought", "through"];
   const BUNDLED_SPELLING = window.BUNDLED_SPELLING_WORDS || [];
   const blankStats = () => ({stars:0,days:{},subjects:{},rounds:[],mistakes:{},skills:{},assessments:{}});
-  const createProfile = (name="Player 1", stats=blankStats()) => ({id:`profile-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,name,stats,missions:{},activeMissionId:"state-scan-1",inventory:["core"],equippedWeapon:"core",seenChapters:[],bosses:{},homeworkTasks:[],homeworkRewards:[]});
+  const createProfile = (name="Player 1", stats=blankStats()) => ({id:`profile-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,name,stats,missions:{},activeMissionId:"state-scan-1",inventory:["core"],equippedWeapon:"core",consumables:{},cosmeticsOwned:[],equippedCosmetics:{},tracksOwned:[],equippedTrack:"",seenChapters:[],bosses:{},homeworkTasks:[],homeworkRewards:[]});
   const SECTORS = {
     states:{title:"Atlas Station",subtitle:"State Quest",icon:"⌖",className:"atlas",target:"states"},
     spelling:{title:"Word Workshop",subtitle:"Word Wizard",icon:"Aa",className:"words",target:"spelling"},
-    math:{title:"Multiplication Reactor",subtitle:"Multiply Mayhem",icon:"×",className:"reactor",target:"math"},
+    math:{title:"Multiplication Reactor",subtitle:"Math Mayhem",icon:"×",className:"reactor",target:"math"},
     poems:{title:"Poetry Signal Tower",subtitle:"Poem Power",icon:"❝",className:"poetry",target:"poems"}
   };
   const MISSIONS = [
@@ -52,6 +52,45 @@
     {id:"cyclone",name:"Cyclone Boomerang",cost:250,element:"Agility",color:"#20c97a",glow:"#70ffe0",power:3,speed:5,guard:3,description:"A sweeping wind form that always circles back to repair missed skills.",ability:"Return Current",lore:"Its returning current remembers every missed signal and guides Sentinel back for another try.",effect:"Wind spiral"},
     {id:"prism",name:"Prism Shield",cost:250,element:"Confidence",color:"#ef46b5",glow:"#8ff8ff",power:3,speed:2,guard:5,description:"A radiant barrier form that turns steady practice into brilliant confidence.",ability:"Spectrum Guard",lore:"Each color in the prism represents a different kind of knowledge working together as one defense.",effect:"Prism flare"}
   ];
+  const SUPPORT_ITEMS = [
+    {id:"targeting",name:"Targeting Chip",cost:10,icon:"◎",description:"Remove one incorrect multiple-choice option.",limit:9},
+    {id:"letter",name:"Letter Scanner",cost:10,icon:"Aa",description:"Reveal one letter in a typed spelling answer.",limit:9},
+    {id:"recall",name:"Recall Chip",cost:15,icon:"↻",description:"Put a missed question immediately back in the mission.",limit:9},
+    {id:"time",name:"Time Battery",cost:15,icon:"+30",description:"Add 30 seconds to a timed mission.",limit:9},
+    {id:"map",name:"Map Scanner",cost:15,icon:"⌖",description:"Reveal a useful State Quest location clue.",limit:9},
+    {id:"verse",name:"Verse Echo",cost:10,icon:"❝",description:"Reveal the opening word of a poem answer.",limit:9},
+    {id:"shield",name:"Shield Cell",cost:20,icon:"◇",description:"Protect the next life from an incorrect answer.",limit:9},
+    {id:"repair",name:"Repair Capsule",cost:25,icon:"+1",description:"Restore one life during a three-life mission.",limit:9},
+    {id:"reboot",name:"Emergency Reboot",cost:40,icon:"⚡",description:"Continue once after losing all three lives.",limit:5}
+  ];
+  const COSMETICS = [
+    {id:"frame-cyan",name:"Cyan Circuit Frame",cost:30,type:"frame",value:"cyan",icon:"▣",description:"A glowing cyan frame around your active-pilot badge."},
+    {id:"frame-gold",name:"Gold Core Frame",cost:45,type:"frame",value:"gold",icon:"▣",description:"A gold energy frame for the pilot display."},
+    {id:"trail-prism",name:"Prism Orb Trail",cost:55,type:"trail",value:"prism",icon:"✦",description:"A rainbow energy trail on rewards and results."},
+    {id:"trail-static",name:"Static Spark Trail",cost:55,type:"trail",value:"static",icon:"ϟ",description:"Electric sparks follow collected Energy Orbs."},
+    {id:"theme-violet",name:"Violet Grid Theme",cost:75,type:"theme",value:"violet",icon:"◈",description:"A violet circuitry accent across Student Arcade."},
+    {id:"theme-gold",name:"Solar Grid Theme",cost:90,type:"theme",value:"gold",icon:"☀",description:"A warm gold command-grid accent."},
+    {id:"title-pathfinder",name:"Pathfinder Title",cost:35,type:"title",value:"Pathfinder",icon:"⌖",description:"Display Pathfinder beside the active pilot."},
+    {id:"title-core-keeper",name:"Core Keeper Title",cost:50,type:"title",value:"Core Keeper",icon:"◆",description:"Display Core Keeper beside the active pilot."}
+  ];
+  const MUSIC_TRACKS = [
+    {id:"storm-eagle",name:"Storm Eagle Theme X",cost:65,file:"audio/shop-music/storm-eagle-theme-x.mp3"},
+    {id:"infinity-mjinion",name:"Infinity Mjinion Theme",cost:65,file:"audio/shop-music/infinity-mjinion-theme.mp3"},
+    {id:"esperanto",name:"Esperanto",cost:65,file:"audio/shop-music/esperanto.mp3"},
+    {id:"straight-ahead",name:"Straight Ahead",cost:65,file:"audio/shop-music/straight-ahead.mp3"},
+    {id:"storm-owl",name:"Storm Owl Theme X4",cost:65,file:"audio/shop-music/storm-owl-theme-x4.mp3"},
+    {id:"wily-castle",name:"Wily's Castle Theme",cost:65,file:"audio/shop-music/wilys-castle-theme.mp3"},
+    {id:"zero-theme",name:"Zero Theme",cost:65,file:"audio/shop-music/zero-theme.mp3"},
+    {id:"x5-opening",name:"X5 Opening",cost:65,file:"audio/shop-music/x5-opening.mp3"},
+    {id:"cannonball",name:"Cannonball Mythos",cost:65,file:"audio/shop-music/cannonball-mythos.mp3"},
+    {id:"x-vs-zero",name:"X Vs Zero",cost:65,file:"audio/shop-music/x-vs-zero.mp3"}
+  ];
+  const STATE_NEIGHBORS = {
+    AL:["FL","GA","MS","TN"],AK:[],AZ:["CA","CO","NV","NM","UT"],AR:["LA","MS","MO","OK","TN","TX"],CA:["AZ","NV","OR"],CO:["AZ","KS","NE","NM","OK","UT","WY"],CT:["MA","NY","RI"],DE:["MD","NJ","PA"],DC:["MD","VA"],FL:["AL","GA"],GA:["AL","FL","NC","SC","TN"],HI:[],ID:["MT","NV","OR","UT","WA","WY"],IL:["IA","IN","KY","MO","WI"],IN:["IL","KY","MI","OH"],IA:["IL","MN","MO","NE","SD","WI"],KS:["CO","MO","NE","OK"],KY:["IL","IN","MO","OH","TN","VA","WV"],LA:["AR","MS","TX"],ME:["NH"],MD:["DC","DE","PA","VA","WV"],MA:["CT","NH","NY","RI","VT"],MI:["IN","OH","WI"],MN:["IA","ND","SD","WI"],MS:["AL","AR","LA","TN"],MO:["AR","IA","IL","KS","KY","NE","OK","TN"],MT:["ID","ND","SD","WY"],NE:["CO","IA","KS","MO","SD","WY"],NV:["AZ","CA","ID","OR","UT"],NH:["ME","MA","VT"],NJ:["DE","NY","PA"],NM:["AZ","CO","OK","TX","UT"],NY:["CT","MA","NJ","PA","VT"],NC:["GA","SC","TN","VA"],ND:["MN","MT","SD"],OH:["IN","KY","MI","PA","WV"],OK:["AR","CO","KS","MO","NM","TX"],OR:["CA","ID","NV","WA"],PA:["DE","MD","NJ","NY","OH","WV"],RI:["CT","MA"],SC:["GA","NC"],SD:["IA","MN","MT","ND","NE","WY"],TN:["AL","AR","GA","KY","MS","MO","NC","VA"],TX:["AR","LA","NM","OK"],UT:["AZ","CO","ID","NV","NM","WY"],VT:["MA","NH","NY"],VA:["DC","KY","MD","NC","TN","WV"],WA:["ID","OR"],WV:["KY","MD","OH","PA","VA"],WI:["IA","IL","MI","MN"],WY:["CO","ID","MT","NE","SD","UT"]
+  };
+  const STATE_DISCOVERY = {
+    AL:"The U.S. Space & Rocket Center is in Huntsville.",AK:"Denali, North America's highest peak, is here.",AZ:"The Grand Canyon crosses its northern landscape.",AR:"Hot Springs National Park protects historic bathhouses.",CA:"Its landmarks include Yosemite and the Golden Gate Bridge.",CO:"The Rocky Mountains cross the center of the state.",CT:"Its flag shows three grapevines on a blue field.",DE:"It was the first state to ratify the Constitution.",DC:"The Washington Monument and U.S. Capitol are here.",FL:"The Everglades cover part of its southern peninsula.",GA:"Its flag includes the state coat of arms and thirteen stars.",HI:"It is the only state made entirely of islands.",ID:"Hells Canyon lies along part of its western border.",IL:"Chicago stands on the shore of Lake Michigan.",IN:"The Indianapolis 500 is held here.",IA:"The state lies between the Missouri and Mississippi Rivers.",KS:"Its flag includes a sunflower above the state seal.",KY:"Mammoth Cave, the world's longest known cave system, is here.",LA:"The Mississippi River delta and bayous shape its coast.",ME:"Acadia National Park sits along its Atlantic coast.",MD:"Chesapeake Bay divides much of the state.",MA:"Plymouth and the Freedom Trail are important historic sites.",MI:"It consists of two peninsulas surrounded by Great Lakes.",MN:"Its nickname refers to its thousands of lakes.",MS:"The Mississippi River forms much of its western border.",MO:"The Gateway Arch stands beside the Mississippi River.",MT:"Glacier National Park stretches across its northern mountains.",NE:"Chimney Rock guided many travelers moving west.",NV:"Most of the state lies within the Great Basin.",NH:"Mount Washington rises in the White Mountains.",NJ:"Its eastern shore faces the Atlantic Ocean.",NM:"White Sands National Park contains enormous gypsum dunes.",NY:"Niagara Falls lies along its border with Canada.",NC:"The Outer Banks form a long chain of barrier islands.",ND:"Theodore Roosevelt National Park protects colorful badlands.",OH:"The Rock and Roll Hall of Fame is in Cleveland.",OK:"Its panhandle extends west between Kansas and Texas.",OR:"Crater Lake fills an ancient volcanic caldera.",PA:"The Liberty Bell is in Philadelphia.",RI:"It is the smallest U.S. state by area.",SC:"Fort Sumter stands in Charleston Harbor.",SD:"Mount Rushmore is carved into the Black Hills.",TN:"Great Smoky Mountains National Park lies along its eastern border.",TX:"The Alamo is in San Antonio.",UT:"Five national parks protect its red-rock landscapes.",VT:"The Green Mountains run north to south through the state.",VA:"Shenandoah National Park follows the Blue Ridge Mountains.",WA:"Mount Rainier is a glacier-covered volcano.",WV:"The New River Gorge cuts through the Appalachian Mountains.",WI:"Its shoreline touches Lake Michigan and Lake Superior.",WY:"Yellowstone became the world's first national park."
+  };
   const CHAPTERS = [
     {id:"blackout",at:0,number:"Prologue",title:"The Great Arcade Blackout",summary:"A mysterious static storm drains every learning sector.",accent:"#59d9f3",scenes:[
       {speaker:"Professor Volt",pose:"idle",text:"The Learning Arcade has gone dark. Atlas, Words, Math, and Poetry have all lost their signal!"},
@@ -95,9 +134,10 @@
     spelling: [],
     poems: window.DEFAULT_POEMS,
     stats: {stars: 0, days: {}},
-    statePrefs: {region:"Northeast Region", division:"All", customStates:[], mode:"mixed", kind:"mixed", count:"10"},
-    mathPrefs: {tables:[0,1,2,3,4,5,6,7,8,9], mode:"mixed", count:"10", timer:"0"},
-    spellingPrefs: {mode:"mixed", count:"max"},
+    statePrefs: {region:"Northeast Region", division:"All", customStates:[], mode:"mixed", kind:"mixed", count:"10", challenge:true},
+    mathPrefs: {tables:[0,1,2,3,4,5,6,7,8,9], mode:"mixed", count:"10", timer:"0", challenge:true},
+    spellingPrefs: {mode:"mixed", count:"max", challenge:true},
+    challengePrefs: {poems:true,study:true},
     voicePrefs: {source:"system", voiceURI:"", style:"bright"},
     audioPrefs: {enabled:true,master:.7,music:.45,effects:.8},
     studySets: [],
@@ -125,13 +165,19 @@
     profile.bosses=profile.bosses&&typeof profile.bosses==="object"?profile.bosses:{};
     profile.homeworkTasks=Array.isArray(profile.homeworkTasks)?profile.homeworkTasks:[];
     profile.homeworkRewards=Array.isArray(profile.homeworkRewards)?profile.homeworkRewards:[];
+    profile.consumables=profile.consumables&&typeof profile.consumables==="object"?profile.consumables:{};
+    SUPPORT_ITEMS.forEach(item=>profile.consumables[item.id]=Math.max(0,Number(profile.consumables[item.id])||0));
+    profile.cosmeticsOwned=Array.isArray(profile.cosmeticsOwned)?profile.cosmeticsOwned.filter(id=>COSMETICS.some(item=>item.id===id)):[];
+    profile.equippedCosmetics=profile.equippedCosmetics&&typeof profile.equippedCosmetics==="object"?profile.equippedCosmetics:{};
+    profile.tracksOwned=Array.isArray(profile.tracksOwned)?profile.tracksOwned.filter(id=>MUSIC_TRACKS.some(track=>track.id===id)):[];
+    profile.equippedTrack=profile.tracksOwned.includes(profile.equippedTrack)?profile.equippedTrack:"";
     if(!MISSIONS.some(m=>m.id===profile.activeMissionId)) profile.activeMissionId="state-scan-1";
   });
   if (!store.profiles.some(profile=>profile.id===store.activeProfileId)) store.activeProfileId=store.profiles[0].id;
   const activeProfile = () => store.profiles.find(profile=>profile.id===store.activeProfileId) || store.profiles[0];
   const activeWeapon = (profile=activeProfile()) => WEAPONS.find(weapon=>weapon.id===profile.equippedWeapon) || WEAPONS[0];
   const sentinelArt = (pose="idle",profile=activeProfile()) => `assets/characters/skins/${activeWeapon(profile).id}-${pose}.png`;
-  function applyEquippedTheme(profile=activeProfile()){const weapon=activeWeapon(profile);document.body.dataset.form=weapon.id;document.body.style.setProperty("--form-color",weapon.color);document.body.style.setProperty("--form-glow",weapon.glow);}
+  function applyEquippedTheme(profile=activeProfile()){const weapon=activeWeapon(profile),equipped=profile.equippedCosmetics||{};document.body.dataset.form=weapon.id;document.body.dataset.pilotFrame=equipped.frame||"none";document.body.dataset.orbTrail=equipped.trail||"none";document.body.dataset.arcadeTheme=equipped.theme||"default";document.body.style.setProperty("--form-color",weapon.color);document.body.style.setProperty("--form-glow",weapon.glow);const title=COSMETICS.find(item=>item.type==="title"&&item.value===equipped.title)?.value||"";document.body.dataset.pilotTitle=title;}
   const syncActiveProfile = () => {store.stats=activeProfile().stats;};
   syncActiveProfile();
   applyEquippedTheme();
@@ -142,6 +188,7 @@
   store.statePrefs.customStates = Array.isArray(store.statePrefs.customStates) ? store.statePrefs.customStates.filter(abbr=>STATE_DATA.some(state=>state.abbr===abbr)) : [];
   store.mathPrefs = {...defaults.mathPrefs, ...(store.mathPrefs || {})};
   store.spellingPrefs = {...defaults.spellingPrefs, ...(store.spellingPrefs || {})};
+  store.challengePrefs = {...defaults.challengePrefs, ...(store.challengePrefs || {})};
   store.voicePrefs = {...defaults.voicePrefs, ...(store.voicePrefs || {})};
   store.studySets = Array.isArray(store.studySets) ? store.studySets : [];
   store.statePresets = Array.isArray(store.statePresets) ? store.statePresets : [];
@@ -202,6 +249,7 @@
   const MUSIC = {menu:"audio/interface/game-select.mp3",level:"audio/interface/level-play.mp3",finished:"audio/interface/round-finished.mp3"};
   const CUES = {opening:"audio/interface/professor-opening.mp3",start:"audio/interface/sentinel-start.mp3"};
   const backgroundMusic = new Audio(); backgroundMusic.loop=true; backgroundMusic.preload="auto";
+  const previewMusic = new Audio(); previewMusic.loop=false; previewMusic.preload="metadata";
   const answerSound = new Audio("audio/interface/answer-selected.wav"); answerSound.preload="auto";
   const wrongAnswerSound = new Audio("audio/interface/wrong-answer.mp3"); wrongAnswerSound.preload="auto";
   const voiceCue = new Audio(CUES.opening); voiceCue.preload="auto";
@@ -211,9 +259,11 @@
   function musicVolume(){return clampVolume(store.audioPrefs.music);}
   function effectsVolume(){return clampVolume(store.audioPrefs.effects);}
   function connectMedia(media,gain){if(!audioContext||!gain||mediaSources.has(media))return;const source=audioContext.createMediaElementSource(media);source.connect(gain);mediaSources.set(media,source);media.volume=1;}
-  function ensureAudioGraph(){const AudioContextClass=window.AudioContext||window.webkitAudioContext;if(!AudioContextClass)return;try{if(!audioContext){audioContext=new AudioContextClass();masterGain=audioContext.createGain();musicGain=audioContext.createGain();effectsGain=audioContext.createGain();voiceGain=audioContext.createGain();musicGain.connect(masterGain);effectsGain.connect(masterGain);voiceGain.connect(masterGain);masterGain.connect(audioContext.destination);connectMedia(backgroundMusic,musicGain);connectMedia(answerSound,effectsGain);connectMedia(wrongAnswerSound,effectsGain);connectMedia(voiceCue,voiceGain);if(activeAudio)connectMedia(activeAudio,voiceGain);}if(audioContext.state==="suspended")audioContext.resume().catch(()=>{});applySoundVolumes();}catch{audioContext=null;masterGain=musicGain=effectsGain=voiceGain=null;}}
-  function applySoundVolumes(){const duck=musicDucked?.05:questionAudioDucked?.16:1,master=store.audioPrefs.enabled?masterVolume():0,music=musicVolume()*duck,effects=effectsVolume();document.body.dataset.masterVolume=String(masterVolume());document.body.dataset.musicVolume=String(musicVolume());document.body.dataset.effectsVolume=String(effectsVolume());document.body.dataset.effectiveMusicVolume=String(master*music);if(audioContext&&masterGain){masterGain.gain.value=master;musicGain.gain.value=music;effectsGain.gain.value=effects;voiceGain.gain.value=1;[backgroundMusic,answerSound,wrongAnswerSound,voiceCue,activeAudio].filter(Boolean).forEach(media=>media.volume=1);}else{backgroundMusic.volume=master*music;answerSound.volume=master*effects;wrongAnswerSound.volume=master*effects;voiceCue.volume=master;if(activeAudio)activeAudio.volume=master;}}
-  function setAudioScene(scene){audioScene=scene;document.body.dataset.audioScene=scene;document.body.dataset.soundEnabled=String(store.audioPrefs.enabled);if(scene==="silent"){backgroundMusic.pause();applySoundVolumes();return;}const source=MUSIC[scene]||MUSIC.menu;if(backgroundMusic.getAttribute("src")!==source){backgroundMusic.src=source;backgroundMusic.load();}applySoundVolumes();if(!store.audioPrefs.enabled||!audioUnlocked){backgroundMusic.pause();return;}ensureAudioGraph();backgroundMusic.play().catch(()=>{});}
+  function ensureAudioGraph(){const AudioContextClass=window.AudioContext||window.webkitAudioContext;if(!AudioContextClass)return;try{if(!audioContext){audioContext=new AudioContextClass();masterGain=audioContext.createGain();musicGain=audioContext.createGain();effectsGain=audioContext.createGain();voiceGain=audioContext.createGain();musicGain.connect(masterGain);effectsGain.connect(masterGain);voiceGain.connect(masterGain);masterGain.connect(audioContext.destination);connectMedia(backgroundMusic,musicGain);connectMedia(previewMusic,musicGain);connectMedia(answerSound,effectsGain);connectMedia(wrongAnswerSound,effectsGain);connectMedia(voiceCue,voiceGain);if(activeAudio)connectMedia(activeAudio,voiceGain);}if(audioContext.state==="suspended")audioContext.resume().catch(()=>{});applySoundVolumes();}catch{audioContext=null;masterGain=musicGain=effectsGain=voiceGain=null;}}
+  function applySoundVolumes(){const duck=musicDucked?.05:questionAudioDucked?.16:1,master=store.audioPrefs.enabled?masterVolume():0,music=musicVolume()*duck,effects=effectsVolume();document.body.dataset.masterVolume=String(masterVolume());document.body.dataset.musicVolume=String(musicVolume());document.body.dataset.effectsVolume=String(effectsVolume());document.body.dataset.effectiveMusicVolume=String(master*music);if(audioContext&&masterGain){masterGain.gain.value=master;musicGain.gain.value=music;effectsGain.gain.value=effects;voiceGain.gain.value=1;[backgroundMusic,previewMusic,answerSound,wrongAnswerSound,voiceCue,activeAudio].filter(Boolean).forEach(media=>media.volume=1);}else{backgroundMusic.volume=master*music;previewMusic.volume=master*music;answerSound.volume=master*effects;wrongAnswerSound.volume=master*effects;voiceCue.volume=master;if(activeAudio)activeAudio.volume=master;}}
+  function musicSource(scene){const track=MUSIC_TRACKS.find(item=>item.id===activeProfile()?.equippedTrack);return scene==="level"&&track?track.file:(MUSIC[scene]||MUSIC.menu);}
+  function setAudioScene(scene){audioScene=scene;document.body.dataset.audioScene=scene;document.body.dataset.soundEnabled=String(store.audioPrefs.enabled);if(scene==="silent"){backgroundMusic.pause();applySoundVolumes();return;}const source=musicSource(scene);if(backgroundMusic.getAttribute("src")!==source){backgroundMusic.src=source;backgroundMusic.load();}applySoundVolumes();if(!store.audioPrefs.enabled||!audioUnlocked){backgroundMusic.pause();return;}ensureAudioGraph();backgroundMusic.play().catch(()=>{});}
+  function previewTrack(track){if(!track||!store.audioPrefs.enabled)return toast("Turn sound on to preview music");audioUnlocked=true;ensureAudioGraph();backgroundMusic.pause();previewMusic.pause();previewMusic.src=track.file;previewMusic.currentTime=0;previewMusic.onended=()=>setAudioScene(audioScene);previewMusic.play().catch(()=>setAudioScene(audioScene));setTimeout(()=>{if(!previewMusic.paused){previewMusic.pause();setAudioScene(audioScene);}},15000);}
   function playAnswerSound(ok=true){if(!store.audioPrefs.enabled||!audioUnlocked)return;ensureAudioGraph();const sound=ok?answerSound:wrongAnswerSound;sound.currentTime=0;sound.play().catch(()=>{});}
   function playFormEffect(ok=true){
     playAnswerSound(ok);
@@ -241,7 +291,7 @@
 
   function wireStartupGate(){
     const gate=$("#startupGate"),button=$("#enterArcade"),status=$("#startupStatus"),message=$("#startupMessage");if(!gate||!button)return;
-    button.onclick=()=>{
+    const launch=()=>{
       if(gate.classList.contains("launching"))return;
       gate.classList.add("launching");button.disabled=true;status.textContent="INITIALIZING CENTRAL GRID";message.textContent=store.audioPrefs.enabled?"Professor Volt is opening the Learning Arcade…":"Initializing the Learning Arcade…";
       audioUnlocked=true;ensureAudioGraph();backgroundMusic.pause();audioScene="silent";openingAttempting=true;openingPlayed=true;
@@ -249,6 +299,8 @@
       const finish=()=>{if(finished)return;finished=true;clearTimeout(fallback);openingAttempting=false;status.textContent="SYSTEMS READY";gate.classList.add("complete");setTimeout(()=>{document.body.classList.remove("intro-active");gate.hidden=true;setAudioScene("menu");showRequiredOnboarding();},420);};
       if(store.audioPrefs.enabled){voiceCue.pause();voiceCue.src=CUES.opening;voiceCue.currentTime=0;applySoundVolumes();voiceCue.onended=finish;voiceCue.onerror=finish;voiceCue.play().catch(()=>setTimeout(finish,1400));fallback=setTimeout(finish,5200);}else fallback=setTimeout(finish,1800);
     };
+    button.onclick=launch;
+    button.addEventListener("click",launch);
   }
 
   function showRequiredOnboarding(){
@@ -374,6 +426,7 @@
     const mission=MISSIONS.find(item=>item.id===profile.activeMissionId&&missionUnlocked(profile,item)&&(profile.missions[item.id]?.progress||0)<item.goal)||MISSIONS.find(item=>missionUnlocked(profile,item)&&(profile.missions[item.id]?.progress||0)<item.goal)||MISSIONS[MISSIONS.length-1];
     const progress=Math.min(profile.missions[mission.id]?.progress||0,mission.goal);
     $("#profileName").textContent=profile.name;
+    $(".profile-meta small").textContent=profile.equippedCosmetics?.title||"ACTIVE PILOT";
     $("#profileInitial").textContent=profile.name.charAt(0).toUpperCase();
     $("#totalStars").textContent = stats.stars || 0;
     $(".home-robot").src=sentinelArt("idle",profile);
@@ -394,6 +447,7 @@
       <button class="choice ${current === "mixed" ? "selected" : ""}" data-value="mixed">Mix it up</button>
     </div>`;
   }
+  function challengePanel(enabled=true){return `<div class="panel challenge-rule"><div class="panel-title-row"><div><p class="label">Mission rules</p><h2>Three-life challenge</h2></div><label class="settings-sound-toggle"><input type="checkbox" data-challenge-toggle ${enabled?'checked':''}> 3 lives</label></div><p class="helper">Turn this off for unlimited training. In challenge mode, three missed answers interrupt the run and recommend review.</p></div>`;}
 
   function wireChoices(root, onChange) {
     $$('[data-choice-group]', root).forEach(group => {
@@ -416,12 +470,16 @@
     $("#statesView").innerHTML = `${head("State Quest","Connect every state, capital, abbreviation, and shape")}
       <div class="panel"><p class="label">Study set</p><div class="field"><label>Region</label><select id="stateRegion">${regions.map(r=>`<option ${p.region===r?'selected':''}>${r}</option>`).join("")}</select></div><div class="field"><label>${p.region==='Custom selection'?'Selection':'Division'}</label><select id="stateDivision" ${p.region==='Custom selection'?'disabled':''}><option>${p.region==='Custom selection'?'Choose locations below':'All'}</option>${divisions.map(d=>`<option ${p.division===d?'selected':''}>${d}</option>`).join("")}</select></div><p class="helper">${setSize} location${setSize===1?'':'s'} in this study set${p.region==='South Region'?', including Washington, D.C.':'.'}</p></div>
       ${p.region==='Custom selection'?customStatePickerMarkup(p.customStates):''}
-      <div class="panel"><p class="label">Question style</p><div class="option-grid" data-choice-group="kind">
+      <div class="panel state-mode-panel"><p class="label">Question style</p><div class="option-grid" data-choice-group="kind">
         <button class="choice ${p.kind === "mixed" ? "selected" : ""}" data-value="mixed">Mixed clues</button><button class="choice ${p.kind === "map" ? "selected" : ""}" data-value="map">Map shapes</button>
+        <button class="choice ${p.kind === "placement" ? "selected" : ""}" data-value="placement">Place on U.S. map</button><button class="choice ${p.kind === "neighbors" ? "selected" : ""}" data-value="neighbors">Neighbor match</button>
+        <button class="choice ${p.kind === "regions" ? "selected" : ""}" data-value="regions">Region sorting</button><button class="choice ${p.kind === "odd" ? "selected" : ""}" data-value="odd">Which doesn't belong?</button>
+        <button class="choice ${p.kind === "capital-speed" ? "selected" : ""}" data-value="capital-speed">Capital speed run</button><button class="choice ${p.kind === "discovery" ? "selected" : ""}" data-value="discovery">Flags & landmarks</button>
         <button class="choice ${p.kind === "facts" ? "selected" : ""}" data-value="facts">Names & capitals</button><button class="choice ${p.kind === "triples" ? "selected" : ""}" data-value="triples">Three-way match</button><button class="choice ${p.kind === "spelling" ? "selected" : ""}" data-value="spelling">Spell state & capital</button>
       </div></div>
       <div class="panel"><p class="label">Round length</p><div class="option-grid" data-choice-group="count"><button class="choice ${p.count==='10'?'selected':''}" data-value="10">10 questions</button><button class="choice ${p.count==='25'?'selected':''}" data-value="25">25 questions</button><button class="choice ${p.count==='max'?'selected':''}" data-value="max">Max · ${maxCount}</button></div></div>
       <div class="panel"><p class="label">Who is holding the phone?</p>${modeButtons(p.mode)}</div>
+      ${challengePanel(p.challenge)}
       <button class="primary" id="startStates" ${setSize?'':'disabled'}>${setSize?`Start ${p.count==='max'?maxCount:Math.min(+p.count,maxCount)}-question quest`:'Choose at least one location'}</button>`;
     $("#stateRegion").onchange=e=>{const previous=activeStates(p.region,p.division,p.customStates);p.region=e.target.value;p.division="All";if(p.region==='Custom selection'&&!p.customStates.length)p.customStates=previous.map(state=>state.abbr);store.statePrefs=p;save();renderStates();};
     $("#stateDivision").onchange=e=>{p.division=e.target.value;store.statePrefs=p;save();renderStates();};
@@ -431,6 +489,7 @@
     $("#saveStateSet")?.addEventListener("click",()=>{if(!ensureParentAccess())return;if(!p.customStates.length)return toast("Select at least one location first");const name=prompt("Name this State Quest set");if(!name?.trim())return;const preset={id:`state-set-${Date.now()}`,name:name.trim(),states:[...p.customStates]};store.statePresets.push(preset);p.activePresetId=preset.id;store.statePrefs=p;save();renderStates();toast("State set saved");});
     $("#deleteStateSet")?.addEventListener("click",()=>{if(!ensureParentAccess())return;const preset=store.statePresets.find(item=>item.id===p.activePresetId);if(!preset)return toast("Load a saved set first");if(!confirm(`Delete “${preset.name}”?`))return;store.statePresets=store.statePresets.filter(item=>item.id!==preset.id);p.activePresetId="";save();renderStates();toast("Saved state set deleted");});
     wireChoices($("#statesView"), (group, value) => { p[group] = value; store.statePrefs = p; save(); renderStates(); });
+    $('[data-challenge-toggle]',$('#statesView')).onchange=e=>{p.challenge=e.target.checked;store.statePrefs=p;save();};
     $("#startStates").onclick = () => startStates(p);
   }
 
@@ -456,20 +515,29 @@
   }
 
   function stateQuestionBank(states,kind) {
-    const kinds = kind === 'mixed' ? ['facts','map','triples','spelling'] : [kind];
+    const kinds = kind === 'mixed' ? ['facts','map','triples','spelling','neighbors','regions','discovery'] : [kind];
     const questions=[];
     states.forEach(state=>kinds.forEach(k=>{
       if(k==='facts') ["state-capital","state-abbr","capital-state","abbr-state","capital-abbr","abbr-capital"].forEach(d=>questions.push(stateQuestion(state,k,d)));
       else if(k==='spelling') ['state','capital'].forEach(d=>questions.push(stateQuestion(state,k,d)));
+      else if(k==='placement') questions.push({subject:"states",state,prompt:`Place ${state.name} on the map`,answer:state.name,detail:`${state.name} — ${state.abbr} — ${state.capital}`,placement:true,modeOverride:"map-place"});
+      else if(k==='neighbors') (STATE_NEIGHBORS[state.abbr]||[]).filter(abbr=>states.some(item=>item.abbr===abbr)).slice(0,2).forEach(abbr=>{const neighbor=states.find(item=>item.abbr===abbr);questions.push({subject:"states",state,prompt:`Which state borders ${state.name}?`,answer:neighbor.name,answerType:"state",detail:`${neighbor.name} borders ${state.name}.`,neighbor:true});});
+      else if(k==='regions'){questions.push({subject:"states",state,prompt:`Which region contains ${state.name}?`,answer:state.region.replace(" Region",""),answerType:"region",detail:`${state.name} is in the ${state.region}.`,regionSort:true});questions.push({subject:"states",state,prompt:`Which division contains ${state.name}?`,answer:state.division.replace(" Division",""),answerType:"division",detail:`${state.name} is in the ${state.division}.`,regionSort:true});}
+      else if(k==='capital-speed'){questions.push(stateQuestion(state,'facts',Math.random()>.5?'state-capital':'capital-state'));}
+      else if(k==='discovery') questions.push({subject:"states",state,prompt:STATE_DISCOVERY[state.abbr],answer:state.name,answerType:"state",detail:`${STATE_DISCOVERY[state.abbr]} Answer: ${state.name}.`,discovery:true});
       else questions.push(stateQuestion(state,k));
     }));
+    if(kinds.includes('odd')){
+      const groups=[...new Set(states.map(state=>state.region))];
+      groups.forEach(region=>{const same=states.filter(state=>state.region===region),other=states.filter(state=>state.region!==region);if(same.length>=3&&other.length){for(let index=0;index<Math.min(4,same.length);index++){const odd=other[index%other.length],set=shuffle([...shuffle(same).slice(0,3),odd]);questions.push({subject:"states",prompt:`Which state does not belong with the ${region.replace(" Region","")} group?`,answer:odd.name,answerType:"state",detail:`${odd.name} belongs to the ${odd.region}.`,oddStates:set,modeOverride:"choice"});}}});
+    }
     questions.forEach(q=>q.pool=states);
     return questions;
   }
 
   function startStates(p) {
-    const states = activeStates(p.region,p.division,p.customStates); if(!states.length)return toast("Choose at least one location"); const bank=shuffle(stateQuestionBank(states,p.kind)); const wanted=p.count==='max'?bank.length:Math.min(+p.count,bank.length); const questions=bank.slice(0,wanted);
-    startSession("State Quest", questions, p.mode);
+    const states = activeStates(p.region,p.division,p.customStates); if(!states.length)return toast("Choose at least one location"); const bank=shuffle(stateQuestionBank(states,p.kind));if(!bank.length)return toast(p.kind==='neighbors'?"Choose a set containing neighboring states":p.kind==='odd'?"Choose states from more than one region":"This study set needs more locations"); const wanted=p.count==='max'?bank.length:Math.min(+p.count,bank.length); const questions=bank.slice(0,wanted);
+    startSession(p.kind==='capital-speed'?"Capital Speed Run":"State Quest", questions, p.mode,p.kind==='capital-speed'?1:0,{livesEnabled:p.challenge});
   }
 
   function renderSpelling() {
@@ -481,20 +549,22 @@
       <div class="panel"><p class="label">Practice mode</p>${modeButtons(p.mode)}</div>
       <div class="panel"><p class="label">Round length</p><div class="option-grid" data-choice-group="count"><button class="choice ${p.count==='10'?'selected':''}" data-value="10">10 questions</button><button class="choice ${p.count==='20'?'selected':''}" data-value="20">20 questions</button><button class="choice ${p.count==='max'?'selected':''}" data-value="max">Max · ${maxCount}</button></div></div>
       ${voicePanelMarkup()}
+      ${challengePanel(p.challenge)}
       <div class="panel"><p class="helper"><strong>Listen mode:</strong> in child play, tap the speaker to hear each word. In parent mode, the spelling stays visible only to the person holding the phone.</p></div>
       <button class="primary" id="startSpelling" ${store.spelling.length ? "" : "disabled"}>Start spelling round</button>`;
     wireChoices($("#spellingView"), (group,value) => { p[group]=value; store.spellingPrefs=p; save(); renderSpelling(); });
     wireVoicePanel($("#spellingView"));
+    $('[data-challenge-toggle]',$('#spellingView')).onchange=e=>{p.challenge=e.target.checked;store.spellingPrefs=p;save();};
     $("#startSpelling").onclick = () => {
       const makeQuestion=(word,modeOverride)=>({subject:"spelling",prompt:"Spell the word you hear",answer:word,speech:word,detail:word,pool:store.spelling,modeOverride});
       const bank=p.mode==="mixed"?store.spelling.flatMap(word=>[makeQuestion(word,"choice"),makeQuestion(word,"type")]):store.spelling.map(word=>makeQuestion(word,p.mode));
       const wanted=p.count==='max'?bank.length:Math.min(+p.count,bank.length);
-      startSession("Word Wizard", shuffle(bank).slice(0,wanted), p.mode);
+      startSession("Word Wizard", shuffle(bank).slice(0,wanted), p.mode,0,{livesEnabled:p.challenge});
     };
   }
 
   function studyQuestionBank(set){const pool=set.questions||[];return pool.map((item,index)=>({subject:"study",studySetId:set.id,prompt:item.question,answer:item.answer,accepted:item.accepted||[],detail:item.explanation||`Answer: ${item.answer}`,distractors:item.distractors||[],pool,index}));}
-  function startStudySet(set,mode){const bank=shuffle(studyQuestionBank(set));if(!bank.length)return toast("Add at least one question first");const questions=bank.map((question,index)=>({...question,modeOverride:mode==="mixed"?["choice","type","parent"][index%3]:mode}));startSession(set.title,questions,mode,0,{studySetId:set.id});}
+  function startStudySet(set,mode){const bank=shuffle(studyQuestionBank(set));if(!bank.length)return toast("Add at least one question first");const questions=bank.map((question,index)=>({...question,modeOverride:mode==="mixed"?["choice","type","parent"][index%3]:mode}));startSession(set.title,questions,mode,0,{studySetId:set.id,livesEnabled:store.challengePrefs.study});}
   function smartReviewItems(){return Object.values(activeProfile().stats.mistakes||{}).filter(item=>(item.misses||0)>(item.corrected||0)).sort((a,b)=>((b.misses||0)-(b.corrected||0))-((a.misses||0)-(a.corrected||0))).slice(0,Math.max(5,+store.smartReview.count||10));}
   function startSmartReview(){const items=smartReviewItems();if(!items.length)return toast("No missed questions need review right now");startMistakeRound(items);}
   function csvCell(value=""){const text=String(value);return /[",\n]/.test(text)?`"${text.replace(/"/g,'""')}"`:text;}
@@ -505,10 +575,12 @@
     $("#studyView").innerHTML=`${head("Study Lab","Build reusable practice for any subject")}
       <div class="study-command panel"><div><p class="eyebrow">Parent-created learning</p><h2>${store.studySets.length} saved study set${store.studySets.length===1?'':'s'}</h2><p class="helper">Create sets in the app, paste question-and-answer lines, or import the reusable CSV template.</p></div><div class="stack"><button class="primary" id="newStudySet">Create study set</button><button class="secondary" id="importStudySet">Import CSV</button><a class="secondary link-button" href="templates/study-lab-import-template.csv" download>Download CSV template</a></div><input type="file" id="studyCSVFile" accept=".csv,text/csv" hidden></div>
       ${store.smartReview.enabled?`<div class="panel smart-review-card"><div><p class="label">Optional Smart Review</p><h2>${review.length?`${review.length} priority question${review.length===1?'':'s'}`:'Everything repaired'}</h2><p class="helper">Uses only saved mistakes to prioritize local practice. Turn it off anytime in Parent Setup.</p></div><button class="secondary" id="startSmartReview" ${review.length?'':'disabled'}>Start smart review</button></div>`:''}
+      ${challengePanel(store.challengePrefs.study)}
       <div class="study-set-grid">${store.studySets.length?store.studySets.map(set=>`<article class="study-set-card"><div class="study-set-top"><span>${esc((set.subject||"General").slice(0,2).toUpperCase())}</span><div class="grow"><p class="eyebrow">${esc(set.subject||"General")}</p><h2>${esc(set.title)}</h2><small>${set.questions?.length||0} questions${set.testDate?` · Test ${esc(set.testDate)}`:''}</small></div></div><div class="study-mode-grid"><button class="tiny" data-study-start="${esc(set.id)}" data-study-mode="parent">Flashcards</button><button class="tiny" data-study-start="${esc(set.id)}" data-study-mode="choice">Multiple choice</button><button class="tiny" data-study-start="${esc(set.id)}" data-study-mode="type">Typed answers</button><button class="tiny" data-study-start="${esc(set.id)}" data-study-mode="mixed">Mixed test</button></div><div class="study-card-actions"><button data-edit-study="${esc(set.id)}">Edit</button><button data-duplicate-study="${esc(set.id)}">Duplicate</button><button data-export-study="${esc(set.id)}">Export</button><button class="danger-text" data-delete-study="${esc(set.id)}">Delete</button></div></article>`).join(""):'<div class="panel empty">No study sets yet. Create one or import the template to begin.</div>'}</div>`;
     $("#newStudySet").onclick=()=>{if(!ensureParentAccess())return;editingStudySetId="";go("study-editor");};
     $("#importStudySet").onclick=()=>{if(ensureParentAccess())$("#studyCSVFile").click();};$("#studyCSVFile").onchange=e=>{if(e.target.files[0])importStudyCSV(e.target.files[0]);};
     $("#startSmartReview")?.addEventListener("click",startSmartReview);
+    $('[data-challenge-toggle]',$('#studyView')).onchange=e=>{store.challengePrefs.study=e.target.checked;save();};
     $$('[data-study-start]').forEach(button=>button.onclick=()=>{const set=store.studySets.find(item=>item.id===button.dataset.studyStart);if(set)startStudySet(set,button.dataset.studyMode);});
     $$('[data-edit-study]').forEach(button=>button.onclick=()=>{if(!ensureParentAccess())return;editingStudySetId=button.dataset.editStudy;go("study-editor");});
     $$('[data-duplicate-study]').forEach(button=>button.onclick=()=>{if(!ensureParentAccess())return;const source=store.studySets.find(item=>item.id===button.dataset.duplicateStudy);if(!source)return;const copy=structuredClone(source);copy.id=`study-${Date.now()}`;copy.title=`${source.title} Copy`;copy.questions.forEach(question=>question.id=`q-${Date.now()}-${Math.random().toString(36).slice(2,6)}`);store.studySets.push(copy);save();renderStudyLab();toast("Study set duplicated");});
@@ -544,16 +616,20 @@
 
   function renderMath() {
     const p = store.mathPrefs || defaults.mathPrefs;
-    $("#mathView").innerHTML = `${head("Multiply Mayhem","Build speed and confidence from 0 × 0 to 9 × 9")}
+    $("#mathView").innerHTML = `${head("Math Mayhem","Choose a number-training sector")}
+      <section class="math-sector active"><div><p class="eyebrow">ACTIVE PROGRAM</p><h2>Multiplication Reactor</h2><p>Build multiplication fluency from 0 × 0 through 9 × 9.</p></div><span>×</span></section>
+      <div class="math-sector-grid" aria-label="Future Math Mayhem sectors"><div><b>÷</b><strong>Division Drive</strong><small>Future sector</small></div><div><b>+</b><strong>Addition Array</strong><small>Future sector</small></div><div><b>−</b><strong>Subtraction Circuit</strong><small>Future sector</small></div></div>
       <div class="panel"><p class="label">Choose tables</p><div class="option-grid" id="tableGrid">${[0,1,2,3,4,5,6,7,8,9].map(n => `<button class="choice ${p.tables.includes(n)?"selected":""}" data-table="${n}">${n}s</button>`).join("")}</div><div class="two" style="margin-top:10px"><button class="tiny" data-preset="all">All tables</button><button class="tiny" data-preset="tricky">6s–9s</button></div></div>
       <div class="panel"><p class="label">Practice mode</p>${modeButtons(p.mode)}</div>
       <div class="panel"><p class="label">Round length</p><div class="option-grid" data-choice-group="count"><button class="choice ${p.count==='10'?'selected':''}" data-value="10">10 questions</button><button class="choice ${p.count==='25'?'selected':''}" data-value="25">25 questions</button><button class="choice ${p.count==='max'?'selected':''}" data-value="max">Max · ${p.tables.length*10}</button></div></div>
       <div class="panel"><p class="label">Timer</p><div class="option-grid" data-choice-group="timer"><button class="choice ${p.timer==='0'?'selected':''}" data-value="0">No timer</button><button class="choice ${p.timer==='1'?'selected':''}" data-value="1">1 minute</button><button class="choice ${p.timer==='3'?'selected':''}" data-value="3">3 minutes</button><button class="choice ${p.timer==='5'?'selected':''}" data-value="5">5 minutes</button></div></div>
+      ${challengePanel(p.challenge)}
       <button class="primary" id="startMath">Start ${p.count==='max'?p.tables.length*10:Math.min(+p.count,p.tables.length*10)}-question round</button>`;
     $("#tableGrid").onclick = e => { const b=e.target.closest("[data-table]"); if(!b)return; const n=+b.dataset.table; p.tables=p.tables.includes(n)?p.tables.filter(x=>x!==n):[...p.tables,n].sort(); if(!p.tables.length)p.tables=[n]; store.mathPrefs=p;save();renderMath(); };
     $$('[data-preset]',$("#mathView")).forEach(b=>b.onclick=()=>{p.tables=b.dataset.preset==="all"?[0,1,2,3,4,5,6,7,8,9]:[6,7,8,9];store.mathPrefs=p;save();renderMath();});
     wireChoices($("#mathView"),(group,value)=>{p[group]=value;store.mathPrefs=p;save();renderMath();});
-    $("#startMath").onclick=()=>{const bank=shuffle(p.tables.flatMap(a=>Array.from({length:10},(_,b)=>({subject:"math",prompt:`${a} × ${b}`,answer:String(a*b),detail:`${a} × ${b} = ${a*b}`,a,b}))));const wanted=p.count==='max'?bank.length:Math.min(+p.count,bank.length);startSession("Multiply Mayhem",bank.slice(0,wanted),p.mode,+p.timer);};
+    $('[data-challenge-toggle]',$('#mathView')).onchange=e=>{p.challenge=e.target.checked;store.mathPrefs=p;save();};
+    $("#startMath").onclick=()=>{const bank=shuffle(p.tables.flatMap(a=>Array.from({length:10},(_,b)=>({subject:"math",prompt:`${a} × ${b}`,answer:String(a*b),detail:`${a} × ${b} = ${a*b}`,a,b}))));const wanted=p.count==='max'?bank.length:Math.min(+p.count,bank.length);startSession("Multiplication Reactor",bank.slice(0,wanted),p.mode,+p.timer,{livesEnabled:p.challenge});};
   }
 
   function renderPoems() {
@@ -561,11 +637,13 @@
     $("#poemsView").innerHTML = `${head("Poem Power","Learn a poem a little at a time")}
       <div class="panel"><p class="label">Choose a poem</p><div class="stack" id="poemList">${store.poems.map((p,i)=>`<button class="list-item ${i===0?"selected":""}" data-poem="${esc(p.id)}"><span class="subject-icon" style="background:#f1e8ff;color:#8047b1">❝</span><span class="grow"><strong>${esc(p.title)}</strong><small>${esc(p.author||"Author not listed")}</small></span><span>›</span></button>`).join("")}</div><button class="secondary" style="margin-top:10px" data-go="settings" data-focus="poems">Add or edit poems</button></div>
       ${voicePanelMarkup()}
+      ${challengePanel(store.challengePrefs.poems)}
       <div class="panel" id="poemModes">${poemModeMarkup(poem)}</div>`;
     let selected=poem;
     $("#poemList").onclick=e=>{const b=e.target.closest("[data-poem]");if(!b)return;selected=store.poems.find(p=>p.id===b.dataset.poem);$$('[data-poem]').forEach(x=>x.classList.toggle('selected',x===b));$("#poemModes").innerHTML=poemModeMarkup(selected);wirePoemModes(selected);};
     wirePoemModes(selected);
     wireVoicePanel($("#poemsView"));
+    $('[data-challenge-toggle]',$('#poemsView')).onchange=e=>{store.challengePrefs.poems=e.target.checked;save();};
   }
 
   function poemModeMarkup(poem){return `<p class="label">Practice ${esc(poem.title)}</p><div class="stack">
@@ -575,8 +653,8 @@
     const lines=poem.text.split("\n").filter(x=>x.trim());
     if(mode==="read"){startSession("Poem Power",[{subject:"poem-read",prompt:poem.title,answer:poem.text,detail:poem.author,speech:poem.text,audio:poem.audio||"",poemId:poem.id}],"read",0,{silentMusic:true});return;}
     if(mode==="recite"){startSession("Poem Power",[{subject:"poem-recite",prompt:`Recite “${poem.title}” from memory`,answer:poem.text,detail:poem.author}],"parent");return;}
-    if(mode==="lines"){const qs=lines.slice(0,-1).map((line,i)=>({subject:"poem-line",prompt:line,answer:lines[i+1],detail:`Next line: ${lines[i+1]}`}));startSession("Next-Line Prompts",shuffle(qs).slice(0,8),"type");return;}
-    const candidates=lines.map(line=>({line,words:(line.match(/[A-Za-z’']+/g)||[]).filter(w=>w.length>3)})).filter(x=>x.words.length);const qs=shuffle(candidates).slice(0,Math.min(8,candidates.length)).map(({line,words})=>{const word=pick(words);return {subject:"poem-missing",prompt:line.replace(new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\b`,'i'),"_____"),answer:word,detail:`The missing word was “${word}.”`};});startSession("Missing Words",qs,"type");
+    if(mode==="lines"){const qs=lines.slice(0,-1).map((line,i)=>({subject:"poem-line",prompt:line,answer:lines[i+1],detail:`Next line: ${lines[i+1]}`}));startSession("Next-Line Prompts",shuffle(qs).slice(0,8),"type",0,{livesEnabled:store.challengePrefs.poems});return;}
+    const candidates=lines.map(line=>({line,words:(line.match(/[A-Za-z’']+/g)||[]).filter(w=>w.length>3)})).filter(x=>x.words.length);const qs=shuffle(candidates).slice(0,Math.min(8,candidates.length)).map(({line,words})=>{const word=pick(words);return {subject:"poem-missing",prompt:line.replace(new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\b`,'i'),"_____"),answer:word,detail:`The missing word was “${word}.”`};});startSession("Missing Words",qs,"type",0,{livesEnabled:store.challengePrefs.poems});
   }
 
   function subjectGroup(subject="") {
@@ -587,7 +665,7 @@
     if(subject==="study")return "study";
     return "other";
   }
-  const subjectLabel=subject=>({states:"State Quest",spelling:"Word Wizard",math:"Multiply Mayhem",poems:"Poem Power",study:"Study Lab",other:"Other"}[subject]||subject);
+  const subjectLabel=subject=>({states:"State Quest",spelling:"Word Wizard",math:"Math Mayhem",poems:"Poem Power",study:"Study Lab",other:"Other"}[subject]||subject);
 
   const completedMissionCount=profile=>MISSIONS.filter(m=>(profile.missions[m.id]?.progress||0)>=m.goal).length;
   const unlockedRewards=profile=>REWARDS.filter(reward=>completedMissionCount(profile)>=reward.at);
@@ -649,10 +727,27 @@
 
   function renderArmory(){
     const profile=activeProfile(),weapon=activeWeapon(profile),orbs=profile.stats.stars||0;
-    $("#armoryView").innerHTML=`${head("Orb Shop & Locker",`${profile.name}'s cosmetic Sentinel forms`)}
+    const equippedTrack=MUSIC_TRACKS.find(track=>track.id===profile.equippedTrack);
+    $("#armoryView").innerHTML=`${head("Orb Shop & Locker",`${profile.name}'s upgrades, supplies, music, and Sentinel forms`)}
       <section class="armory-console" style="--weapon-color:${weapon.color};--weapon-glow:${weapon.glow}"><div class="armory-scan" aria-hidden="true"></div><div class="selected-form"><p class="eyebrow">CURRENT FORM</p><img src="${sentinelArt("idle",profile)}" alt="${esc(weapon.name)}"><div class="form-name"><span>${esc(weapon.element)} system</span><h2>${esc(weapon.name)}</h2></div><div class="pose-preview" aria-label="Form pose preview"><figure><img src="${sentinelArt("idle",profile)}" alt=""><small>Ready</small></figure><figure><img src="${sentinelArt("success",profile)}" alt=""><small>Victory</small></figure><figure><img src="${sentinelArt("thinking",profile)}" alt=""><small>Think</small></figure></div></div><div class="weapon-spec"><div class="orb-wallet"><img src="assets/ui/energy-orb.png" alt=""><strong>${orbs}</strong><span>available orbs</span></div><p class="eyebrow">SPECIAL PROGRAM</p><h2>${esc(weapon.ability)}</h2><p>${esc(weapon.description)}</p><div class="form-lore"><strong>Archive record</strong><span>${esc(weapon.lore)}</span></div><div class="form-effect"><i></i><span>Answer effect: ${esc(weapon.effect)}</span></div>${[["Power",weapon.power],["Speed",weapon.speed],["Guard",weapon.guard]].map(([label,value])=>`<div class="spec-row"><span>${label}</span><i><b style="width:${value*20}%"></b></i></div>`).join('')}<small>Forms change armor art, interface energy, victory effects, and answer sounds. Difficulty and scoring stay fair.</small></div></section>
+      <div class="section-heading"><div><p class="eyebrow">FIELD SUPPLIES</p><h2>Mission support items</h2></div><span>10–40 orbs</span></div>
+      <div class="supply-grid">${SUPPORT_ITEMS.map(item=>`<article class="shop-tile support-tile"><span class="shop-icon">${item.icon}</span><div><h3>${esc(item.name)}</h3><p>${esc(item.description)}</p><small>${profile.consumables[item.id]||0} in inventory · maximum ${item.limit}</small></div><button class="tiny shop-buy" data-buy-support="${item.id}" ${(profile.consumables[item.id]||0)>=item.limit?'disabled':''}><img src="assets/ui/energy-orb.png" alt=""> ${item.cost}</button></article>`).join('')}</div>
+      <div class="section-heading"><div><p class="eyebrow">STYLE MODULES</p><h2>Permanent cosmetics</h2></div><span>${profile.cosmeticsOwned.length}/${COSMETICS.length} owned</span></div>
+      <div class="cosmetic-grid">${COSMETICS.map(item=>{const owned=profile.cosmeticsOwned.includes(item.id),equipped=profile.equippedCosmetics[item.type]===item.value;return `<article class="shop-tile cosmetic-tile ${equipped?'equipped':''}"><span class="shop-icon">${item.icon}</span><div><h3>${esc(item.name)}</h3><p>${esc(item.description)}</p></div>${equipped?`<button class="tiny" data-unequip-cosmetic="${item.type}">Unequip</button>`:owned?`<button class="secondary" data-equip-cosmetic="${item.id}">Equip</button>`:`<button class="primary" data-buy-cosmetic="${item.id}"><img src="assets/ui/energy-orb.png" alt=""> ${item.cost}</button>`}</article>`;}).join('')}</div>
+      <div class="section-heading"><div><p class="eyebrow">MISSION JUKEBOX</p><h2>Unlock a round soundtrack</h2></div><span>${profile.tracksOwned.length}/${MUSIC_TRACKS.length} owned</span></div>
+      <div class="panel jukebox-now"><span>♫</span><div><small>Equipped mission music</small><strong>${esc(equippedTrack?.name||"Standard Level Theme")}</strong></div>${equippedTrack?'<button class="tiny" data-clear-track>Use standard</button>':''}</div>
+      <div class="music-grid">${MUSIC_TRACKS.map(track=>{const owned=profile.tracksOwned.includes(track.id),equipped=profile.equippedTrack===track.id;return `<article class="music-tile ${equipped?'equipped':''}"><button class="music-preview" data-preview-track="${track.id}" aria-label="Preview ${esc(track.name)}">▶</button><div><strong>${esc(track.name)}</strong><small>${owned?'Permanent unlock':'15-second preview'}</small></div>${equipped?'<button class="tiny" disabled>Equipped</button>':owned?`<button class="tiny" data-equip-track="${track.id}">Equip</button>`:`<button class="tiny shop-buy" data-buy-track="${track.id}"><img src="assets/ui/energy-orb.png" alt=""> ${track.cost}</button>`}</article>`;}).join('')}</div>
       <div class="section-heading"><div><p class="eyebrow">FORM SELECT</p><h2>Choose your Sentinel</h2></div><span>${profile.inventory.length}/${WEAPONS.length} owned</span></div>
       <div class="weapon-grid">${WEAPONS.map(item=>{const owned=profile.inventory.includes(item.id),equipped=profile.equippedWeapon===item.id;return `<article class="weapon-card ${equipped?'equipped':''}" style="--weapon-color:${item.color}"><div class="weapon-preview"><img src="assets/characters/skins/${item.id}-idle.png" alt="${esc(item.name)}"><span>${esc(item.element)}</span></div><div class="weapon-card-copy"><h3>${esc(item.name)}</h3><small>${esc(item.ability)}</small>${equipped?'<button class="tiny equipped-label" disabled>Equipped</button>':owned?`<button class="secondary" data-equip-weapon="${item.id}">Equip</button>`:`<button class="primary" data-buy-weapon="${item.id}"><img src="assets/ui/energy-orb.png" alt=""> ${item.cost}</button>`}</div></article>`;}).join('')}</div>`;
+    const spend=(cost,onSuccess)=>{if((profile.stats.stars||0)<cost){toast(`You need ${cost-(profile.stats.stars||0)} more orbs`);return false;}profile.stats.stars-=cost;onSuccess();syncActiveProfile();save();renderArmory();return true;};
+    $$('[data-buy-support]').forEach(button=>button.onclick=()=>{const item=SUPPORT_ITEMS.find(candidate=>candidate.id===button.dataset.buySupport);if(!item||(profile.consumables[item.id]||0)>=item.limit)return;spend(item.cost,()=>{profile.consumables[item.id]=(profile.consumables[item.id]||0)+1;toast(`${item.name} added to inventory`);});});
+    $$('[data-buy-cosmetic]').forEach(button=>button.onclick=()=>{const item=COSMETICS.find(candidate=>candidate.id===button.dataset.buyCosmetic);if(!item||profile.cosmeticsOwned.includes(item.id))return;spend(item.cost,()=>{profile.cosmeticsOwned.push(item.id);profile.equippedCosmetics[item.type]=item.value;applyEquippedTheme(profile);toast(`${item.name} unlocked and equipped`);});});
+    $$('[data-equip-cosmetic]').forEach(button=>button.onclick=()=>{const item=COSMETICS.find(candidate=>candidate.id===button.dataset.equipCosmetic);if(!item||!profile.cosmeticsOwned.includes(item.id))return;profile.equippedCosmetics[item.type]=item.value;applyEquippedTheme(profile);save();renderArmory();toast(`${item.name} equipped`);});
+    $$('[data-unequip-cosmetic]').forEach(button=>button.onclick=()=>{delete profile.equippedCosmetics[button.dataset.unequipCosmetic];applyEquippedTheme(profile);save();renderArmory();toast("Cosmetic removed");});
+    $$('[data-preview-track]').forEach(button=>button.onclick=()=>previewTrack(MUSIC_TRACKS.find(track=>track.id===button.dataset.previewTrack)));
+    $$('[data-buy-track]').forEach(button=>button.onclick=()=>{const track=MUSIC_TRACKS.find(candidate=>candidate.id===button.dataset.buyTrack);if(!track||profile.tracksOwned.includes(track.id))return;spend(track.cost,()=>{profile.tracksOwned.push(track.id);profile.equippedTrack=track.id;toast(`${track.name} unlocked and equipped`);});});
+    $$('[data-equip-track]').forEach(button=>button.onclick=()=>{profile.equippedTrack=button.dataset.equipTrack;save();renderArmory();toast("Mission soundtrack equipped");});
+    $('[data-clear-track]')?.addEventListener('click',()=>{profile.equippedTrack="";save();renderArmory();toast("Standard level music restored");});
     $$('[data-equip-weapon]').forEach(button=>button.onclick=()=>{profile.equippedWeapon=button.dataset.equipWeapon;applyEquippedTheme(profile);playFormEffect(true);save();renderArmory();toast(`${activeWeapon(profile).name} equipped`);});
     $$('[data-buy-weapon]').forEach(button=>button.onclick=()=>{const item=WEAPONS.find(candidate=>candidate.id===button.dataset.buyWeapon);if(!item||profile.inventory.includes(item.id))return;if((profile.stats.stars||0)<item.cost)return toast(`You need ${item.cost-(profile.stats.stars||0)} more orbs`);profile.stats.stars-=item.cost;profile.inventory.push(item.id);profile.equippedWeapon=item.id;syncActiveProfile();applyEquippedTheme(profile);playFormEffect(true);save();renderArmory();toast(`${item.name} unlocked and equipped!`);});
   }
@@ -716,9 +811,9 @@
     renderMasteryMap("states");
   }
 
-  function questionSnapshot(q){return {subject:q.subject,prompt:q.prompt,answer:q.answer,detail:q.detail||q.answer,speech:q.speech||"",a:q.a,b:q.b,map:!!q.map,combined:!!q.combined,answerType:q.answerType||"",stateName:q.state?.name||"",modeOverride:q.modeOverride||"",accepted:q.accepted||[],distractors:q.distractors||[],studySetId:q.studySetId||""};}
+  function questionSnapshot(q){return {subject:q.subject,prompt:q.prompt,answer:q.answer,detail:q.detail||q.answer,speech:q.speech||"",a:q.a,b:q.b,map:!!q.map,placement:!!q.placement,neighbor:!!q.neighbor,regionSort:!!q.regionSort,discovery:!!q.discovery,combined:!!q.combined,answerType:q.answerType||"",stateName:q.state?.name||"",oddStateNames:(q.oddStates||[]).map(state=>state.name),modeOverride:q.modeOverride||"",accepted:q.accepted||[],distractors:q.distractors||[],studySetId:q.studySetId||""};}
   function mistakeKey(q){return `${q.subject}|${q.prompt}|${q.answer}`;}
-  function hydrateQuestion(item){const q={subject:item.subject,prompt:item.prompt,answer:item.answer,detail:item.detail,speech:item.speech||"",a:item.a,b:item.b,map:item.map,combined:item.combined,answerType:item.answerType,modeOverride:item.modeOverride||undefined,accepted:item.accepted||[],distractors:item.distractors||[],studySetId:item.studySetId||""};if(item.stateName){q.state=STATE_DATA.find(state=>state.name===item.stateName);q.pool=STATE_DATA;}else if(item.subject==="spelling")q.pool=store.spelling;else if(item.subject==="study"){const set=store.studySets.find(candidate=>candidate.id===item.studySetId);q.pool=set?.questions||[];}return q;}
+  function hydrateQuestion(item){const q={subject:item.subject,prompt:item.prompt,answer:item.answer,detail:item.detail,speech:item.speech||"",a:item.a,b:item.b,map:item.map,placement:item.placement,neighbor:item.neighbor,regionSort:item.regionSort,discovery:item.discovery,combined:item.combined,answerType:item.answerType,modeOverride:item.modeOverride||undefined,accepted:item.accepted||[],distractors:item.distractors||[],studySetId:item.studySetId||""};q.oddStates=(item.oddStateNames||[]).map(name=>STATE_DATA.find(state=>state.name===name)).filter(Boolean);if(item.stateName){q.state=STATE_DATA.find(state=>state.name===item.stateName);q.pool=STATE_DATA;}else if(item.subject==="states")q.pool=STATE_DATA;else if(item.subject==="spelling")q.pool=store.spelling;else if(item.subject==="study"){const set=store.studySets.find(candidate=>candidate.id===item.studySetId);q.pool=set?.questions||[];}return q;}
   function startMistakeRound(items){const questions=shuffle(items).slice(0,20).map(hydrateQuestion).filter(q=>q.answer&&(!q.stateName||q.state));if(!questions.length)return toast("No mistakes are waiting for practice");startSession("Mistake Repair",questions,"mixed",0,{repair:true});}
   function startAssessment(subject){let questions=[],mode="mixed";
     if(subject==="states")questions=shuffle(stateQuestionBank(STATE_DATA.filter(s=>!s.district),"facts")).slice(0,10);
@@ -728,7 +823,7 @@
     if(!questions.length)return toast("Add learning material before starting this assessment");
     startSession(`${subjectLabel(subject)} Assessment`,questions,mode,0,{assessment:true,assessmentSubject:subject});
   }
-  function startSession(title,questions,mode,minutes=0,options={}){playStartCue();session={title,questions,index:0,correct:0,answeredCount:0,mode,locked:false,minutes,deadline:minutes?Date.now()+minutes*60000:0,timedOut:false,startedAt:Date.now(),earnedOrbs:0,wrongQuestions:[],completedMissions:[],newRewards:[],newChapters:[],...options};go("session");renderQuestion();}
+  function startSession(title,questions,mode,minutes=0,options={}){playStartCue();const subjects=new Set(questions.map(q=>q.subject)),quietPractice=options.assessment||options.repair||subjects.has("poem-read")||subjects.has("poem-recite"),defaultChallenge=subjects.has("study")?store.challengePrefs.study:[...subjects].some(subject=>subject.startsWith("poem"))?store.challengePrefs.poems:true,livesEnabled=options.livesEnabled??(!quietPractice&&defaultChallenge);session={title,questions,index:0,correct:0,answeredCount:0,mode,locked:false,minutes,deadline:minutes?Date.now()+minutes*60000:0,timedOut:false,startedAt:Date.now(),earnedOrbs:0,wrongQuestions:[],completedMissions:[],newRewards:[],newChapters:[],livesEnabled,lives:livesEnabled?3:0,maxLives:3,shieldActive:false,rebootUsed:false,endedByLives:false,...options};go("session");renderQuestion();}
   function resolvedMode(){return session.questions[session.index]?.modeOverride || (session.mode==="mixed"?pick(["choice","type"]):session.mode);}
   function updateTimer(){if(!session?.deadline)return;const left=Math.max(0,session.deadline-Date.now()),seconds=Math.ceil(left/1000),el=$("#timer");if(el)el.textContent=`${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;if(left<=0){clearInterval(session.timerId);session.timedOut=true;renderFinish();}}
   function renderQuestion(){
@@ -736,17 +831,25 @@
     setQuestionAudioDuck(!!q.speech);setAudioScene(session.silentMusic?"silent":"level");session.questionStarted=Date.now();
     const pct=(session.index/session.questions.length)*100,boss=session.bossId?BOSSES.find(item=>item.id===session.bossId):null,damage=Math.min(session.bossDamage||0,boss?.goal||0),health=boss?Math.max(0,Math.round((1-damage/boss.goal)*100)):0;
     const bossHud=boss?`<div class="boss-hud" style="--boss-color:${boss.color}"><img src="${boss.art}" alt="${esc(boss.name)}"><div><span>${esc(boss.sector)} boss</span><strong>${esc(boss.name)}</strong><div class="boss-health"><i style="width:${health}%"></i></div><small>${damage}/${boss.goal} signal hits</small></div></div>`:"";
-    view.innerHTML=`<div class="quiz-shell">${bossHud}<div class="quiz-top"><button class="back" data-end-session aria-label="End round">×</button><div class="quiz-progress"><span style="width:${pct}%"></span></div>${session.deadline?'<div class="timer" id="timer">0:00</div>':''}<div class="score"><img src="assets/ui/energy-orb.png" alt="">${session.correct}</div></div><div class="flash-card ${q.map?'map-card':''}" id="flashCard"><p class="prompt-label">${esc(session.title)} · ${session.index+1} of ${session.questions.length}</p><div id="questionBody"></div></div></div>`;
+    const lives=session.livesEnabled?`<div class="life-hud" aria-label="${session.lives} of ${session.maxLives} lives">${Array.from({length:session.maxLives},(_,index)=>`<span class="${index<session.lives?'charged':''}">◆</span>`).join('')}</div>`:"";
+    view.innerHTML=`<div class="quiz-shell">${bossHud}<div class="quiz-top"><button class="back" data-end-session aria-label="End round">×</button><div class="quiz-progress"><span style="width:${pct}%"></span></div>${session.deadline?'<div class="timer" id="timer">0:00</div>':''}${lives}<div class="score"><img src="assets/ui/energy-orb.png" alt="">${session.correct}</div></div>${supportTrayMarkup(q)}<div class="flash-card ${q.map||q.placement?'map-card':''}" id="flashCard"><p class="prompt-label">${esc(session.title)} · ${session.index+1} of ${session.questions.length}</p><div id="questionBody"></div></div></div>`;
     $('[data-end-session]').onclick=()=>{clearInterval(session?.timerId);session=null;go('home');};
     if(session.deadline){updateTimer();session.timerId=setInterval(updateTimer,250);}
     renderQuestionBody(q);
+    wireSupportTray(q);
   }
+
+  function supportTrayMarkup(q){const items=activeProfile().consumables||{},mode=session.currentMode,buttons=[];if(mode==="choice"&&items.targeting)buttons.push(["targeting","◎","Remove choice"]);if(mode==="type"&&(q.subject==="spelling"||q.subject==="state-spelling")&&items.letter)buttons.push(["letter","Aa","Reveal letter"]);if(q.subject==="states"&&items.map)buttons.push(["map","⌖","Map clue"]);if(q.subject?.startsWith("poem")&&items.verse)buttons.push(["verse","❝","Verse clue"]);if(session.deadline&&items.time)buttons.push(["time","+30","Add time"]);if(session.livesEnabled&&!session.shieldActive&&items.shield)buttons.push(["shield","◇","Shield"]);if(session.livesEnabled&&session.lives<session.maxLives&&items.repair)buttons.push(["repair","+1","Repair life"]);return buttons.length?`<div class="support-tray"><small>SUPPORT DECK</small>${buttons.map(([id,icon,label])=>`<button data-use-support="${id}"><b>${icon}</b><span>${label}</span><em>${items[id]}</em></button>`).join('')}</div>`:"";}
+  function consumeSupport(id){const inventory=activeProfile().consumables;if(!inventory?.[id])return false;inventory[id]--;save();return true;}
+  function wireSupportTray(q){$$('[data-use-support]').forEach(button=>button.onclick=()=>{const id=button.dataset.useSupport;if(id==="targeting"){const wrong=$$('.answer').filter(answer=>norm(answer.dataset.answer)!==norm(q.answer)&&!answer.hidden);if(!wrong.length)return toast("No removable answer remains");if(consumeSupport(id)){pick(wrong).hidden=true;button.remove();toast("One incorrect option removed");}}else if(id==="letter"){const answer=String(q.answer),available=[...answer].map((char,index)=>/[a-z]/i.test(char)&&!session.revealedLetters?.includes(index)?index:-1).filter(index=>index>=0);if(!available.length)return toast("Every letter is already visible");if(consumeSupport(id)){session.revealedLetters=[...(session.revealedLetters||[]),pick(available)];const hint=[...answer].map((char,index)=>/[a-z]/i.test(char)?session.revealedLetters.includes(index)?char:"_":char).join(" ");let hintEl=$("#supportHint");if(!hintEl){hintEl=document.createElement("div");hintEl.id="supportHint";hintEl.className="support-hint";$("#interaction").prepend(hintEl);}hintEl.textContent=hint;renderQuestionSupportCount(button,id);}}else if(id==="shield"){if(consumeSupport(id)){session.shieldActive=true;button.remove();toast("Shield Cell armed");}}else if(id==="repair"){if(session.lives>=session.maxLives)return toast("Lives are already full");if(consumeSupport(id)){session.lives++;renderQuestion();toast("One life restored");}}else if(id==="time"){if(consumeSupport(id)){session.deadline+=30000;renderQuestionSupportCount(button,id);toast("30 seconds added");}}else if(id==="map"){if(consumeSupport(id)){toast(`${q.state?.name||q.answer}: ${q.state?.region||"Look for its region"} · ${q.state?.division||""}`);renderQuestionSupportCount(button,id);}}else if(id==="verse"){if(consumeSupport(id)){const first=String(q.answer).trim().split(/\s+/)[0];toast(`The answer begins with “${first}…”`);renderQuestionSupportCount(button,id);}}});}
+  function renderQuestionSupportCount(button,id){const count=activeProfile().consumables[id]||0,em=button.querySelector('em');if(em)em.textContent=count;if(!count)button.remove();}
 
   function renderQuestionBody(q){
     const body=$("#questionBody");const mode=session.currentMode;
     const guide=`<div class="question-guide"><img src="assets/characters/professor-volt.png" alt=""><span>Professor Volt asks:</span></div>`;
     if(q.subject==="poem-read") {body.innerHTML=`${guide}<h2>${esc(q.prompt)}</h2><p class="helper">${esc(q.detail)}</p><button class="secondary" style="margin-bottom:16px" data-play-poem>🔊 Play poem audio</button><div class="poem-text">${esc(q.answer)}</div><button class="primary" style="margin-top:18px" data-self-done>I read it aloud</button>`;$('[data-play-poem]').onclick=()=>playPracticeAudio(q.speech,q.audio,q.poemId);$('[data-self-done]').onclick=()=>grade(true);return;}
     const speech=q.speech?`<button class="subject-icon" id="speakWord" aria-label="Hear the word" style="border:0;color:#5e4bd0">🔊</button>`:"";
+    if(mode==="map-place"){body.innerHTML=`${guide}<h2>${esc(q.prompt)}</h2><div class="state-drag-chip" draggable="true">${esc(q.state.name)}</div><div class="us-placement-map" id="placementMap"><span class="helper">Loading U.S. map…</span></div><div id="interaction"></div>`;renderStatePlacement(q);return;}
     body.innerHTML=`${guide}${q.map?`<div class="map-stage" id="mapStage"><span class="helper">Loading state shape…</span></div>`:""}${speech}<h2 class="${q.subject?.startsWith('poem')?'poem-text':''}">${esc(q.prompt)}</h2><div id="interaction"></div>`;
     if(q.map) renderStateMap(q.state);
     if(q.speech){const speak=()=>playPracticeAudio(q.speech);$("#speakWord").onclick=speak;setTimeout(speak,1200);}
@@ -769,10 +872,13 @@
 
   function answerOptions(q){
     if(q.subject==="math") return mathAnswerOptions(q);
-    if(q.subject==="spelling"||q.subject==="state-spelling"){const w=q.answer;const variants=[w,w.slice(0,-1)+(w.endsWith('e')?'a':'e'),w.replace(/([aeiou])/, '$1$1'),w.length>4?w.slice(0,2)+w.slice(3):w+'e'];return shuffle([...new Set(variants)]).slice(0,4);}
+    if(q.subject==="spelling"||q.subject==="state-spelling"){const w=q.answer,letters="abcdefghijklmnopqrstuvwxyz",variants=[w,w.slice(0,-1)+(w.endsWith('e')?'a':'e'),w.replace(/([aeiou])/, '$1$1'),w.length>4?w.slice(0,2)+w.slice(3):w+'e',w+"e",w.slice(0,-1),w.slice(0,-1)+letters[(letters.indexOf(w.slice(-1).toLowerCase())+1)%26]];const unique=[...new Set(variants.filter(Boolean))];for(let i=0;unique.length<4;i++)unique.push(`${w}${letters[i]}`);return shuffle(unique).slice(0,4);}
     if(q.subject==="states"){
-      if(q.combined){return shuffle([q.state,...shuffle(q.pool.filter(s=>s!==q.state)).slice(0,3)]).map(s=>q.map?`${s.name} · ${s.abbr} · ${s.capital}`:`${s.abbr} · ${s.capital}`);}
-      const prop=q.answerType==="state"?"name":q.answerType==="capital"?"capital":"abbr";return shuffle([q.answer,...shuffle(q.pool.filter(s=>s!==q.state)).slice(0,3).map(s=>s[prop])]);
+      if(q.oddStates)return shuffle(q.oddStates.map(state=>state.name));
+      if(q.combined){const pool=[...new Map([q.state,...shuffle(q.pool||[]),...shuffle(STATE_DATA)].filter(Boolean).map(state=>[state.abbr,state])).values()].slice(0,4);return shuffle(pool).map(s=>q.map?`${s.name} · ${s.abbr} · ${s.capital}`:`${s.abbr} · ${s.capital}`);}
+      if(q.answerType==="region")return shuffle([q.answer,...["Northeast","Midwest","South","West"].filter(value=>value!==q.answer).slice(0,3)]);
+      if(q.answerType==="division"){const divisions=[...new Set(STATE_DATA.map(state=>state.division.replace(" Division","")))];return shuffle([q.answer,...shuffle(divisions.filter(value=>value!==q.answer)).slice(0,3)]);}
+      const prop=q.answerType==="state"?"name":q.answerType==="capital"?"capital":"abbr",choices=[q.answer,...shuffle(q.pool||[]).map(s=>s[prop]),...shuffle(STATE_DATA).map(s=>s[prop])],unique=[...new Set(choices)];return shuffle(unique.slice(0,4));
     }
     if(q.subject==="study"){const poolAnswers=(q.pool||[]).map(item=>item.answer).filter(Boolean),fallback=["Not stated in the study guide","None of these","Unable to determine","All of these","Another answer"],choices=[q.answer,...(q.distractors||[]),...shuffle(poolAnswers.filter(answer=>norm(answer)!==norm(q.answer))),...fallback],unique=[...new Map(choices.map(value=>[norm(value),value])).values()];return shuffle(unique.slice(0,4));}
     return [q.answer];
@@ -781,7 +887,7 @@
   function renderTyped(q){const it=$("#interaction");if(q.combined){const labels=q.map?["State","Abbreviation","Capital"]:["Abbreviation","Capital"];it.innerHTML=`<div class="stack">${labels.map((l,i)=>`<input class="answer-input" data-part="${i}" aria-label="${l}" placeholder="${l}" autocapitalize="words">`).join("")}<button class="primary" data-check>Check answer</button></div><div id="feedback"></div>`;$('[data-check]').onclick=()=>{const vals=$$('[data-part]').map(x=>x.value);const expected=q.map?[q.state.name,q.state.abbr,q.state.capital]:[q.state.abbr,q.state.capital];finishAnswer(vals.every((v,i)=>norm(v)===norm(expected[i])),q);};}
     else{it.innerHTML=`<form id="answerForm" class="stack"><input class="answer-input" id="typedAnswer" aria-label="Your answer" placeholder="Type your answer" autocomplete="off" autocapitalize="words"><button class="primary">Check answer</button></form><div id="feedback"></div>`;$("#answerForm").onsubmit=e=>{e.preventDefault();const response=norm($("#typedAnswer").value),accepted=[q.answer,...(q.accepted||[])].map(norm);finishAnswer(accepted.includes(response),q);};setTimeout(()=>$("#typedAnswer")?.focus(),80);}}
 
-  function finishAnswer(ok,q){if(session.locked)return;session.locked=true;playFormEffect(ok);const feedback=$("#feedback")||$("#interaction"),form=activeWeapon();const correction=q.subject==="math"&&!ok?`${q.a} groups of ${q.b}: ${Array(q.a).fill(q.b).join(" + ") || "0"} = ${q.answer}`:q.detail||`Answer: ${q.answer}`;const message=ok?pick(["Nice work!","You got it!","Great recall!","Level up!"]):`Good try. ${esc(correction)}`;feedback.innerHTML=`<div class="feedback ${ok?'good':'try'} mascot-feedback form-feedback fx-${form.id}"><div class="form-answer-fx" aria-hidden="true"></div><img src="${sentinelArt(ok?'success':'thinking')}" alt=""><span>${message}</span></div><button class="primary" style="margin-top:10px" data-next>${session.index===session.questions.length-1?'See results':'Next question'}</button>`;$('[data-next]').onclick=()=>grade(ok,false);}
+  function finishAnswer(ok,q){if(session.locked)return;session.locked=true;playFormEffect(ok);const feedback=$("#feedback")||$("#interaction"),form=activeWeapon(),canRecall=!ok&&(activeProfile().consumables.recall||0)>0;const correction=q.subject==="math"&&!ok?`${q.a} groups of ${q.b}: ${Array(q.a).fill(q.b).join(" + ") || "0"} = ${q.answer}`:q.detail||`Answer: ${q.answer}`;const message=ok?pick(["Nice work!","You got it!","Great recall!","Level up!"]):`Good try. ${esc(correction)}`;feedback.innerHTML=`<div class="feedback ${ok?'good':'try'} mascot-feedback form-feedback fx-${form.id}"><div class="form-answer-fx" aria-hidden="true"></div><img src="${sentinelArt(ok?'success':'thinking')}" alt=""><span>${message}</span></div>${canRecall?`<button class="secondary recall-answer" data-recall-answer>↻ Use Recall Chip (${activeProfile().consumables.recall})</button>`:''}<button class="primary" style="margin-top:10px" data-next>${session.index===session.questions.length-1?'See results':'Next question'}</button>`;$('[data-recall-answer]')?.addEventListener('click',()=>{if(!consumeSupport('recall'))return;session.retryRequested=true;grade(false,false);});$('[data-next]').onclick=()=>grade(ok,false);}
   function recordAnswer(ok,q,elapsed=0){
     const profile=activeProfile(),stats=profile.stats,group=subjectGroup(q?.subject||"");
     const day=stats.days[today()]||{answered:0,correct:0};day.answered++;if(ok)day.correct++;stats.days[today()]=day;
@@ -796,29 +902,32 @@
     if(ok&&mission){const beforeRewards=unlockedRewards(profile).map(r=>r.name),beforeChapters=CHAPTERS.filter(chapter=>chapterUnlocked(profile,chapter)).map(chapter=>chapter.id),state=profile.missions[mission.id]||{progress:0,complete:false};if(!state.complete){state.progress=Math.min(mission.goal,(state.progress||0)+1);profile.missions[mission.id]=state;if(state.progress>=mission.goal){state.complete=true;stats.stars=(stats.stars||0)+mission.reward;session.earnedOrbs+=mission.reward;session.completedMissions.push(mission);const next=MISSIONS.find(m=>m.subject===group&&missionUnlocked(profile,m)&&(profile.missions[m.id]?.progress||0)<m.goal);if(next)profile.activeMissionId=next.id;}const afterRewards=unlockedRewards(profile).filter(r=>!beforeRewards.includes(r.name));session.newRewards.push(...afterRewards);const newChapters=CHAPTERS.filter(chapter=>chapterUnlocked(profile,chapter)&&!beforeChapters.includes(chapter.id));session.newChapters.push(...newChapters);}}
     syncActiveProfile();
   }
-  function grade(ok,withSound=true){if(withSound)playFormEffect(ok);const q=session.questions[session.index],elapsed=Math.max(0,Date.now()-(session.questionStarted||Date.now()));session.answeredCount=(session.answeredCount||0)+1;if(ok){session.correct++;if(session.bossId)session.bossDamage=(session.bossDamage||0)+1;}recordAnswer(ok,q,elapsed);save();if(session.bossId&&session.bossDamage>=session.bossGoal){session.bossDefeated=true;session.index=session.questions.length;}else session.index++;renderQuestion();}
+  function grade(ok,withSound=true){if(withSound)playFormEffect(ok);const q=session.questions[session.index],elapsed=Math.max(0,Date.now()-(session.questionStarted||Date.now()));session.answeredCount=(session.answeredCount||0)+1;if(ok){session.correct++;if(session.bossId)session.bossDamage=(session.bossDamage||0)+1;}else if(session.livesEnabled){if(session.shieldActive){session.shieldActive=false;toast("Shield Cell protected your life");}else session.lives=Math.max(0,session.lives-1);}recordAnswer(ok,q,elapsed);if(!ok&&session.retryRequested){session.questions.splice(session.index+1,0,{...q});session.retryRequested=false;}save();if(session.bossId&&session.bossDamage>=session.bossGoal){session.bossDefeated=true;session.index=session.questions.length;}else session.index++;if(session.livesEnabled&&!session.lives){session.endedByLives=true;renderFinish();}else renderQuestion();}
   function wireSwipe(){let startX=0;const card=$("#flashCard");card.addEventListener('touchstart',e=>startX=e.touches[0].clientX,{passive:true});card.addEventListener('touchend',e=>{if($("#revealed")?.hidden)return;const d=e.changedTouches[0].clientX-startX;if(Math.abs(d)>70)grade(d>0);},{passive:true});}
 
+  async function renderStatePlacement(q){const stage=$("#placementMap");try{if(!mapTopology){const res=await fetch("vendor/states-10m.json");mapTopology=await res.json();}const features=topojson.feature(mapTopology,mapTopology.objects.states).features,collection={type:"FeatureCollection",features},projection=d3.geoAlbersUsa().fitExtent([[8,8],[572,348]],collection),path=d3.geoPath(projection);stage.innerHTML=`<svg viewBox="0 0 580 356" role="img" aria-label="Blank United States placement map">${features.map(feature=>`<path data-state-id="${String(feature.id).padStart(2,'0')}" d="${path(feature)||''}"><title>Choose this location</title></path>`).join('')}</svg><p class="helper">Drag the state chip or tap its correct location.</p>`;$$('[data-state-id]',stage).forEach(shape=>{shape.onclick=()=>{if(session.locked)return;const ok=shape.dataset.stateId===q.state.id;shape.classList.add(ok?'correct':'wrong');if(ok)$$('[data-state-id]',stage).forEach(item=>{if(item.dataset.stateId===q.state.id)item.classList.add('correct');});finishAnswer(ok,q);};shape.ondragover=event=>event.preventDefault();shape.ondrop=event=>{event.preventDefault();shape.click();};});const chip=$('.state-drag-chip');chip?.addEventListener('dragstart',event=>event.dataTransfer.setData('text/plain',q.state.id));}catch{stage.innerHTML=`<div class="feedback try">The placement map could not load. Reopen the app and try again.</div>`;}}
   async function renderStateMap(state){const stage=$("#mapStage");try{if(!mapTopology){const res=await fetch("vendor/states-10m.json");mapTopology=await res.json();}const features=topojson.feature(mapTopology,mapTopology.objects.states).features;const feature=features.find(f=>String(f.id).padStart(2,'0')===state.id);const projection=d3.geoIdentity().reflectY(true).fitExtent([[18,14],[332,218]],feature);const path=d3.geoPath(projection);stage.innerHTML=`<svg viewBox="0 0 350 232" role="img" aria-label="Unlabeled state outline"><path d="${path(feature)}"></path></svg>`;}catch{stage.innerHTML=`<div class="feedback try">This state outline could not load. Try reopening the app.</div>`;}}
   function renderFinish(){
     clearInterval(session?.timerId);setQuestionAudioDuck(false);setAudioScene("finished");
     const boss=session.bossId?BOSSES.find(item=>item.id===session.bossId):null,profile=activeProfile(),bossWon=!!boss&&(session.bossDefeated||session.bossDamage>=boss.goal);
-    const total=boss?(session.answeredCount||session.index):(session.timedOut?session.index:session.questions.length),correct=session.correct,pct=Math.round(correct/Math.max(1,total)*100),pose=bossWon||pct>=60?'success':'thinking';
+    const interrupted=!!session.endedByLives,total=boss?(session.answeredCount||session.index):(session.timedOut||interrupted?session.answeredCount:session.questions.length),correct=session.correct,pct=Math.round(correct/Math.max(1,total)*100),pose=bossWon||pct>=60?'success':'thinking';
     const missed=[...new Map((session.wrongQuestions||[]).map(q=>[mistakeKey(q),q])).values()];
     if(bossWon&&!bossDefeated(profile,boss)){profile.bosses[boss.id]={defeated:true,date:today()};profile.stats.stars=(profile.stats.stars||0)+boss.reward;session.earnedOrbs=(session.earnedOrbs||0)+boss.reward;if(boss.id==="doubt-cloud"){const finale=CHAPTERS.find(chapter=>chapter.id==="arcade-reborn");if(finale&&!profile.seenChapters.includes(finale.id))session.newChapters.push(finale);}save();}
     if(!session.roundSaved){const stats=activeProfile().stats,round={date:today(),title:session.title,total,correct,accuracy:pct,durationMs:Date.now()-(session.startedAt||Date.now()),assessment:!!session.assessment};stats.rounds.push(round);stats.rounds=stats.rounds.slice(-100);if(session.assessment&&session.assessmentSubject)stats.assessments[session.assessmentSubject]=round;session.roundSaved=true;save();}
     const completed=session.completedMissions||[],newRewards=session.newRewards||[],newChapters=session.newChapters||[];
-    $("#sessionView").innerHTML=`${head(boss?bossWon?"Boss defeated!":"Boss retreat":session.timedOut?"Time's up!":session.assessment?"Assessment complete!":"Mission round complete!",session.title,"home")}
+    $("#sessionView").innerHTML=`${head(boss?bossWon?"Boss defeated!":interrupted?"Mission interrupted":"Boss retreat":interrupted?"Mission interrupted":session.timedOut?"Time's up!":session.assessment?"Assessment complete!":"Mission round complete!",session.title,"home")}
+      ${interrupted?`<section class="life-interrupted"><div class="interrupted-core">◇</div><div><p class="eyebrow">ENERGY DEPLETED</p><h2>Three lives used</h2><p>This run is saved. Review the missed signals, train without lives, or use one Emergency Reboot to continue.</p></div></section>`:''}
       ${boss?`<section class="boss-result ${bossWon?'defeated':'retry'}" style="--boss-color:${boss.color}"><img class="boss-result-enemy" src="${boss.art}" alt="${esc(boss.name)}"><img class="boss-result-hero" src="${sentinelArt(pose)}" alt="Circuit Sentinel"><div><p class="eyebrow">${bossWon?'Sector restored':'Signal still unstable'}</p><h2>${bossWon?`${esc(boss.name)} cleared!`:`${session.bossDamage||0} of ${boss.goal} hits landed`}</h2><p>${bossWon?`The ${esc(boss.sector)} is secure. Boss reward: ${boss.reward} bonus orbs.`:esc(boss.hint)}</p></div></section>`:''}
       <div class="result-hero ${bossWon||pct>=80?'victory':'practice'} form-result"><div class="result-burst"></div><img class="result-mascot" src="${sentinelArt(pose)}" alt="Circuit Sentinel ${bossWon||pct>=60?'celebrating':'thinking'}"><div class="result-copy"><p class="eyebrow">${bossWon?activeWeapon(profile).ability:pct>=90?'Gold signal':pct>=75?'Strong signal':'Signal training'}</p><h1>${correct} of ${total}</h1><div class="result-stars" aria-label="Performance rating">${[1,2,3].map((star,i)=>`<span class="${pct>=[60,75,90][i]?'lit':''}">★</span>`).join('')}</div><p>${bossWon?`${activeWeapon(profile).name} delivered the finishing signal.`:session.timedOut?`You answered ${total} before time ended. `:''}${bossWon?'':pct>=90?'Outstanding work—the sector is glowing!':pct>=75?'Great progress. Your recall is getting stronger.':pct>=60?'Solid practice. Repair the missed signals next.':'Every repaired mistake makes the Sentinel stronger.'}</p></div></div>
       <div class="result-rewards"><div><img src="assets/ui/energy-orb.png" alt=""><strong>+${session.earnedOrbs||0}</strong><span>Energy orbs</span></div><div><strong>${pct}%</strong><span>Accuracy</span></div><div><strong>${missed.length}</strong><span>To repair</span></div></div>
       ${completed.map(mission=>`<div class="panel mission-celebration"><img src="assets/characters/professor-volt.png" alt="Professor Volt"><div><p class="eyebrow">Mission complete</p><h2>${esc(mission.title)}</h2><p class="helper">Professor Volt restored another arcade system. Bonus: ${mission.reward} orbs.</p></div></div>`).join('')}
       ${newRewards.map(reward=>`<div class="unlock-banner"><span>${reward.icon}</span><div><p class="eyebrow">New Sentinel reward</p><h2>${esc(reward.name)}</h2></div></div>`).join('')}
       ${newChapters.map(chapter=>`<button class="chapter-unlock" data-chapter="${chapter.id}" style="--chapter-accent:${chapter.accent}"><span>NEW STORY</span><strong>${esc(chapter.number)} · ${esc(chapter.title)}</strong><small>Play the new animated transmission ›</small></button>`).join('')}
-      <div class="stack">${missed.length?'<button class="primary" data-repair>Practice missed answers</button>':''}<button class="${missed.length?'secondary':'primary'}" data-again>${boss?(bossWon?'Replay boss mission':'Retry boss mission'):'Practice this round again'}</button><button class="secondary" data-go="armory">Open Orb Shop & Locker</button><button class="secondary" data-go="story">Open mission map</button><button class="secondary" data-go="reports">View assessment report</button><button class="secondary" data-go="home">Back to quests</button></div>`;
+      <div class="stack">${interrupted&&!session.rebootUsed&&session.index<session.questions.length&&(profile.consumables.reboot||0)>0?`<button class="primary emergency-reboot" data-emergency-reboot>⚡ Emergency Reboot (${profile.consumables.reboot})</button>`:''}${missed.length?'<button class="primary" data-repair>Practice missed answers</button>':''}<button class="${missed.length?'secondary':'primary'}" data-again>${boss?(bossWon?'Replay boss mission':'Retry boss mission'):'Practice this round again'}</button><button class="secondary" data-go="armory">Open Orb Shop & Locker</button><button class="secondary" data-go="story">Open mission map</button><button class="secondary" data-go="reports">View assessment report</button><button class="secondary" data-go="home">Back to quests</button></div>`;
+    $('[data-emergency-reboot]')?.addEventListener('click',()=>{if(!consumeSupport('reboot'))return;if(session.roundSaved){profile.stats.rounds.pop();session.roundSaved=false;}session.lives=1;session.endedByLives=false;session.rebootUsed=true;save();setAudioScene("level");renderQuestion();toast("Emergency Reboot restored one life");});
     $('[data-repair]')?.addEventListener('click',()=>startMistakeRound(missed));
     $$('[data-chapter]').forEach(button=>button.onclick=()=>openChapter(button.dataset.chapter));
-    $('[data-again]').onclick=()=>{session.index=0;session.correct=0;session.answeredCount=0;session.bossDamage=0;session.bossDefeated=false;session.roundSaved=false;session.timedOut=false;session.startedAt=Date.now();session.earnedOrbs=0;session.wrongQuestions=[];session.completedMissions=[];session.newRewards=[];session.newChapters=[];session.deadline=session.minutes?Date.now()+session.minutes*60000:0;session.questions=boss?bossQuestions(boss):shuffle(session.questions);renderQuestion();};
+    $('[data-again]').onclick=()=>{session.index=0;session.correct=0;session.answeredCount=0;session.bossDamage=0;session.bossDefeated=false;session.roundSaved=false;session.timedOut=false;session.endedByLives=false;session.lives=session.livesEnabled?session.maxLives:0;session.shieldActive=false;session.rebootUsed=false;session.startedAt=Date.now();session.earnedOrbs=0;session.wrongQuestions=[];session.completedMissions=[];session.newRewards=[];session.newChapters=[];session.deadline=session.minutes?Date.now()+session.minutes*60000:0;session.questions=boss?bossQuestions(boss):shuffle(session.questions);renderQuestion();};
   }
 
   function renderSettings(){
@@ -850,7 +959,7 @@
 
   document.addEventListener("click", e => {const nav=e.target.closest("[data-go]");if(nav)go(nav.dataset.go);});
   window.addEventListener("hashchange",()=>go(location.hash.slice(1)||"home"));
-  if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=20"));
+  if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=29"));
   if (document.modelContext?.registerTool) {
     const register = tool => Promise.resolve(document.modelContext.registerTool(tool)).catch(() => {});
     register({name:"read_learning_sets",title:"Read learning sets",description:"Read the current spelling words and poem titles configured in Learning Arcade.",inputSchema:{type:"object",properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({spellingWords:[...store.spelling],poems:store.poems.map(p=>({id:p.id,title:p.title,author:p.author}))})});
