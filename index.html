@@ -12,9 +12,21 @@
   <link rel="manifest" href="manifest.webmanifest?v=20">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/app-icon-192.png?v=20">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/app-icon-180.png?v=20">
-  <link rel="stylesheet" href="styles.css?v=25">
+  <link rel="stylesheet" href="styles.css?v=26">
 </head>
-<body>
+<body class="intro-active">
+  <section class="startup-gate" id="startupGate" aria-label="Learning Arcade startup">
+    <div class="startup-console">
+      <div class="startup-logo"><img src="assets/icons/app-icon-192.png" alt="Circuit Sentinel"><div><small>CIRCUIT SENTINEL'S</small><strong>Learning Arcade</strong></div></div>
+      <div class="startup-scan" aria-hidden="true"><span></span></div>
+      <p class="startup-kicker">CENTRAL GRID · SYSTEM STANDBY</p>
+      <h1>Ready to begin<br>today's mission?</h1>
+      <p class="startup-message" id="startupMessage">Tap once to initialize sound and enter the arcade.</p>
+      <button class="startup-enter" id="enterArcade"><span>▶</span> Enter the Arcade</button>
+      <div class="startup-progress" aria-hidden="true"><i></i></div>
+      <small class="startup-status" id="startupStatus">AWAITING PILOT</small>
+    </div>
+  </section>
   <div class="app-shell">
     <header class="topbar">
       <button class="brand" type="button" data-go="home" aria-label="Go home">
@@ -31,32 +43,33 @@
       <section class="screen active" data-screen="home">
         <div class="welcome-row">
           <div>
-            <p class="eyebrow">Choose a quest</p>
-            <h1>What should we practice?</h1>
+            <p class="eyebrow" id="homeEyebrow">Choose a quest</p>
+            <h1 id="homeTitle">What should we practice?</h1>
           </div>
           <div class="streak-chip"><img src="assets/ui/energy-orb.png" alt=""><strong id="totalStars">0</strong> orbs</div>
         </div>
+        <nav class="dashboard-switch" aria-label="Choose dashboard"><button class="selected" data-home-mode="student"><span>⚡</span><strong>Student Arcade</strong><small>Play and learn</small></button><button data-home-mode="parent"><span>⌁</span><strong>Parent Command</strong><small>Plan and review</small></button></nav>
         <section class="home-cast" aria-label="Your learning guides">
           <img class="home-professor" src="assets/characters/professor-volt.png" alt="Professor Volt">
           <div class="cast-copy"><p class="eyebrow">Mission control</p><h2>Professor Volt and Circuit Sentinel are ready!</h2></div>
           <img class="home-robot" src="assets/characters/skins/core-idle.png" alt="Core Sentinel Circuit Sentinel">
         </section>
-        <div class="subject-grid">
-          <button class="subject-card states" data-go="states">
-            <span class="subject-icon">⌖</span><span class="subject-copy"><strong>State Quest</strong><small>States · capitals · abbreviations · maps</small></span><span class="arrow">›</span>
-          </button>
-          <button class="subject-card spelling" data-go="spelling">
-            <span class="subject-icon">Aa</span><span class="subject-copy"><strong>Word Wizard</strong><small>This week's spelling words</small></span><span class="arrow">›</span>
-          </button>
-          <button class="subject-card math" data-go="math">
-            <span class="subject-icon">×</span><span class="subject-copy"><strong>Multiply Mayhem</strong><small>Facts from 0 × 0 through 9 × 9</small></span><span class="arrow">›</span>
-          </button>
-          <button class="subject-card poems" data-go="poems">
-            <span class="subject-icon">❝</span><span class="subject-copy"><strong>Poem Power</strong><small>Read · remember · recite</small></span><span class="arrow">›</span>
-          </button>
+        <div class="student-home" data-home-panel="student">
+          <button class="story-launch" data-go="story"><span class="story-launch-icon">✦</span><span><small>CONTINUE THE ADVENTURE</small><strong>Story Mode</strong><em id="storyLaunchStatus">Restore the Learning Arcade</em></span><b>›</b></button>
+          <section class="home-zone game-zone"><div class="zone-heading"><span>01</span><div><p class="eyebrow">Training deck</p><h2>Game Modes</h2></div></div><div class="subject-grid">
+            <button class="subject-card states" data-go="states"><span class="subject-icon">⌖</span><span class="subject-copy"><strong>State Quest</strong><small>States · capitals · abbreviations · maps</small></span><span class="arrow">›</span></button>
+            <button class="subject-card spelling" data-go="spelling"><span class="subject-icon">Aa</span><span class="subject-copy"><strong>Word Wizard</strong><small>This week's spelling words</small></span><span class="arrow">›</span></button>
+            <button class="subject-card math" data-go="math"><span class="subject-icon">×</span><span class="subject-copy"><strong>Multiply Mayhem</strong><small>Facts from 0 × 0 through 9 × 9</small></span><span class="arrow">›</span></button>
+            <button class="subject-card poems" data-go="poems"><span class="subject-icon">❝</span><span class="subject-copy"><strong>Poem Power</strong><small>Read · remember · recite</small></span><span class="arrow">›</span></button>
+          </div></section>
+          <section class="home-zone support-zone"><div class="zone-heading"><span>02</span><div><p class="eyebrow">Support systems</p><h2>Arcade Tools</h2></div></div><div class="adventure-grid"><button class="adventure-card study-link" data-go="study"><span>CUSTOM PRACTICE</span><strong>Study Lab</strong><small>Use saved quizzes and flashcards</small></button><button class="adventure-card homework-link" data-go="homework"><span>WEEKLY PLAN</span><strong>Mission Board</strong><small>Check today's assignments</small></button><button class="adventure-card armory-link" data-go="armory"><span>ORBS & FORMS</span><strong>Shop & Locker</strong><small>Unlock and equip Sentinel forms</small></button><button class="adventure-card report-link" data-go="reports"><span>LEARNING RECORD</span><strong>Reports</strong><small>See progress and repaired skills</small></button></div></section>
+          <section class="progress-panel" id="homeReport"></section>
         </div>
-        <div class="adventure-grid"><button class="adventure-card study-link" data-go="study"><span>CUSTOM PRACTICE</span><strong>Study Lab</strong><small>Create flashcards, quizzes, and assessments</small></button><button class="adventure-card homework-link" data-go="homework"><span>WEEKLY PLAN</span><strong>Mission Board</strong><small>Track assignments Monday through Sunday</small></button><button class="adventure-card mission-link" data-go="story"><span>MISSION MAP</span><strong>Story Mode</strong><small>Animated chapters and restoration goals</small></button><button class="adventure-card armory-link" data-go="armory"><span>ORBS & FORMS</span><strong>Shop & Locker</strong><small>Unlock and equip Sentinel forms</small></button><button class="adventure-card report-link" data-go="reports"><span>LEARNING RECORD</span><strong>Assessments & Reports</strong><small>Accuracy, subjects, and recent rounds</small></button></div>
-        <section class="progress-panel" id="homeReport"></section>
+        <div class="parent-home" data-home-panel="parent" hidden>
+          <section class="parent-briefing"><img src="assets/characters/professor-volt.png" alt="Professor Volt"><div><p class="eyebrow">Parent Command</p><h2>Plan the week. Build the material. Review the results.</h2><p>To hold the phone during practice, open a game and choose <strong>Parent Swipe</strong> in that round's setup.</p></div></section>
+          <section class="home-zone parent-zone"><div class="zone-heading"><span>P</span><div><p class="eyebrow">Command tools</p><h2>Manage Learning</h2></div></div><div class="parent-tool-grid"><button class="parent-tool profiles-tool" data-go="profiles"><span>◎</span><strong>Learner Profiles</strong><small>Switch, create, or delete profiles</small></button><button class="parent-tool study-tool" data-go="study"><span>▤</span><strong>Study Lab Builder</strong><small>Create and import reusable quizzes</small></button><button class="parent-tool homework-tool" data-go="homework"><span>✓</span><strong>Mission Board</strong><small>Enter and verify weekly homework</small></button><button class="parent-tool states-tool" data-go="states"><span>⌖</span><strong>State Quest Sets</strong><small>Choose and save assigned states</small></button><button class="parent-tool reports-tool" data-go="reports"><span>⌁</span><strong>Assessments & Reports</strong><small>Review accuracy and skill mastery</small></button><button class="parent-tool settings-tool" data-go="settings"><span>⚙</span><strong>Parent Setup</strong><small>Audio, word banks, poems, and backups</small></button></div></section>
+          <button class="student-preview" data-home-mode="student">Return to Student Arcade</button>
+        </div>
       </section>
 
       <section class="screen" data-screen="states"><div id="statesView"></div></section>
@@ -79,6 +92,6 @@
   <script src="vendor/d3.min.js"></script>
   <script src="vendor/topojson-client.min.js"></script>
   <script src="data.js?v=20"></script>
-  <script src="app.js?v=25"></script>
+  <script src="app.js?v=26"></script>
 </body>
 </html>

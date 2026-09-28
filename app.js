@@ -182,6 +182,7 @@
   let homeworkWeekOffset = 0;
   let editingHomeworkId = "";
   let parentUnlocked = false;
+  let homeMode = "student";
   let activeChapterId = "blackout";
   let chapterStep = 0;
   let mapTopology = null;
@@ -232,7 +233,19 @@
   function playVoiceCue(source){if(!store.audioPrefs.enabled||!audioUnlocked)return Promise.resolve(false);ensureAudioGraph();voiceCue.pause();if(voiceCue.getAttribute("src")!==source){voiceCue.src=source;voiceCue.load();}voiceCue.currentTime=0;duckMusic(true);voiceCue.onended=()=>duckMusic(false);voiceCue.onerror=()=>duckMusic(false);return voiceCue.play().then(()=>true).catch(()=>{duckMusic(false);return false;});}
   function tryOpeningCue(){if(openingPlayed||openingAttempting||!store.audioPrefs.enabled||!$("[data-screen='home']").classList.contains("active"))return;openingAttempting=true;playVoiceCue(CUES.opening).then(started=>{openingAttempting=false;if(started)openingPlayed=true;});}
   function playStartCue(){playVoiceCue(CUES.start);}
-  function wireSoundControls(){const enabled=$("#soundEnabled"),volume=$("#soundVolume");enabled.checked=store.audioPrefs.enabled;volume.value=Math.round(masterVolume()*100);enabled.onchange=()=>{audioUnlocked=true;ensureAudioGraph();store.audioPrefs.enabled=enabled.checked;if(!enabled.checked){activeAudio?.pause();voiceCue.pause();window.speechSynthesis?.cancel();duckMusic(false);}save();applySoundVolumes();setAudioScene(audioScene);if(enabled.checked)tryOpeningCue();};volume.oninput=()=>{audioUnlocked=true;ensureAudioGraph();store.audioPrefs.master=Number(volume.value)/100;applySoundVolumes();save();syncMixerControls();if(store.audioPrefs.enabled&&backgroundMusic.paused&&audioScene!=="silent")setAudioScene(audioScene);};document.addEventListener("pointerdown",()=>{audioUnlocked=true;ensureAudioGraph();setAudioScene(audioScene);tryOpeningCue();},{capture:true});}
+  function wireSoundControls(){const enabled=$("#soundEnabled"),volume=$("#soundVolume");enabled.checked=store.audioPrefs.enabled;volume.value=Math.round(masterVolume()*100);enabled.onchange=()=>{audioUnlocked=true;ensureAudioGraph();store.audioPrefs.enabled=enabled.checked;if(!enabled.checked){activeAudio?.pause();voiceCue.pause();window.speechSynthesis?.cancel();duckMusic(false);}save();applySoundVolumes();setAudioScene(audioScene);};volume.oninput=()=>{audioUnlocked=true;ensureAudioGraph();store.audioPrefs.master=Number(volume.value)/100;applySoundVolumes();save();syncMixerControls();if(store.audioPrefs.enabled&&backgroundMusic.paused&&audioScene!=="silent")setAudioScene(audioScene);};document.addEventListener("pointerdown",()=>{if(document.body.classList.contains("intro-active"))return;audioUnlocked=true;ensureAudioGraph();setAudioScene(audioScene);},{capture:true});}
+
+  function wireStartupGate(){
+    const gate=$("#startupGate"),button=$("#enterArcade"),status=$("#startupStatus"),message=$("#startupMessage");if(!gate||!button)return;
+    button.onclick=()=>{
+      if(gate.classList.contains("launching"))return;
+      gate.classList.add("launching");button.disabled=true;status.textContent="INITIALIZING CENTRAL GRID";message.textContent=store.audioPrefs.enabled?"Professor Volt is opening the Learning Arcade…":"Initializing the Learning Arcade…";
+      audioUnlocked=true;ensureAudioGraph();backgroundMusic.pause();audioScene="silent";openingAttempting=true;openingPlayed=true;
+      let finished=false,fallback;
+      const finish=()=>{if(finished)return;finished=true;clearTimeout(fallback);openingAttempting=false;status.textContent="SYSTEMS READY";gate.classList.add("complete");setTimeout(()=>{document.body.classList.remove("intro-active");gate.hidden=true;setAudioScene("menu");},420);};
+      if(store.audioPrefs.enabled){voiceCue.pause();voiceCue.src=CUES.opening;voiceCue.currentTime=0;applySoundVolumes();voiceCue.onended=finish;voiceCue.onerror=finish;voiceCue.play().catch(()=>setTimeout(finish,1400));fallback=setTimeout(finish,5200);}else fallback=setTimeout(finish,1800);
+    };
+  }
 
   function refreshVoices() { availableVoices = window.speechSynthesis?.getVoices?.().filter(v => /^en([-_]|$)/i.test(v.lang)) || []; }
   refreshVoices();
@@ -332,8 +345,13 @@
     $("#totalStars").textContent = stats.stars || 0;
     $(".home-robot").src=sentinelArt("idle",profile);
     $(".home-robot").alt=`${activeWeapon(profile).name} Circuit Sentinel`;
+    $("#storyLaunchStatus").textContent=`${completedMissionCount(profile)}/20 systems restored · ${Object.keys(profile.bosses||{}).filter(id=>profile.bosses[id]?.defeated).length}/5 bosses cleared`;
     $("#homeReport").innerHTML=`<div><p class="eyebrow">${esc(profile.name)} · ${completedMissionCount(profile)}/20 missions</p><h2>${totals.answered?`${accuracy}% accuracy across ${totals.answered} answers`:"Ready to restore the Learning Arcade"}</h2><p class="helper">Current mission: ${esc(mission.title)} · ${progress}/${mission.goal}</p></div><button class="report-orb" data-go="reports" aria-label="Open reports"><img src="assets/ui/energy-orb.png" alt=""><strong>${stats.rounds.length}</strong><small>rounds</small></button>`;
+    renderHomeMode();
+    $$('[data-home-mode]').forEach(button=>button.onclick=()=>{const next=button.dataset.homeMode;if(next==="parent"&&!ensureParentAccess())return;homeMode=next;renderHomeMode();});
   }
+
+  function renderHomeMode(){const parent=homeMode==="parent";$$('[data-home-panel]').forEach(panel=>panel.hidden=panel.dataset.homePanel!==homeMode);$$('.dashboard-switch [data-home-mode]').forEach(button=>button.classList.toggle('selected',button.dataset.homeMode===homeMode));$("#homeEyebrow").textContent=parent?"Parent Command":"Choose a quest";$("#homeTitle").textContent=parent?"What should we manage?":"What should we practice?";document.body.dataset.homeMode=homeMode;}
 
   function modeButtons(current) {
     return `<div class="option-grid" data-choice-group="mode">
@@ -807,5 +825,5 @@
     register({name:"update_spelling_words",title:"Update spelling words",description:"Replace the weekly spelling word bank and update the visible app.",inputSchema:{type:"object",properties:{words:{type:"array",items:{type:"string",minLength:1},minItems:1}},required:["words"],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:true},execute:({words})=>{if(!Array.isArray(words)||!words.length)throw new Error("At least one word is required");store.spelling=[...new Set(words.map(w=>String(w).trim()).filter(Boolean))];save();if($("[data-screen='settings']").classList.contains("active"))renderSettings();return{saved:true,count:store.spelling.length};}});
     register({name:"add_practice_poem",title:"Add practice poem",description:"Add a poem to the memorization and recitation list.",inputSchema:{type:"object",properties:{title:{type:"string",minLength:1},author:{type:"string"},text:{type:"string",minLength:1}},required:["title","text"],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:true},execute:({title,author="",text})=>{if(!String(title).trim()||!String(text).trim())throw new Error("Title and poem text are required");const poem={id:`poem-${Date.now()}`,title:String(title).trim(),author:String(author).trim(),text:String(text).trim()};store.poems.push(poem);save();if($("[data-screen='poems']").classList.contains("active"))renderPoems();return{saved:true,id:poem.id,title:poem.title};}});
   }
-  wireSoundControls();renderHome();setAudioScene("menu");
+  wireSoundControls();wireStartupGate();renderHome();setAudioScene("menu");
 })();
