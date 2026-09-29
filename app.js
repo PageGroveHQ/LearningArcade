@@ -886,16 +886,37 @@
     return shuffle([n,...shuffle(distractors).slice(0,3)]).map(String);
   }
 
+  function spellingAnswerOptions(q) {
+    const answer=String(q.answer||"").trim(),letters="abcdefghijklmnopqrstuvwxyz";
+    if(!answer)return [];
+    const variants=[
+      answer.slice(0,-1)+(answer.endsWith("e")?"a":"e"),
+      answer.replace(/([aeiou])/i,"$1$1"),
+      answer.length>4?answer.slice(0,2)+answer.slice(3):answer+"e",
+      answer+"e",
+      answer.slice(0,-1),
+      answer.slice(0,-1)+letters[(letters.indexOf(answer.slice(-1).toLowerCase())+1)%26]
+    ];
+    const seen=new Set([norm(answer)]),distractors=[];
+    const add=candidate=>{candidate=String(candidate||"").trim();const key=norm(candidate);if(!candidate||!key||seen.has(key))return;seen.add(key);distractors.push(candidate);};
+    variants.forEach(add);
+    for(let index=0;distractors.length<3;index++)add(`${answer}${letters[index%letters.length]}${index>=letters.length?Math.floor(index/letters.length):""}`);
+    return shuffle([answer,...shuffle(distractors).slice(0,3)]);
+  }
+
+  function stateAnswerOptions(q){
+    if(q.oddStates)return shuffle(q.oddStates.map(state=>state.name));
+    if(q.combined){const pool=[...new Map([q.state,...shuffle(q.pool||[]),...shuffle(STATE_DATA)].filter(Boolean).map(state=>[state.abbr,state])).values()].slice(0,4);return shuffle(pool).map(state=>q.map?`${state.name} · ${state.abbr} · ${state.capital}`:`${state.abbr} · ${state.capital}`);}
+    if(q.answerType==="region")return shuffle([q.answer,...["Northeast","Midwest","South","West"].filter(value=>value!==q.answer).slice(0,3)]);
+    if(q.answerType==="division"){const divisions=[...new Set(STATE_DATA.map(state=>state.division.replace(" Division","")))];return shuffle([q.answer,...shuffle(divisions.filter(value=>value!==q.answer)).slice(0,3)]);}
+    const prop=q.answerType==="state"?"name":q.answerType==="capital"?"capital":"abbr",choices=[q.answer,...shuffle(q.pool||[]).map(state=>state[prop]),...shuffle(STATE_DATA).map(state=>state[prop])],unique=[...new Set(choices)];
+    return shuffle(unique.slice(0,4));
+  }
+
   function answerOptions(q){
     if(q.subject==="math") return mathAnswerOptions(q);
-    if(q.subject==="spelling"||q.subject==="state-spelling"){const w=q.answer,letters="abcdefghijklmnopqrstuvwxyz",variants=[w,w.slice(0,-1)+(w.endsWith('e')?'a':'e'),w.replace(/([aeiou])/, '$1$1'),w.length>4?w.slice(0,2)+w.slice(3):w+'e',w+"e",w.slice(0,-1),w.slice(0,-1)+letters[(letters.indexOf(w.slice(-1).toLowerCase())+1)%26]];const unique=[...new Set(variants.filter(Boolean))];for(let i=0;unique.length<4;i++)unique.push(`${w}${letters[i]}`);return shuffle(unique).slice(0,4);}
-    if(q.subject==="states"){
-      if(q.oddStates)return shuffle(q.oddStates.map(state=>state.name));
-      if(q.combined){const pool=[...new Map([q.state,...shuffle(q.pool||[]),...shuffle(STATE_DATA)].filter(Boolean).map(state=>[state.abbr,state])).values()].slice(0,4);return shuffle(pool).map(s=>q.map?`${s.name} · ${s.abbr} · ${s.capital}`:`${s.abbr} · ${s.capital}`);}
-      if(q.answerType==="region")return shuffle([q.answer,...["Northeast","Midwest","South","West"].filter(value=>value!==q.answer).slice(0,3)]);
-      if(q.answerType==="division"){const divisions=[...new Set(STATE_DATA.map(state=>state.division.replace(" Division","")))];return shuffle([q.answer,...shuffle(divisions.filter(value=>value!==q.answer)).slice(0,3)]);}
-      const prop=q.answerType==="state"?"name":q.answerType==="capital"?"capital":"abbr",choices=[q.answer,...shuffle(q.pool||[]).map(s=>s[prop]),...shuffle(STATE_DATA).map(s=>s[prop])],unique=[...new Set(choices)];return shuffle(unique.slice(0,4));
-    }
+    if(q.subject==="spelling"||q.subject==="state-spelling")return spellingAnswerOptions(q);
+    if(q.subject==="states")return stateAnswerOptions(q);
     if(q.subject==="study"){const poolAnswers=(q.pool||[]).map(item=>item.answer).filter(Boolean),fallback=["Not stated in the study guide","None of these","Unable to determine","All of these","Another answer"],choices=[q.answer,...(q.distractors||[]),...shuffle(poolAnswers.filter(answer=>norm(answer)!==norm(q.answer))),...fallback],unique=[...new Map(choices.map(value=>[norm(value),value])).values()];return shuffle(unique.slice(0,4));}
     return [q.answer];
   }
@@ -975,7 +996,7 @@
 
   document.addEventListener("click", e => {const nav=e.target.closest("[data-go]");if(nav)go(nav.dataset.go);});
   window.addEventListener("hashchange",()=>go(location.hash.slice(1)||"home"));
-  if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=29"));
+  if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=32"));
   if (document.modelContext?.registerTool) {
     const register = tool => Promise.resolve(document.modelContext.registerTool(tool)).catch(() => {});
     register({name:"read_learning_sets",title:"Read learning sets",description:"Read the current spelling words and poem titles configured in Learning Arcade.",inputSchema:{type:"object",properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({spellingWords:[...store.spelling],poems:store.poems.map(p=>({id:p.id,title:p.title,author:p.author}))})});
