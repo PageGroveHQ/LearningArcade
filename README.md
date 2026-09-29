@@ -32,6 +32,10 @@ Everything is static and can be hosted on GitHub Pages. Practice data is stored 
 
 The included `templates/study-lab-import-template.csv` opens in Excel, Numbers, or Google Sheets. Each row is one question. `set_title`, `question`, and `answer` are required; optional alternate answers and multiple-choice distractors use semicolons inside their cells. Multiple rows with the same set title become one reusable study set.
 
+## Mission Board imports
+
+The Mission Board accepts CSV files with `date`, `subject`, `assignment`, `notes`, and `estimated_minutes` columns. Dates use `YYYY-MM-DD`; `date` and `assignment` are required. Assignments are placed into the correct Monday–Sunday week automatically, and importing the same file again skips matching assignments. A reusable example is available at `templates/mission-board-import-template.csv`.
+
 ## Publish with GitHub Pages
 
 1. Put these files in the root of a GitHub repository.
