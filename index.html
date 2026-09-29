@@ -9,11 +9,11 @@
   <meta name="apple-mobile-web-app-title" content="Sentinel Arcade">
   <meta name="description" content="An installable learning arcade for states, spelling, multiplication, poems, missions, and progress reports.">
   <title>Circuit Sentinel's Learning Arcade</title>
-  <link rel="manifest" href="manifest.webmanifest?v=34">
-  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/app-icon-192.png?v=34">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/app-icon-180.png?v=34">
-  <link rel="stylesheet" href="styles.css?v=34">
-  <link rel="stylesheet" href="features.css?v=34">
+  <link rel="manifest" href="manifest.webmanifest?v=35">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/app-icon-192.png?v=35">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/app-icon-180.png?v=35">
+  <link rel="stylesheet" href="styles.css?v=35">
+  <link rel="stylesheet" href="features.css?v=35">
 </head>
 <body class="intro-active">
   <section class="startup-gate" id="startupGate" aria-label="Learning Arcade startup">
@@ -28,6 +28,15 @@
       <small class="startup-status" id="startupStatus">AWAITING PILOT</small>
     </div>
   </section>
+  <script>
+    window.__arcadeEnterRequested=false;
+    document.getElementById("enterArcade").addEventListener("click",function(){
+      window.__arcadeEnterRequested=true;
+      this.setAttribute("aria-busy","true");
+      const status=document.getElementById("startupStatus");
+      if(status&&status.textContent==="AWAITING PILOT")status.textContent="INITIALIZING CENTRAL GRID";
+    });
+  </script>
   <section class="onboarding-gate" id="onboardingGate" hidden aria-label="Required Parent Portal setup">
     <div class="onboarding-console">
       <div class="onboarding-brand"><img src="assets/characters/professor-volt.png" alt="Professor Volt"><div><p class="eyebrow">Required first-time setup</p><h1>Parent Portal</h1><p>Set up the protected parent area before opening Student Arcade.</p></div></div>
@@ -111,9 +120,9 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="vendor/d3.min.js"></script>
   <script src="vendor/topojson-client.min.js"></script>
-  <script src="data.js?v=34"></script>
-  <script src="cloud-config.js?v=34"></script>
-  <script src="app.js?v=34"></script>
-  <script type="module" src="cloud-sync.js?v=34"></script>
+  <script src="data.js?v=35"></script>
+  <script src="cloud-config.js?v=35"></script>
+  <script src="app.js?v=35"></script>
+  <script type="module" src="cloud-sync.js?v=35"></script>
 </body>
 </html>

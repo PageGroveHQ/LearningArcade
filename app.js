@@ -228,7 +228,9 @@
   const LOCAL_CHANGED="learning-arcade-local-changed-at-v1",DEVICE_ID="learning-arcade-device-id-v1";
   const save = () => {localStorage.setItem(STORE,JSON.stringify(store));localStorage.setItem(LOCAL_CHANGED,String(Date.now()));window.LearningArcadeCloud?.schedulePush?.();};
   function saveSoon(){setTimeout(save,0);}
-  window.LearningArcadeDataBridge={exportData:()=>JSON.parse(JSON.stringify(store)),importData:data=>{if(!data||!Array.isArray(data.profiles)||!data.profiles.length)throw new Error("Invalid cloud save");localStorage.setItem(STORE,JSON.stringify({...defaults,...data}));location.reload();},changedAt:()=>Number(localStorage.getItem(LOCAL_CHANGED))||0,markSynced:timestamp=>localStorage.setItem(LOCAL_CHANGED,String(timestamp||Date.now())),deviceId:()=>{let id=localStorage.getItem(DEVICE_ID);if(!id){id=`device-${Date.now()}-${Math.random().toString(36).slice(2,9)}`;localStorage.setItem(DEVICE_ID,id);}return id;}};
+  function freshData(){const fresh=structuredClone(defaults),profile=createProfile("Player 1");fresh.poems=structuredClone(window.DEFAULT_POEMS||[]);fresh.profiles=[profile];fresh.activeProfileId=profile.id;return fresh;}
+  function clearLocalData(){[STORE,OLD_STORE,LOCAL_CHANGED,DEVICE_ID,"learning-arcade-cloud-meta-v1"].forEach(key=>localStorage.removeItem(key));location.hash="";location.reload();}
+  window.LearningArcadeDataBridge={exportData:()=>JSON.parse(JSON.stringify(store)),freshData,clearLocalData,importData:data=>{if(!data||!Array.isArray(data.profiles)||!data.profiles.length)throw new Error("Invalid cloud save");localStorage.setItem(STORE,JSON.stringify({...defaults,...data}));location.reload();},changedAt:()=>Number(localStorage.getItem(LOCAL_CHANGED))||0,markSynced:timestamp=>localStorage.setItem(LOCAL_CHANGED,String(timestamp||Date.now())),deviceId:()=>{let id=localStorage.getItem(DEVICE_ID);if(!id){id=`device-${Date.now()}-${Math.random().toString(36).slice(2,9)}`;localStorage.setItem(DEVICE_ID,id);}return id;}};
   let session = null;
   let editingStudySetId = "";
   let homeworkWeekOffset = 0;
@@ -295,16 +297,17 @@
 
   function wireStartupGate(){
     const gate=$("#startupGate"),button=$("#enterArcade"),status=$("#startupStatus"),message=$("#startupMessage");if(!gate||!button)return;
+    let launchStarted=false;
     const launch=()=>{
-      if(gate.classList.contains("launching"))return;
+      if(launchStarted)return;launchStarted=true;
       gate.classList.add("launching");button.disabled=true;status.textContent="INITIALIZING CENTRAL GRID";message.textContent=store.audioPrefs.enabled?"Professor Volt is opening the Learning Arcade…":"Initializing the Learning Arcade…";
-      audioUnlocked=true;ensureAudioGraph();backgroundMusic.pause();audioScene="silent";openingAttempting=true;openingPlayed=true;
       let finished=false,fallback;
       const finish=()=>{if(finished)return;finished=true;clearTimeout(fallback);openingAttempting=false;status.textContent="SYSTEMS READY";gate.classList.add("complete");setTimeout(()=>{document.body.classList.remove("intro-active");gate.hidden=true;setAudioScene("menu");showRequiredOnboarding();},420);};
-      if(store.audioPrefs.enabled){voiceCue.pause();voiceCue.src=CUES.opening;voiceCue.currentTime=0;applySoundVolumes();voiceCue.onended=finish;voiceCue.onerror=finish;voiceCue.play().catch(()=>setTimeout(finish,1400));fallback=setTimeout(finish,5200);}else fallback=setTimeout(finish,1800);
+      fallback=setTimeout(finish,4800);
+      try{audioUnlocked=true;ensureAudioGraph();backgroundMusic.pause();audioScene="silent";openingAttempting=true;openingPlayed=true;if(store.audioPrefs.enabled){voiceCue.pause();voiceCue.src=CUES.opening;voiceCue.currentTime=0;applySoundVolumes();voiceCue.onended=finish;voiceCue.onerror=finish;const playback=voiceCue.play();if(playback&&typeof playback.catch==="function")playback.catch(()=>setTimeout(finish,900));}else setTimeout(finish,1200);}catch{setTimeout(finish,300);}
     };
-    button.onclick=launch;
     button.addEventListener("click",launch);
+    if(window.__arcadeEnterRequested)setTimeout(launch,0);
   }
 
   function showRequiredOnboarding(){
@@ -1023,6 +1026,7 @@
       <div class="panel" id="poemSettings"><h2>Poems</h2><div class="stack">${store.poems.map((p,i)=>`<div class="list-item"><span class="grow"><strong>${esc(p.title)}</strong><small>${esc(p.author||"")}</small></span><button class="tiny" data-edit-poem="${i}">Edit</button></div>`).join("")}</div><button class="secondary" style="margin-top:10px" id="addPoem">Add a poem</button><div id="poemEditor"></div></div>
       <div id="cloudSettings"></div>
       <div class="panel ${backupAge>14?'backup-reminder':''}"><div class="panel-title-row"><div><p class="label">Save protection</p><h2>Full app backup</h2></div><span class="status-pill ${backupAge<=14?'on':''}">${backupAge<=14?'Current':'Recommended'}</span></div><p class="helper">Progress is saved on this device. A full backup includes profiles, reports, Study Lab sets, state sets, weekly assignments, settings, and unlocks.</p><p class="backup-status">${esc(backupStatus)}</p><div class="two"><button class="secondary" id="exportData">Download backup</button><button class="secondary" id="importData">Restore backup</button></div><input type="file" id="importFile" accept="application/json,.json" hidden></div>
+      <div class="panel reset-data-panel"><div class="panel-title-row"><div><p class="label">Fresh start</p><h2>Erase Learning Arcade data</h2></div><span class="status-pill">Parent only</span></div><p class="helper">Remove profiles, progress, homework, Study Lab sets, orbs, purchases, settings, and paused rounds. If Cloud Save is signed in, its saved learning data is replaced with a blank copy so connected devices receive the reset.</p><button class="danger-btn" id="resetAllData">Start completely fresh</button></div>
       <div class="panel"><h2>Home-screen updates</h2><p class="helper">Tap “Check for update” to load the newest code without replacing saved progress. iPhone may require removing and re-adding the home-screen shortcut before a new app icon appears.</p><button class="secondary" id="checkUpdate">Check for update</button></div>`;
     wireMixerControls();
     renderCloudSettings();
@@ -1033,6 +1037,7 @@
     $("#saveWords").onclick=()=>{store.spelling=$("#wordBank").value.split(/[\n,]+/).map(w=>w.trim()).filter(Boolean);save();toast(`${store.spelling.length} spelling words saved`);};
     $("#addPoem").onclick=()=>renderPoemEditor();$$('[data-edit-poem]').forEach(b=>b.onclick=()=>renderPoemEditor(+b.dataset.editPoem));
     $("#exportData").onclick=exportData;$("#importData").onclick=()=>$("#importFile").click();$("#importFile").onchange=importData;
+    $("#resetAllData").onclick=async()=>{if(!confirm("Start completely fresh?\n\nThis permanently erases Learning Arcade profiles, progress, assignments, custom study material, purchases, settings, and paused rounds. A Cloud Save currently signed in on this device will also be reset."))return;try{const cloud=window.LearningArcadeCloud;if(cloud?.state?.().email)await cloud.resetAll();else window.LearningArcadeDataBridge.clearLocalData();}catch{toast("The reset could not finish. Your existing data was left in place.");}};
     $("#checkUpdate").onclick=async()=>{if(!('serviceWorker'in navigator)){toast('No update is waiting');return;}const reg=await navigator.serviceWorker.getRegistration();await reg?.update();toast('Update check complete');};
   }
   function syncMixerControls(){const top=$("#soundVolume");if(top)top.value=Math.round(masterVolume()*100);['master','music','effects'].forEach(key=>{const input=$(`[data-mixer="${key}"]`),output=$(`[data-mixer-output="${key}"]`);if(input)input.value=Math.round(store.audioPrefs[key]*100);if(output)output.textContent=`${Math.round(store.audioPrefs[key]*100)}%`;});const toggle=$("#settingsSoundEnabled");if(toggle)toggle.checked=store.audioPrefs.enabled;}
@@ -1046,7 +1051,7 @@
   window.addEventListener("pagehide",()=>persistSessionProgress());
   window.addEventListener("learning-arcade-cloud-state",()=>{if($("[data-screen='settings']")?.classList.contains("active"))renderCloudSettings();});
   window.addEventListener("hashchange",()=>go(location.hash.slice(1)||"home"));
-  if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=34"));
+  if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=35"));
   if (document.modelContext?.registerTool) {
     const register = tool => Promise.resolve(document.modelContext.registerTool(tool)).catch(() => {});
     register({name:"read_learning_sets",title:"Read learning sets",description:"Read the current spelling words and poem titles configured in Learning Arcade.",inputSchema:{type:"object",properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({spellingWords:[...store.spelling],poems:store.poems.map(p=>({id:p.id,title:p.title,author:p.author}))})});

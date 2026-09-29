@@ -1,0 +1,17 @@
+const assert=require("node:assert/strict");
+const fs=require("node:fs");
+const path=require("node:path");
+const root=path.join(__dirname,"..");
+const app=fs.readFileSync(path.join(root,"app.js"),"utf8");
+const html=fs.readFileSync(path.join(root,"index.html"),"utf8");
+const cloud=fs.readFileSync(path.join(root,"cloud-sync.js"),"utf8");
+assert(html.includes("__arcadeEnterRequested"),"Early startup taps are not queued");
+assert(app.includes("if(window.__arcadeEnterRequested)setTimeout(launch,0)"),"Queued startup taps are not replayed");
+assert(app.includes("fallback=setTimeout(finish,4800)"),"Startup does not have a fail-open timeout");
+const startup=app.slice(app.indexOf("function wireStartupGate"),app.indexOf("function showRequiredOnboarding"));
+assert(startup.indexOf("fallback=setTimeout(finish,4800)")<startup.indexOf("voiceCue.play()"),"Startup fallback is armed after audio playback");
+assert(app.includes("Start completely fresh")&&app.includes("resetAllData"),"Parent fresh-start control is missing");
+assert(app.includes('[STORE,OLD_STORE,LOCAL_CHANGED,DEVICE_ID,"learning-arcade-cloud-meta-v1"]'),"Reset does not target every Learning Arcade local key");
+assert(!app.includes("localStorage.clear()"),"Reset would erase unrelated apps on the shared GitHub Pages origin");
+assert(cloud.includes("resetAt:api.serverTimestamp()")&&cloud.includes("bridge.freshData()"),"Cloud reset does not replace the save with blank data");
+console.log("Validated early-tap startup recovery, audio fail-open timing, scoped local erasure, and blank Cloud Save replacement.");

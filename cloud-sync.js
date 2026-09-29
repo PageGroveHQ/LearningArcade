@@ -50,5 +50,6 @@ async function createAccount(email,password){await loadFirebase();status.phase="
 async function signIn(email,password){await loadFirebase();status.phase="loading";status.message="Signing in…";emit();await api.signInWithEmailAndPassword(auth,email,password);}
 async function signOut(){clearTimeout(pushTimer);await api.signOut(auth);user=null;status.email="";status.phase="signed-out";status.message="Signed out; local saving continues";emit();}
 async function pull(){if(!user)return;const snapshot=await api.getDoc(cloudDocument());if(snapshot.exists())await applyCloud(snapshot);}
-window.LearningArcadeCloud={state:()=>({...status}),subscribe(listener){listeners.add(listener);listener({...status});return()=>listeners.delete(listener);},createAccount,signIn,signOut,push:upload,pull,schedulePush};
+async function resetAll(){clearTimeout(pushTimer);if(user){status.phase="syncing";status.message="Resetting Cloud Save…";emit();const fresh=bridge.freshData();await api.setDoc(cloudDocument(),{format:"circuit-sentinel-learning-arcade",version:1,data:fresh,resetAt:api.serverTimestamp(),updatedAt:api.serverTimestamp(),updatedBy:bridge.deviceId()});await api.signOut(auth);}unsubscribe?.();localStorage.removeItem(META);bridge.clearLocalData();}
+window.LearningArcadeCloud={state:()=>({...status}),subscribe(listener){listeners.add(listener);listener({...status});return()=>listeners.delete(listener);},createAccount,signIn,signOut,push:upload,pull,resetAll,schedulePush};
 emit();initialize();window.addEventListener("online",()=>{if(status.pending)schedulePush();});

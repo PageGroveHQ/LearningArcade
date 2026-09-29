@@ -44,6 +44,8 @@ Cloud Save uses Firebase's no-cost Spark plan. The app remains fully usable with
 
 GitHub Pages distributes app code, layout changes, artwork, and bundled audio. Cloud Save synchronizes the changing family data: profiles, progress, reports, orbs and purchases, equipped cosmetics, settings, spelling and poem edits, Study Lab sets, State Quest sets, Mission Board assignments, and paused rounds. Manual JSON backups remain available as a separate recovery option. Avoid actively playing or editing the same profile on two devices at the exact same time; the most recently synchronized save becomes current.
 
+Parent Setup also includes **Start completely fresh**. It removes only Learning Arcade's own browser keys, never data belonging to another PageGrove app on the shared GitHub Pages domain. When Cloud Save is signed in, the cloud document is replaced with a blank Learning Arcade save so connected devices receive the reset; the Firebase login itself remains available for reuse.
+
 ## Study Lab imports
 
 The included `templates/study-lab-import-template.csv` opens in Excel, Numbers, or Google Sheets. Each row is one question. `set_title`, `question`, and `answer` are required; optional alternate answers and multiple-choice distractors use semicolons inside their cells. Multiple rows with the same set title become one reusable study set.
