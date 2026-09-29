@@ -354,6 +354,10 @@
     return window.AUDIO_PACKS?.[store.voicePrefs.source]?.spelling?.[norm(text)] || "";
   }
 
+  function stateRecordedAudio(state, field) {
+    return window.AUDIO_PACKS?.["circuit-sentinel"]?.states?.[state?.abbr]?.[field] || "";
+  }
+
   function playPracticeAudio(text, suppliedAudio="", poemId="") {
     if(!store.audioPrefs.enabled)return toast("Turn sound on to hear audio");
     const pack = window.AUDIO_PACKS?.[store.voicePrefs.source];
@@ -503,7 +507,7 @@
   function stateQuestion(state, kind, direction) {
     if (kind === "map") return {subject:"states", state, map:true, prompt:"Which state is this?", answer:`${state.name} · ${state.abbr} · ${state.capital}`, accepts:[state.name,state.abbr,state.capital], combined:true, detail:`${state.name} — ${state.abbr} — ${state.capital}`};
     if (kind === "triples") return {subject:"states", state, prompt:`Complete the set for ${state.name}`, answer:`${state.abbr} · ${state.capital}`, accepts:[state.abbr,state.capital], combined:true, detail:`${state.name} — ${state.abbr} — ${state.capital}`};
-    if (kind === "spelling") { const answer=direction==='capital'?state.capital:state.name; return {subject:"state-spelling",state,prompt:`Spell the ${direction==='capital'?'capital':'state name'} you hear`,answer,speech:answer,detail:`${state.name} — ${state.capital}`}; }
+    if (kind === "spelling") { const field=direction==='capital'?'capital':'name',answer=state[field]; return {subject:"state-spelling",state,prompt:`Spell the ${direction==='capital'?'capital':'state name'} you hear`,answer,speech:answer,audio:stateRecordedAudio(state,field),detail:`${state.name} — ${state.capital}`}; }
     const map = {
       "state-capital":[`What is the capital of ${state.name}?`,state.capital,"capital"],
       "state-abbr":[`What is the abbreviation for ${state.name}?`,state.abbr,"abbreviation"],
@@ -823,9 +827,9 @@
     renderMasteryMap("states");
   }
 
-  function questionSnapshot(q){return {subject:q.subject,prompt:q.prompt,answer:q.answer,detail:q.detail||q.answer,speech:q.speech||"",a:q.a,b:q.b,map:!!q.map,placement:!!q.placement,neighbor:!!q.neighbor,regionSort:!!q.regionSort,discovery:!!q.discovery,combined:!!q.combined,answerType:q.answerType||"",stateName:q.state?.name||"",oddStateNames:(q.oddStates||[]).map(state=>state.name),modeOverride:q.modeOverride||"",accepted:q.accepted||[],distractors:q.distractors||[],studySetId:q.studySetId||""};}
+  function questionSnapshot(q){return {subject:q.subject,prompt:q.prompt,answer:q.answer,detail:q.detail||q.answer,speech:q.speech||"",audio:q.audio||"",a:q.a,b:q.b,map:!!q.map,placement:!!q.placement,neighbor:!!q.neighbor,regionSort:!!q.regionSort,discovery:!!q.discovery,combined:!!q.combined,answerType:q.answerType||"",stateName:q.state?.name||"",oddStateNames:(q.oddStates||[]).map(state=>state.name),modeOverride:q.modeOverride||"",accepted:q.accepted||[],distractors:q.distractors||[],studySetId:q.studySetId||""};}
   function mistakeKey(q){return `${q.subject}|${q.prompt}|${q.answer}`;}
-  function hydrateQuestion(item){const q={subject:item.subject,prompt:item.prompt,answer:item.answer,detail:item.detail,speech:item.speech||"",a:item.a,b:item.b,map:item.map,placement:item.placement,neighbor:item.neighbor,regionSort:item.regionSort,discovery:item.discovery,combined:item.combined,answerType:item.answerType,modeOverride:item.modeOverride||undefined,accepted:item.accepted||[],distractors:item.distractors||[],studySetId:item.studySetId||""};q.oddStates=(item.oddStateNames||[]).map(name=>STATE_DATA.find(state=>state.name===name)).filter(Boolean);if(item.stateName){q.state=STATE_DATA.find(state=>state.name===item.stateName);q.pool=STATE_DATA;}else if(item.subject==="states")q.pool=STATE_DATA;else if(item.subject==="spelling")q.pool=store.spelling;else if(item.subject==="study"){const set=store.studySets.find(candidate=>candidate.id===item.studySetId);q.pool=set?.questions||[];}return q;}
+  function hydrateQuestion(item){const q={subject:item.subject,prompt:item.prompt,answer:item.answer,detail:item.detail,speech:item.speech||"",audio:item.audio||"",a:item.a,b:item.b,map:item.map,placement:item.placement,neighbor:item.neighbor,regionSort:item.regionSort,discovery:item.discovery,combined:item.combined,answerType:item.answerType,modeOverride:item.modeOverride||undefined,accepted:item.accepted||[],distractors:item.distractors||[],studySetId:item.studySetId||""};q.oddStates=(item.oddStateNames||[]).map(name=>STATE_DATA.find(state=>state.name===name)).filter(Boolean);if(item.stateName){q.state=STATE_DATA.find(state=>state.name===item.stateName);q.pool=STATE_DATA;}else if(item.subject==="states")q.pool=STATE_DATA;else if(item.subject==="spelling")q.pool=store.spelling;else if(item.subject==="study"){const set=store.studySets.find(candidate=>candidate.id===item.studySetId);q.pool=set?.questions||[];}return q;}
   function startMistakeRound(items){const questions=shuffle(items).slice(0,20).map(hydrateQuestion).filter(q=>q.answer&&(!q.stateName||q.state));if(!questions.length)return toast("No mistakes are waiting for practice");startSession("Mistake Repair",questions,"mixed",0,{repair:true});}
   function startAssessment(subject){let questions=[],mode="mixed";
     if(subject==="states")questions=shuffle(stateQuestionBank(STATE_DATA.filter(s=>!s.district),"facts")).slice(0,10);
@@ -864,7 +868,7 @@
     if(mode==="map-place"){body.innerHTML=`${guide}<h2>${esc(q.prompt)}</h2><div class="state-drag-chip" draggable="true">${esc(q.state.name)}</div><div class="us-placement-map" id="placementMap"><span class="helper">Loading U.S. map…</span></div><div id="interaction"></div>`;renderStatePlacement(q);return;}
     body.innerHTML=`${guide}${q.map?`<div class="map-stage" id="mapStage"><span class="helper">Loading state shape…</span></div>`:""}${speech}<h2 class="${q.subject?.startsWith('poem')?'poem-text':''}">${esc(q.prompt)}</h2><div id="interaction"></div>`;
     if(q.map) renderStateMap(q.state);
-    if(q.speech){const speak=()=>playPracticeAudio(q.speech);$("#speakWord").onclick=speak;setTimeout(speak,1200);}
+    if(q.speech){const speak=()=>playPracticeAudio(q.speech,q.audio);$("#speakWord").onclick=speak;setTimeout(speak,1200);}
     if(mode==="parent") renderParent(q); else if(mode==="choice") renderMultipleChoice(q); else renderTyped(q);
   }
 

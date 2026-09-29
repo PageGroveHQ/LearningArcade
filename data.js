@@ -54,6 +54,10 @@ window.STATE_DATA = [
 
 window.BUNDLED_SPELLING_WORDS = ["police","promise","reply","slight","behind","child","mire","cyclone","sighing","satisfy","lightning","die","rind","thy","untie","whine","divide","decide","sign","thigh"];
 const CARTOON_DOG_HEELER_WORDS = ["sheaf","were","between","extreme","turkey","trolley","wheat","feast","copy","astronomy","complete","envy","money","sincere","speech","kneel","tease","freeze","barley","empty"];
+const CIRCUIT_SENTINEL_STATE_AUDIO = Object.fromEntries(window.STATE_DATA.map(location=>[location.abbr,{
+  name:`audio/circuit-sentinel/states/names/${location.abbr.toLowerCase()}.mp3`,
+  capital:`audio/circuit-sentinel/states/capitals/${location.abbr.toLowerCase()}.mp3`
+}]));
 
 window.AUDIO_PACKS = {
   "cartoon-dog-heeler": {
@@ -75,7 +79,8 @@ window.AUDIO_PACKS = {
     sampleWord:"police",
     words:window.BUNDLED_SPELLING_WORDS,
     spelling:Object.fromEntries(window.BUNDLED_SPELLING_WORDS.map(word=>[word,`audio/circuit-sentinel/spelling/${word}.mp3`])),
-    poems:{"the-crocodile":"audio/circuit-sentinel/poems/the-crocodile.mp3"}
+    poems:{"the-crocodile":"audio/circuit-sentinel/poems/the-crocodile.mp3"},
+    states:CIRCUIT_SENTINEL_STATE_AUDIO
   }
 };
 

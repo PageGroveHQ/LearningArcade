@@ -1,0 +1,8 @@
+{
+  "model": "s2.1-pro-free",
+  "delayMs": 350,
+  "voice": {
+    "name": "circuit-sentinel",
+    "referenceId": "e61f2a036dc444fc97eb8ec84e9f81a0"
+  }
+}

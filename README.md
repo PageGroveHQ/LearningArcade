@@ -51,3 +51,14 @@ Ordinary updates do not require replacing the home-screen shortcut. When changin
 - Sentinel forms and permanent cosmetics do not change question difficulty or scoring. Support items are limited-use inventory.
 
 The armory and story assets are original Circuit Sentinel designs created for this project.
+
+## Generating Circuit Sentinel State Quest audio
+
+`tools/fish-state-audio.mjs` generates individual Circuit Sentinel recordings for all 50 state names, their capitals, District of Columbia, and Washington, D.C. directly from `STATE_DATA`. It explicitly selects Fish Audio's `s2.1-pro-free` model in the request header. The generated paths are deterministic, temporary API failures are retried, existing MP3s are preserved, and incomplete `.part` files are never used by the app.
+
+1. Run `tools/run-fish-state-audio.ps1` from a visible PowerShell terminal.
+2. Confirm that the terminal displays `SECURE HIDDEN PROMPT` before entering the Learning Arcade Fish Audio key.
+3. Paste the key only at that prompt. It should not appear on screen.
+4. Leave the terminal open until it reports that generation is complete and the key has been removed.
+
+The public Circuit Sentinel voice ID is stored in `tools/fish-state-audio.example.json`. The private API key is never stored in that file or GitHub. A local voice override may be saved as `tools/fish-state-audio.local.json`, which is ignored by Git. Output is written under `audio/circuit-sentinel/states/names/` and `audio/circuit-sentinel/states/capitals/`. State Quest automatically falls back to the selected device voice if a recording is unavailable.
