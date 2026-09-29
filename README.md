@@ -24,9 +24,25 @@ A mobile-first, installable learning app for:
 - One-time onboarding that establishes the PIN and child profile before Student Arcade opens
 - Versioned full-app backups with restore previews and a two-week backup reminder
 - Separate master, music, and sound-effect controls powered through a mobile-safe audio mixer
+- Resumable rounds with an in-game pause mixer, Save & Exit, and automatic background pausing
+- Optional owner-protected Firebase Cloud Save for synchronizing family data across devices
 - A Circuit Sentinel home-screen icon sized for iPhone and installable-app use
 
-Everything is static and can be hosted on GitHub Pages. Practice data is stored only in the browser on the current device.
+Everything is static and can be hosted on GitHub Pages. Practice data is always stored in the browser first; Cloud Save is an optional second copy for using the same family data on multiple devices.
+
+## Free Cloud Save setup
+
+Cloud Save uses Firebase's no-cost Spark plan. The app remains fully usable with local saves when Firebase is not configured or when a device is offline.
+
+1. Create a Firebase project and keep it on the **Spark (no-cost)** plan. Do not add a billing method.
+2. In **Build → Authentication → Sign-in method**, enable **Email/Password**.
+3. In **Build → Firestore Database**, create a database. Choose the region closest to the family.
+4. In **Project settings → Your apps**, register a Web app and copy its `firebaseConfig` object.
+5. In `cloud-config.js`, replace `null` with that public configuration object. This is normal public web configuration—not a private API, service-account, or Admin SDK key.
+6. In Firestore **Rules**, publish the contents of `firestore.rules`. The supplied rule permits each signed-in account to read and write only its own Learning Arcade save.
+7. Publish the site, open **Parent Setup → Cloud Save** on the primary device, create the family account, and use that same sign-in on the other devices.
+
+GitHub Pages distributes app code, layout changes, artwork, and bundled audio. Cloud Save synchronizes the changing family data: profiles, progress, reports, orbs and purchases, equipped cosmetics, settings, spelling and poem edits, Study Lab sets, State Quest sets, Mission Board assignments, and paused rounds. Manual JSON backups remain available as a separate recovery option. Avoid actively playing or editing the same profile on two devices at the exact same time; the most recently synchronized save becomes current.
 
 ## Study Lab imports
 
