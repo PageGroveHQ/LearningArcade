@@ -43,4 +43,8 @@ for (const marker of ['Targeting Chip','Emergency Reboot','Three-life challenge'
   if (!app.includes(marker)) throw new Error(`Missing feature marker: ${marker}`);
 }
 
+for (const marker of ['data-armory-pose','cosmeticDemo(item)','Buy for ${item.cost} orbs']) {
+  if (!app.includes(marker)) throw new Error(`Missing shop usability marker: ${marker}`);
+}
+
 console.log(`Validated ${states.length} locations, ${audioFiles.length} shop tracks, State Quest expansion markers, and three-life support systems.`);

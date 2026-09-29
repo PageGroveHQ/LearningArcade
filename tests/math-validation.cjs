@@ -5,7 +5,10 @@ const path = require("node:path");
 const appPath = path.join(__dirname, "..", "app.js");
 const source = fs.readFileSync(appPath, "utf8");
 const start = source.indexOf("function mathAnswerOptions(q)");
-const end = source.indexOf("\n\n  function answerOptions(q)", start);
+const answerOptionsMatch = /\r?\n\r?\n  function answerOptions\(q\)/g;
+answerOptionsMatch.lastIndex = start;
+const match = answerOptionsMatch.exec(source);
+const end = match ? match.index : -1;
 assert(start >= 0 && end > start, "Could not locate mathAnswerOptions in app.js");
 
 const functionSource = source.slice(start, end);
