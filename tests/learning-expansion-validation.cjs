@@ -34,8 +34,9 @@ for (const selector of ['.weekly-loadout-card','.math-program-tabs','.learn-mode
 
 assert(app.includes("dividing?'1s':'0s'"), 'Division Drive must not present zero as a divisor table');
 assert(css.includes('.table-grid>.choice:last-child:nth-child(odd){grid-column:auto}'), 'Odd table buttons must retain the same width as their neighbors');
-for (const versioned of ['styles.css?v=39','features.css?v=39','app.js?v=39','cloud-sync.js?v=39']) {
-  assert(html.includes(versioned), `Missing v39 asset marker: ${versioned}`);
+assert(app.includes('if(reopenCore)$("#coreTableGrid")?.closest("details")?.setAttribute("open","")'), 'Core table customization must stay expanded across selections');
+for (const versioned of ['styles.css?v=40','features.css?v=40','app.js?v=40','cloud-sync.js?v=40']) {
+  assert(html.includes(versioned), `Missing v40 asset marker: ${versioned}`);
 }
 
 console.log('Validated deferred round commits, exact latest-round undo, detailed history, guided practice, saved curricula, expanded math, weekly planning, rewards, summaries, and archive controls.');
