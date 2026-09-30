@@ -14,6 +14,13 @@ if (JSON.stringify(packIds) !== JSON.stringify(["circuit-sentinel"])) throw new 
 for (const word of expected) {
   const expectedPath = `audio/circuit-sentinel/spelling/${word.toLowerCase()}.mp3`;
   if (context.window.AUDIO_PACKS["circuit-sentinel"].spelling[word.toLowerCase()] !== expectedPath) throw new Error(`Incorrect mapping for ${word}.`);
+  if (process.argv.includes("--require-files")) {
+    const file = path.join(root, expectedPath);
+    if (!fs.existsSync(file) || fs.statSync(file).size < 1000) throw new Error(`Missing or invalid recording for ${word}: ${expectedPath}`);
+    const header = fs.readFileSync(file).subarray(0,3);
+    const looksLikeMp3 = header.toString("ascii") === "ID3" || (header[0] === 0xff && (header[1] & 0xe0) === 0xe0);
+    if (!looksLikeMp3) throw new Error(`Recording does not have an MP3 header: ${expectedPath}`);
+  }
 }
 
 const bank = fs.readFileSync(path.join(root, "tools", "circuit-sentinel-word-bank.txt"), "utf8").trim().split(/\r?\n/);
@@ -27,4 +34,4 @@ const appFiles = ["app.js","data.js","sw.js"].map(file=>fs.readFileSync(path.joi
 for (const legacy of ["william-cypher","cartoon-dog-heeler"]) {
   if (appFiles.includes(legacy)) throw new Error(`Legacy voice reference remains in the published app: ${legacy}`);
 }
-console.log("Validated the current 20-word Circuit Sentinel bank, mappings, secure generator, and legacy voice cleanup.");
+console.log(`Validated the current 20-word Circuit Sentinel bank, mappings, secure generator, and legacy voice cleanup${process.argv.includes("--require-files") ? " with generated MP3 files" : ""}.`);
