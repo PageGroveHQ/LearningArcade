@@ -7,6 +7,7 @@ const html=fs.readFileSync(path.join(root,"index.html"),"utf8");
 const cloud=fs.readFileSync(path.join(root,"cloud-sync.js"),"utf8");
 assert(html.includes("__arcadeEnterRequested"),"Early startup taps are not queued");
 assert(app.includes("if(window.__arcadeEnterRequested)setTimeout(launch,0)"),"Queued startup taps are not replayed");
+assert(app.includes("function saveSoon(){setTimeout(()=>save(),0);}"),"Fresh-start migrations can access save before it initializes");
 assert(app.includes("fallback=setTimeout(finish,4800)"),"Startup does not have a fail-open timeout");
 const startup=app.slice(app.indexOf("function wireStartupGate"),app.indexOf("function showRequiredOnboarding"));
 assert(startup.indexOf("fallback=setTimeout(finish,4800)")<startup.indexOf("voiceCue.play()"),"Startup fallback is armed after audio playback");

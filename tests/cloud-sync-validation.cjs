@@ -15,6 +15,7 @@ for(const method of ["createAccount","signIn","signOut","push:upload","pull","re
 assert(rules.includes("request.auth.uid == userId"),"Firestore saves are not owner protected");
 assert(app.includes("LearningArcadeDataBridge"),"The local data bridge is missing");
 for(const marker of ["Cloud Save setup needed","cloudCreateAccount","cloudPush","cloudPull","learning-arcade-cloud-state"])assert(app.includes(marker),`Missing Cloud Save UI marker: ${marker}`);
-assert(html.includes('src="cloud-config.js?v=35"')&&html.includes('type="module" src="cloud-sync.js?v=35"'),"Cloud scripts are not loaded in the expected order");
+const configIndex=html.indexOf('src="cloud-config.js?v='),syncIndex=html.indexOf('type="module" src="cloud-sync.js?v=');
+assert(configIndex>=0&&syncIndex>configIndex,"Cloud scripts are not loaded in the expected order");
 assert(worker.includes('"./cloud-config.js","./cloud-sync.js"'),"Cloud files are missing from the offline shell");
 console.log("Validated opt-in Cloud Save wiring, owner-only rules, local bridge, settings controls, and offline shell files.");

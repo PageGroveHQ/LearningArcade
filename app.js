@@ -227,7 +227,9 @@
   if(legacyBrandedPoem){store.poems.forEach(poem=>{if(poem.author==="Asher's Learning Arcade")poem.author="Learning Arcade";});saveSoon();}
   const LOCAL_CHANGED="learning-arcade-local-changed-at-v1",DEVICE_ID="learning-arcade-device-id-v1";
   const save = () => {localStorage.setItem(STORE,JSON.stringify(store));localStorage.setItem(LOCAL_CHANGED,String(Date.now()));window.LearningArcadeCloud?.schedulePush?.();};
-  function saveSoon(){setTimeout(save,0);}
+  // Defer the lookup as well as the call. Fresh installs reach the content
+  // migrations above before the `save` constant has finished initializing.
+  function saveSoon(){setTimeout(()=>save(),0);}
   function freshData(){const fresh=structuredClone(defaults),profile=createProfile("Player 1");fresh.poems=structuredClone(window.DEFAULT_POEMS||[]);fresh.profiles=[profile];fresh.activeProfileId=profile.id;return fresh;}
   function clearLocalData(){[STORE,OLD_STORE,LOCAL_CHANGED,DEVICE_ID,"learning-arcade-cloud-meta-v1"].forEach(key=>localStorage.removeItem(key));location.hash="";location.reload();}
   window.LearningArcadeDataBridge={exportData:()=>JSON.parse(JSON.stringify(store)),freshData,clearLocalData,importData:data=>{if(!data||!Array.isArray(data.profiles)||!data.profiles.length)throw new Error("Invalid cloud save");localStorage.setItem(STORE,JSON.stringify({...defaults,...data}));location.reload();},changedAt:()=>Number(localStorage.getItem(LOCAL_CHANGED))||0,markSynced:timestamp=>localStorage.setItem(LOCAL_CHANGED,String(timestamp||Date.now())),deviceId:()=>{let id=localStorage.getItem(DEVICE_ID);if(!id){id=`device-${Date.now()}-${Math.random().toString(36).slice(2,9)}`;localStorage.setItem(DEVICE_ID,id);}return id;}};
