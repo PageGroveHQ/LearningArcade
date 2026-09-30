@@ -97,7 +97,7 @@ The public Circuit Sentinel voice ID is stored in `tools/fish-state-audio.exampl
 
 The reusable Word Wizard workflow reads one word per line from `tools/circuit-sentinel-word-bank.txt` and writes matching MP3 files to `audio/circuit-sentinel/spelling/`. Change that text file whenever a new weekly bank is ready, then keep `BUNDLED_SPELLING_WORDS` in `data.js` synchronized with it.
 
-1. Run `tools/run-fish-word-bank-audio.ps1` from a visible PowerShell terminal.
+1. Double-click `tools/run-fish-word-bank-audio.cmd`. It opens the correct folder and runs the PowerShell launcher automatically.
 2. Paste the Learning Arcade Fish Audio key only into the secure hidden prompt.
 3. Wait for `Word-bank audio generation complete` and confirmation that the key was removed.
 4. Run `node tests/word-bank-audio-validation.cjs`, then commit the newly generated MP3 files with the matching word-bank update.
