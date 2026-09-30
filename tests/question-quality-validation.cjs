@@ -105,7 +105,7 @@ for(const subject of ["poem-line","poem-missing"]){
   const pattern=new RegExp(`subject:\"${subject}\"[^}]*modeOverride:\"choice\"`);
   assert(!pattern.test(app),`${subject} unexpectedly uses multiple choice without a distractor bank`);
 }
-assert(app.includes('startSession("Next-Line Prompts",shuffle(qs).slice(0,8),"type"'),"Next-line poems must use typed answers");
-assert(app.includes('startSession("Missing Words",qs,"type"'),"Missing-word poems must use typed answers");
+assert(app.includes('startSession(`Next-Line Prompts — ${poem.title}`,shuffle(qs).slice(0,8),"type"'),"Next-line poems must use typed answers");
+assert(app.includes('startSession(`Missing Words — ${poem.title}`,qs,"type"'),"Missing-word poems must use typed answers");
 
 console.log(`Validated 51 canonical locations, all nine division rosters, map coverage, 306 generated fact questions, ${(states.length*7*100).toLocaleString()} State Quest choice sets, and ${(spellingTargets.length*200).toLocaleString()} spelling-choice sets.`);
