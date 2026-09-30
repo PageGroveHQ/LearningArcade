@@ -35,7 +35,11 @@ for (const selector of ['.weekly-loadout-card','.math-program-tabs','.learn-mode
 assert(app.includes("dividing?'1s':'0s'"), 'Division Drive must not present zero as a divisor table');
 assert(css.includes('.table-grid>.choice:last-child:nth-child(odd){grid-column:auto}'), 'Odd table buttons must retain the same width as their neighbors');
 assert(app.includes('if(reopenCore)$("#coreTableGrid")?.closest("details")?.setAttribute("open","")'), 'Core table customization must stay expanded across selections');
-for (const versioned of ['styles.css?v=40','features.css?v=40','app.js?v=41','cloud-sync.js?v=40']) {
+assert(app.includes('d3.zoom().scaleExtent([1,7])'), 'State placement map must support bounded pinch and pan zoom');
+assert(app.includes('data-map-zoom="in"') && app.includes('data-map-zoom="reset"'), 'State placement map zoom controls are missing');
+assert(app.includes('event.defaultPrevented||session.locked'), 'Dragging the map must not submit a state answer');
+assert(css.includes('.map-zoom-controls') && css.includes('touch-action:none'), 'Responsive map zoom styling is missing');
+for (const versioned of ['styles.css?v=40','features.css?v=42','app.js?v=42','cloud-sync.js?v=40']) {
   assert(html.includes(versioned), `Missing current asset marker: ${versioned}`);
 }
 

@@ -1083,7 +1083,46 @@
   function grade(ok,withSound=true){if(withSound)playFormEffect(ok);const q=session.questions[session.index],elapsed=Math.max(0,Date.now()-(session.questionStarted||Date.now()));session.answeredCount=(session.answeredCount||0)+1;if(ok){session.correct++;if(session.bossId)session.bossDamage=(session.bossDamage||0)+1;}else if(session.livesEnabled){if(session.shieldActive){session.shieldActive=false;toast("Shield Cell protected your life");}else session.lives=Math.max(0,session.lives-1);}recordAnswer(ok,q,elapsed);if(!ok&&session.learnMode&&!q.learnRetry)session.questions.splice(Math.min(session.index+2,session.questions.length),0,{...q,learnRetry:true});if(!ok&&session.retryRequested){session.questions.splice(session.index+1,0,{...q});session.retryRequested=false;}persistSessionProgress();if(session.bossId&&session.bossDamage>=session.bossGoal){session.bossDefeated=true;session.index=session.questions.length;}else session.index++;if(session.livesEnabled&&!session.lives){session.endedByLives=true;renderFinish();}else renderQuestion();}
   function wireSwipe(){let startX=0;const card=$("#flashCard");card.addEventListener('touchstart',e=>startX=e.touches[0].clientX,{passive:true});card.addEventListener('touchend',e=>{if($("#revealed")?.hidden)return;const d=e.changedTouches[0].clientX-startX;if(Math.abs(d)>70)grade(d>0);},{passive:true});}
 
-  async function renderStatePlacement(q){const stage=$("#placementMap");try{if(!mapTopology){const res=await fetch("vendor/states-10m.json");mapTopology=await res.json();}const features=topojson.feature(mapTopology,mapTopology.objects.states).features,collection={type:"FeatureCollection",features},projection=d3.geoAlbersUsa().fitExtent([[8,8],[572,348]],collection),path=d3.geoPath(projection);stage.innerHTML=`<svg viewBox="0 0 580 356" role="img" aria-label="Blank United States placement map">${features.map(feature=>`<path data-state-id="${String(feature.id).padStart(2,'0')}" d="${path(feature)||''}"><title>Choose this location</title></path>`).join('')}</svg><p class="helper">Drag the state chip or tap its correct location.</p>`;$$('[data-state-id]',stage).forEach(shape=>{shape.onclick=()=>{if(session.locked)return;const ok=shape.dataset.stateId===q.state.id;shape.classList.add(ok?'correct':'wrong');$$('[data-state-id]',stage).forEach(item=>{if(item.dataset.stateId===q.state.id)item.classList.add('correct');});if(!ok){const note=document.createElement('p');note.className='placement-correction';note.textContent=`Correct location: ${q.state.name} (${q.state.abbr})`;stage.appendChild(note);}finishAnswer(ok,q);};shape.ondragover=event=>event.preventDefault();shape.ondrop=event=>{event.preventDefault();shape.click();};});const chip=$('.state-drag-chip');chip?.addEventListener('dragstart',event=>event.dataTransfer.setData('text/plain',q.state.id));}catch{stage.innerHTML=`<div class="feedback try">The placement map could not load. Reopen the app and try again.</div>`;}}
+  async function renderStatePlacement(q){
+    const stage=$("#placementMap");
+    try{
+      if(!mapTopology){const res=await fetch("vendor/states-10m.json");mapTopology=await res.json();}
+      const features=topojson.feature(mapTopology,mapTopology.objects.states).features;
+      const collection={type:"FeatureCollection",features};
+      const projection=d3.geoAlbersUsa().fitExtent([[8,8],[572,348]],collection);
+      const path=d3.geoPath(projection);
+      stage.innerHTML=`<div class="placement-map-viewport"><svg viewBox="0 0 580 356" role="img" aria-label="Interactive United States placement map"><g data-placement-map-layer>${features.map(feature=>`<path data-state-id="${String(feature.id).padStart(2,'0')}" d="${path(feature)||''}"><title>Choose this location</title></path>`).join('')}</g></svg><div class="map-zoom-controls" aria-label="Map zoom controls"><button type="button" data-map-zoom="in" aria-label="Zoom in">+</button><button type="button" data-map-zoom="out" aria-label="Zoom out">−</button><button type="button" data-map-zoom="reset" aria-label="Reset map zoom">↺</button></div><div class="map-zoom-level" aria-live="polite">100%</div></div><p class="helper">Tap a state to answer. Pinch or use +/− to zoom, then drag to move the map.</p>`;
+      const svg=d3.select(stage.querySelector("svg"));
+      const layer=svg.select("[data-placement-map-layer]");
+      const zoomLevel=stage.querySelector(".map-zoom-level");
+      const zoom=d3.zoom().scaleExtent([1,7]).clickDistance(7).extent([[0,0],[580,356]]).translateExtent([[-60,-45],[640,401]]).filter(event=>event.type!=="wheel"||event.ctrlKey).on("zoom",event=>{
+        layer.attr("transform",event.transform);
+        zoomLevel.textContent=`${Math.round(event.transform.k*100)}%`;
+        stage.classList.toggle("map-is-zoomed",event.transform.k>1.01);
+      });
+      svg.call(zoom).on("dblclick.zoom",null);
+      $$('[data-map-zoom]',stage).forEach(button=>button.onclick=event=>{
+        event.preventDefault();event.stopPropagation();
+        const action=button.dataset.mapZoom;
+        if(action==="reset")svg.transition().duration(180).call(zoom.transform,d3.zoomIdentity);
+        else svg.transition().duration(180).call(zoom.scaleBy,action==="in"?1.6:1/1.6);
+      });
+      $$('[data-state-id]',stage).forEach(shape=>{
+        shape.onclick=event=>{
+          if(event.defaultPrevented||session.locked)return;
+          const ok=shape.dataset.stateId===q.state.id;
+          shape.classList.add(ok?'correct':'wrong');
+          $$('[data-state-id]',stage).forEach(item=>{if(item.dataset.stateId===q.state.id)item.classList.add('correct');});
+          if(!ok){const note=document.createElement('p');note.className='placement-correction';note.textContent=`Correct location: ${q.state.name} (${q.state.abbr})`;stage.appendChild(note);}
+          finishAnswer(ok,q);
+        };
+        shape.ondragover=event=>event.preventDefault();
+        shape.ondrop=event=>{event.preventDefault();shape.click();};
+      });
+      const chip=$('.state-drag-chip');
+      chip?.addEventListener('dragstart',event=>event.dataTransfer.setData('text/plain',q.state.id));
+    }catch{stage.innerHTML=`<div class="feedback try">The placement map could not load. Reopen the app and try again.</div>`;}
+  }
   async function renderStateMap(state){const stage=$("#mapStage");try{if(!mapTopology){const res=await fetch("vendor/states-10m.json");mapTopology=await res.json();}const features=topojson.feature(mapTopology,mapTopology.objects.states).features;const feature=features.find(f=>String(f.id).padStart(2,'0')===state.id);const projection=d3.geoIdentity().reflectY(true).fitExtent([[18,14],[332,218]],feature);const path=d3.geoPath(projection);stage.innerHTML=`<svg viewBox="0 0 350 232" role="img" aria-label="Unlabeled state outline"><path d="${path(feature)}"></path></svg>`;}catch{stage.innerHTML=`<div class="feedback try">This state outline could not load. Try reopening the app.</div>`;}}
   function commitRoundResults(profile,boss,bossWon,total,correct,pct){if(session.resultsCommitted)return;const before=progressSnapshot(profile);if(session.inventoryBefore)before.consumables=structuredClone(session.inventoryBefore);session.earnedOrbs=0;session.completedMissions=[];session.newRewards=[];session.newChapters=[];(session.answerEvents||[]).forEach(event=>applyCommittedAnswer(!!event.ok,hydrateQuestion(event.question),event.elapsed||0));if(bossWon&&!bossDefeated(profile,boss)){profile.bosses[boss.id]={defeated:true,date:today()};profile.stats.stars=(profile.stats.stars||0)+boss.reward;session.earnedOrbs=(session.earnedOrbs||0)+boss.reward;if(boss.id==="doubt-cloud"){const finale=CHAPTERS.find(chapter=>chapter.id==="arcade-reborn");if(finale&&!profile.seenChapters.includes(finale.id))session.newChapters.push(finale);}}const round={id:`round-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,date:today(),completedAt:new Date().toISOString(),title:session.title,total,correct,accuracy:pct,durationMs:Date.now()-(session.startedAt||Date.now()),assessment:!!session.assessment,earnedOrbs:session.earnedOrbs||0,answers:(session.answerEvents||[]).map(event=>({...event,question:structuredClone(event.question)}))};profile.stats.rounds.push(round);profile.stats.rounds=profile.stats.rounds.slice(-100);if(session.assessment&&session.assessmentSubject)profile.stats.assessments[session.assessmentSubject]=round;profile.lastRoundUndo={roundId:round.id,before,createdAt:round.completedAt};session.roundId=round.id;session.resultsCommitted=true;session.roundSaved=true;syncActiveProfile();save();}
   function rollbackLatestRound(profile=activeProfile()){const receipt=profile.lastRoundUndo,round=profile.stats.rounds.at(-1);if(!receipt||!round||round.id!==receipt.roundId)return false;restoreProgress(profile,receipt.before);profile.stats.rounds=profile.stats.rounds.filter(item=>item.id!==receipt.roundId);profile.lastRoundUndo=null;syncActiveProfile();save();return true;}
@@ -1161,7 +1200,7 @@
   window.addEventListener("pagehide",()=>persistSessionProgress());
   window.addEventListener("learning-arcade-cloud-state",()=>{if($("[data-screen='settings']")?.classList.contains("active"))renderCloudSettings();});
   window.addEventListener("hashchange",()=>go(location.hash.slice(1)||"home"));
-  if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=41"));
+  if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=42"));
   if (document.modelContext?.registerTool) {
     const register = tool => Promise.resolve(document.modelContext.registerTool(tool)).catch(() => {});
     register({name:"read_learning_sets",title:"Read learning sets",description:"Read the current spelling words and poem titles configured in Learning Arcade.",inputSchema:{type:"object",properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({spellingWords:[...store.spelling],poems:store.poems.map(p=>({id:p.id,title:p.title,author:p.author}))})});
