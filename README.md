@@ -92,3 +92,14 @@ The armory and story assets are original Circuit Sentinel designs created for th
 4. Leave the terminal open until it reports that generation is complete and the key has been removed.
 
 The public Circuit Sentinel voice ID is stored in `tools/fish-state-audio.example.json`. The private API key is never stored in that file or GitHub. A local voice override may be saved as `tools/fish-state-audio.local.json`, which is ignored by Git. Output is written under `audio/circuit-sentinel/states/names/` and `audio/circuit-sentinel/states/capitals/`. State Quest automatically falls back to the selected device voice if a recording is unavailable.
+
+## Generating Circuit Sentinel Word Wizard audio
+
+The reusable Word Wizard workflow reads one word per line from `tools/circuit-sentinel-word-bank.txt` and writes matching MP3 files to `audio/circuit-sentinel/spelling/`. Change that text file whenever a new weekly bank is ready, then keep `BUNDLED_SPELLING_WORDS` in `data.js` synchronized with it.
+
+1. Run `tools/run-fish-word-bank-audio.ps1` from a visible PowerShell terminal.
+2. Paste the Learning Arcade Fish Audio key only into the secure hidden prompt.
+3. Wait for `Word-bank audio generation complete` and confirmation that the key was removed.
+4. Run `node tests/word-bank-audio-validation.cjs`, then commit the newly generated MP3 files with the matching word-bank update.
+
+Existing recordings are preserved, temporary `.part` files are ignored, and missing recordings fall back to the selected device voice. Retired voice packs are kept only in the local Git-ignored `.local-audio-archive/` folder so they can be recovered without continuing to publish them on GitHub Pages.

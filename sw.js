@@ -1,6 +1,8 @@
-const CACHE = "learning-arcade-v40";
-const PACKS = {"cartoon-dog-heeler":["sheaf","were","between","extreme","turkey","trolley","wheat","feast","copy","astronomy","complete","envy","money","sincere","speech","kneel","tease","freeze","barley","empty"],"william-cypher":["police","promise","reply","slight","behind","child","mire","cyclone","sighing","satisfy","lightning","die","rind","thy","untie","whine","divide","decide","sign","thigh"],"circuit-sentinel":["police","promise","reply","slight","behind","child","mire","cyclone","sighing","satisfy","lightning","die","rind","thy","untie","whine","divide","decide","sign","thigh"]};
-const AUDIO = Object.entries(PACKS).flatMap(([pack,words])=>[`./audio/${pack}/poems/the-crocodile.mp3`,...words.map(word=>`./audio/${pack}/spelling/${word}.mp3`)]);
+const CACHE = "learning-arcade-v41";
+const PACKS = {"circuit-sentinel":["yolk","post","thrown","throat","suppose","though","approach","bellow","foam","know","joe","colt","doughnut","yoke","stroll","hoe","throne","boast","woeful","prove"]};
+// Word recordings are cached on first successful use. Keeping them out of the
+// install list lets a newly entered bank use device speech until its MP3s are generated.
+const AUDIO = Object.keys(PACKS).map(pack=>`./audio/${pack}/poems/the-crocodile.mp3`);
 const STATE_ABBRS = ["al","ak","az","ar","ca","co","ct","de","dc","fl","ga","hi","id","il","in","ia","ks","ky","la","me","md","ma","mi","mn","ms","mo","mt","ne","nv","nh","nj","nm","ny","nc","nd","oh","ok","or","pa","ri","sc","sd","tn","tx","ut","vt","va","wa","wv","wi","wy"];
 const STATE_AUDIO = STATE_ABBRS.flatMap(abbr=>[`./audio/circuit-sentinel/states/names/${abbr}.mp3`,`./audio/circuit-sentinel/states/capitals/${abbr}.mp3`]);
 const SKINS = ["core","ember","frost","volt","cyclone","prism"].flatMap(form=>["idle","success","thinking"].map(pose=>`./assets/characters/skins/${form}-${pose}.png`));

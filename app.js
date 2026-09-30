@@ -229,9 +229,8 @@
     saveSoon();
   }
   if (!store.audioContentV2) {
-    const earlierWords = window.AUDIO_PACKS?.["cartoon-dog-heeler"]?.words || [];
-    if (sameWords(store.spelling, earlierWords) || sameWords(store.spelling, ORIGINAL_SPELLING)) store.spelling = [...BUNDLED_SPELLING];
-    if (!store.voicePrefs.source || store.voicePrefs.source === "cartoon-dog-heeler") store.voicePrefs.source = "william-cypher";
+    if (sameWords(store.spelling, ORIGINAL_SPELLING)) store.spelling = [...BUNDLED_SPELLING];
+    if (!store.voicePrefs.source) store.voicePrefs.source = "circuit-sentinel";
     store.spellingPrefs.count = "max";
     store.audioContentV2 = true;
     saveSoon();
@@ -240,6 +239,28 @@
     const crocodile=store.poems.find(poem=>poem.id==="the-crocodile");
     if(crocodile){crocodile.text=crocodile.text.replace(/ev[’']ry/gi,"every");crocodile.audio="audio/circuit-sentinel/poems/the-crocodile.mp3";}
     store.audioContentV3=true;
+    saveSoon();
+  }
+  if (!store.audioContentV4) {
+    const currentSetId="word-set-circuit-sentinel-current";
+    if(store.voicePrefs.source!=="system"&&!window.AUDIO_PACKS?.[store.voicePrefs.source])store.voicePrefs.source="circuit-sentinel";
+    let currentSet=store.spellingSets.find(set=>set.id===currentSetId);
+    if(!currentSet){
+      currentSet={id:currentSetId,name:"Circuit Sentinel — Current Words",words:[...BUNDLED_SPELLING],archived:false};
+      store.spellingSets.push(currentSet);
+    }else{
+      currentSet.name="Circuit Sentinel — Current Words";
+      currentSet.words=[...BUNDLED_SPELLING];
+      currentSet.archived=false;
+    }
+    const activeSet=store.spellingSets.find(set=>set.id===store.activeSpellingSetId);
+    const emptyOrBundledDefault=!activeSet||(!activeSet.words.length&&/current word list/i.test(activeSet.name||""));
+    if(emptyOrBundledDefault){
+      if(activeSet&&activeSet.id!==currentSetId)store.spellingSets=store.spellingSets.filter(set=>set.id!==activeSet.id);
+      store.activeSpellingSetId=currentSetId;
+      store.spelling=[...BUNDLED_SPELLING];
+    }
+    store.audioContentV4=true;
     saveSoon();
   }
   const legacyBrandedPoem=store.poems.find(poem=>poem.author==="Asher's Learning Arcade");
@@ -389,13 +410,12 @@
   function playPracticeAudio(text, suppliedAudio="", poemId="") {
     if(!store.audioPrefs.enabled)return toast("Turn sound on to hear audio");
     const pack = window.AUDIO_PACKS?.[store.voicePrefs.source];
-    const fallbackPack=window.AUDIO_PACKS?.["william-cypher"];
-    const audioPath = pack ? (poemId ? pack.poems?.[poemId] || suppliedAudio : recordedAudioFor(text)||fallbackPack?.spelling?.[norm(text)]||suppliedAudio) : suppliedAudio;
+    const audioPath = pack ? (poemId ? pack.poems?.[poemId] || suppliedAudio : recordedAudioFor(text)||suppliedAudio) : suppliedAudio;
     if (!audioPath) { speakText(text); return; }
     window.speechSynthesis?.cancel();
     if (activeAudio) activeAudio.pause();
     activeAudio = new Audio(audioPath);
-    ensureAudioGraph();connectMedia(activeAudio,voiceGain);applySoundVolumes();duckMusic(true);activeAudio.onended=()=>duckMusic(false);activeAudio.onerror=()=>duckMusic(false);activeAudio.play().catch(()=>{duckMusic(false);speakText(text);});
+    ensureAudioGraph();connectMedia(activeAudio,voiceGain);applySoundVolumes();duckMusic(true);activeAudio.onended=()=>duckMusic(false);activeAudio.onerror=()=>{duckMusic(false);speakText(text);};activeAudio.play().catch(()=>{duckMusic(false);speakText(text);});
   }
 
   function voicePanelMarkup() {
@@ -1141,7 +1161,7 @@
   window.addEventListener("pagehide",()=>persistSessionProgress());
   window.addEventListener("learning-arcade-cloud-state",()=>{if($("[data-screen='settings']")?.classList.contains("active"))renderCloudSettings();});
   window.addEventListener("hashchange",()=>go(location.hash.slice(1)||"home"));
-  if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=40"));
+  if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=41"));
   if (document.modelContext?.registerTool) {
     const register = tool => Promise.resolve(document.modelContext.registerTool(tool)).catch(() => {});
     register({name:"read_learning_sets",title:"Read learning sets",description:"Read the current spelling words and poem titles configured in Learning Arcade.",inputSchema:{type:"object",properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({spellingWords:[...store.spelling],poems:store.poems.map(p=>({id:p.id,title:p.title,author:p.author}))})});
