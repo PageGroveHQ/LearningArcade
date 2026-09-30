@@ -6,7 +6,7 @@
   const pick = arr => arr[Math.floor(Math.random() * arr.length)];
   const norm = value => String(value).trim().toLowerCase().replace(/[.?!,'’]/g, "").replace(/\s+/g, " ");
   const today = () => new Date().toISOString().slice(0, 10);
-  const STORE = "learning-arcade-v2";
+  const STORE = "learning-arcade-v2",SKIP_INTRO_ONCE="learning-arcade-skip-intro-once-v1";
   const OLD_STORE = "asher-learning-arcade-v1";
   const ORIGINAL_SPELLING = ["because", "friend", "school", "people", "favorite", "different", "thought", "through"];
   const BUNDLED_SPELLING = window.BUNDLED_SPELLING_WORDS || [];
@@ -251,7 +251,7 @@
   function saveSoon(){setTimeout(()=>save(),0);}
   function freshData(){const fresh=structuredClone(defaults),profile=createProfile("Player 1");fresh.poems=structuredClone(window.DEFAULT_POEMS||[]);fresh.profiles=[profile];fresh.activeProfileId=profile.id;return fresh;}
   function clearLocalData(){[STORE,OLD_STORE,LOCAL_CHANGED,DEVICE_ID,"learning-arcade-cloud-meta-v1"].forEach(key=>localStorage.removeItem(key));location.hash="";location.reload();}
-  window.LearningArcadeDataBridge={exportData:()=>JSON.parse(JSON.stringify(store)),freshData,clearLocalData,importData:data=>{if(!data||!Array.isArray(data.profiles)||!data.profiles.length)throw new Error("Invalid cloud save");localStorage.setItem(STORE,JSON.stringify({...defaults,...data}));location.reload();},changedAt:()=>Number(localStorage.getItem(LOCAL_CHANGED))||0,markSynced:timestamp=>localStorage.setItem(LOCAL_CHANGED,String(timestamp||Date.now())),deviceId:()=>{let id=localStorage.getItem(DEVICE_ID);if(!id){id=`device-${Date.now()}-${Math.random().toString(36).slice(2,9)}`;localStorage.setItem(DEVICE_ID,id);}return id;}};
+  window.LearningArcadeDataBridge={exportData:()=>JSON.parse(JSON.stringify(store)),freshData,clearLocalData,importData:data=>{if(!data||!Array.isArray(data.profiles)||!data.profiles.length)throw new Error("Invalid cloud save");localStorage.setItem(STORE,JSON.stringify({...defaults,...data}));sessionStorage.setItem(SKIP_INTRO_ONCE,"1");location.reload();},changedAt:()=>Number(localStorage.getItem(LOCAL_CHANGED))||0,markSynced:timestamp=>localStorage.setItem(LOCAL_CHANGED,String(timestamp||Date.now())),deviceId:()=>{let id=localStorage.getItem(DEVICE_ID);if(!id){id=`device-${Date.now()}-${Math.random().toString(36).slice(2,9)}`;localStorage.setItem(DEVICE_ID,id);}return id;}};
   let session = null;
   let editingStudySetId = "";
   let homeworkWeekOffset = 0;
@@ -318,6 +318,7 @@
 
   function wireStartupGate(){
     const gate=$("#startupGate"),button=$("#enterArcade"),status=$("#startupStatus"),message=$("#startupMessage");if(!gate||!button)return;
+    if(sessionStorage.getItem(SKIP_INTRO_ONCE)==="1"){sessionStorage.removeItem(SKIP_INTRO_ONCE);document.body.classList.remove("intro-active");gate.hidden=true;setAudioScene("menu");showRequiredOnboarding();return;}
     let launchStarted=false;
     const launch=()=>{
       if(launchStarted)return;launchStarted=true;
@@ -1139,7 +1140,7 @@
   window.addEventListener("pagehide",()=>persistSessionProgress());
   window.addEventListener("learning-arcade-cloud-state",()=>{if($("[data-screen='settings']")?.classList.contains("active"))renderCloudSettings();});
   window.addEventListener("hashchange",()=>go(location.hash.slice(1)||"home"));
-  if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=37"));
+  if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=38"));
   if (document.modelContext?.registerTool) {
     const register = tool => Promise.resolve(document.modelContext.registerTool(tool)).catch(() => {});
     register({name:"read_learning_sets",title:"Read learning sets",description:"Read the current spelling words and poem titles configured in Learning Arcade.",inputSchema:{type:"object",properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({spellingWords:[...store.spelling],poems:store.poems.map(p=>({id:p.id,title:p.title,author:p.author}))})});

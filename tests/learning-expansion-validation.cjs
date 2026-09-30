@@ -32,8 +32,8 @@ for (const selector of ['.weekly-loadout-card','.math-program-tabs','.learn-mode
   assert(css.includes(selector), `Missing styling for ${selector}`);
 }
 
-for (const versioned of ['styles.css?v=37','features.css?v=37','app.js?v=37','cloud-sync.js?v=37']) {
-  assert(html.includes(versioned), `Missing v37 asset marker: ${versioned}`);
+for (const versioned of ['styles.css?v=38','features.css?v=38','app.js?v=38','cloud-sync.js?v=38']) {
+  assert(html.includes(versioned), `Missing v38 asset marker: ${versioned}`);
 }
 
 console.log('Validated deferred round commits, exact latest-round undo, detailed history, guided practice, saved curricula, expanded math, weekly planning, rewards, summaries, and archive controls.');

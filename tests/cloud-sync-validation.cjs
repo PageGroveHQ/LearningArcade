@@ -14,6 +14,10 @@ assert(cloud.includes("firebasejs/12.19.0/firebase-app.js"),"Pinned official Fir
 for(const method of ["createAccount","signIn","signOut","push:upload","pull","resetAll","schedulePush"])assert(cloud.includes(method),`Missing cloud method: ${method}`);
 assert(rules.includes("request.auth.uid == userId"),"Firestore saves are not owner protected");
 assert(app.includes("LearningArcadeDataBridge"),"The local data bridge is missing");
+assert(cloud.includes("acknowledgeOwnSnapshot(snapshot)"),"Own-device cloud snapshots are not guarded against reload loops");
+assert(cloud.includes("if(acknowledgeOwnSnapshot(snapshot))return"),"The realtime listener does not ignore acknowledged local uploads");
+assert(app.includes('sessionStorage.setItem(SKIP_INTRO_ONCE,"1")'),"Cloud imports do not preserve the active arcade session");
+assert(app.includes('sessionStorage.removeItem(SKIP_INTRO_ONCE)'),"The one-time startup bypass is not consumed");
 for(const marker of ["Cloud Save setup needed","cloudCreateAccount","cloudPush","cloudPull","learning-arcade-cloud-state"])assert(app.includes(marker),`Missing Cloud Save UI marker: ${marker}`);
 const configIndex=html.indexOf('src="cloud-config.js?v='),syncIndex=html.indexOf('type="module" src="cloud-sync.js?v=');
 assert(configIndex>=0&&syncIndex>configIndex,"Cloud scripts are not loaded in the expected order");
