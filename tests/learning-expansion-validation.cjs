@@ -39,7 +39,12 @@ assert(app.includes('d3.zoom().scaleExtent([1,7])'), 'State placement map must s
 assert(app.includes('data-map-zoom="in"') && app.includes('data-map-zoom="reset"'), 'State placement map zoom controls are missing');
 assert(app.includes('event.defaultPrevented||session.locked'), 'Dragging the map must not submit a state answer');
 assert(css.includes('.map-zoom-controls') && css.includes('touch-action:none'), 'Responsive map zoom styling is missing');
-for (const versioned of ['styles.css?v=40','features.css?v=42','app.js?v=42','cloud-sync.js?v=40']) {
+assert(app.includes('data-equip-reward') && app.includes('sentinelVisual('), 'Campaign reward cosmetics must be equipable and visible on Sentinel');
+assert(css.includes('.sentinel-reward-aura') && css.includes('.sentinel-reward-trim'), 'Campaign reward visual layers are missing');
+for (const reward of ['cyan-armor-trim','navigator-badge','energy-orb-trail','reactor-glow','archive-crest','master-sentinel-emblem']) {
+  assert(fs.existsSync(path.join(root, 'assets', 'ui', 'rewards', `${reward}.png`)), `Missing campaign reward art: ${reward}`);
+}
+for (const versioned of ['styles.css?v=40','features.css?v=43','app.js?v=43','cloud-sync.js?v=40']) {
   assert(html.includes(versioned), `Missing current asset marker: ${versioned}`);
 }
 
