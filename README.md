@@ -33,7 +33,7 @@ A mobile-first, installable learning app for:
 - Resumable rounds with an in-game pause mixer, Save & Exit, and automatic background pausing
 - Optional owner-protected Firebase Cloud Save for synchronizing family data across devices
 - A Weekly Learning Loadout that surfaces the current state, word, math, poem, and optional Study Lab materials
-- A visible Reward Gallery for campaign honors, with future art variants clearly identified
+- A visual Reward Gallery with six freely equipable campaign honors, including armor trims and circuit auras
 - A Circuit Sentinel home-screen icon sized for iPhone and installable-app use
 
 Everything is static and can be hosted on GitHub Pages. Practice data is always stored in the browser first; Cloud Save is an optional second copy for using the same family data on multiple devices.
@@ -78,6 +78,7 @@ Ordinary updates do not require replacing the home-screen shortcut. When changin
 - Purchases, ownership, equipped form, story progress, and viewed chapters are saved separately for each local learner profile.
 - Math Mayhem includes Multiplication Reactor and Division Drive. Both support fluency, fact families, missing factors/divisors, and equal-group story prompts.
 - The Orb Shop includes consumable support items, permanent interface cosmetics, ten unlockable mission soundtracks, and full Sentinel forms.
+- Campaign milestones unlock two armor-trim modules and four circuit auras. Newly earned honors auto-equip and can be changed or removed in the Reward Gallery at no orb cost.
 - Sentinel forms and permanent cosmetics do not change question difficulty or scoring. Support items are limited-use inventory.
 
 The armory and story assets are original Circuit Sentinel designs created for this project.
