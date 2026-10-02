@@ -83,6 +83,12 @@ Ordinary updates do not require replacing the home-screen shortcut. When changin
 
 The armory and story assets are original Circuit Sentinel designs created for this project.
 
+Season Two, **The Mirror Citadel**, opens after the Doubt Cloud. Five rival Sentinels unlock in order through cumulative Sentinel Records: 100 correct State Quest answers, 100 combined Word Wizard/Study Lab answers, 150 Math Mayhem answers, 40 Poem Power answers, and 500 correct answers overall. Existing progress counts immediately. Additional records recognize repaired mistakes, verified homework, and practice days. Records are derived from saved history, so Undo Latest Round also reverses their progress. Boss bonuses are awarded once; replays award ordinary practice progress.
+
+The five rival portraits use lossless WebP with verified identical visible colors and transparency, reducing this asset download by about 44%. Source PNGs are preserved locally and in the image-generation library. `tools/optimize-boss-art.cjs` verifies the conversion. Browser regression checks can be rerun with `node tests/season-two-browser.cjs` when Playwright and Chrome are available. These checks cover mobile rendering, question sources, sequential unlocks, and background pause.
+
+Switching apps, hiding the browser, or locking the device pauses active gameplay and stops music, previews, recorded speech, device speech, and synthesized effects. The app clears its Media Session state. Returning to an active mission leaves its pause menu open; menu music may resume when the app becomes visible. Physical iOS lock-screen behavior should also be checked on-device.
+
 ## Generating Circuit Sentinel State Quest audio
 
 `tools/fish-state-audio.mjs` generates individual Circuit Sentinel recordings for all 50 state names, their capitals, District of Columbia, and Washington, D.C. directly from `STATE_DATA`. It explicitly selects Fish Audio's `s2.1-pro-free` model in the request header. The generated paths are deterministic, temporary API failures are retried, existing MP3s are preserved, and incomplete `.part` files are never used by the app.
