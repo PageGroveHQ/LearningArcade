@@ -58,6 +58,25 @@ Parent Setup also includes **Start completely fresh**. It removes only Learning 
 
 The included `templates/study-lab-import-template.csv` opens in Excel, Numbers, or Google Sheets. Each row is one question. `set_title`, `question`, and `answer` are required; optional alternate answers and multiple-choice distractors use semicolons inside their cells. Multiple rows with the same set title become one reusable study set.
 
+### Visual practice uploads
+
+In **Study Lab → Upload practice set**, select either an existing CSV or a visual `.json` file. The reusable example is `templates/study-lab-visual-template.json`. Visual sets work in ordinary practice, mixed tests, flashcards, mistake repair, and the last-five-round reports. Their diagrams and multi-part answers are stored with the set and question snapshots, so saved rounds, local backups, and the existing Cloud Save carry them to other devices. A multi-part question counts as one answer and requires every part to be correct; multiple-choice mode uses typed fields for these questions. Numeric fields accept comma-formatted numbers. Flashcards remain parent/self graded.
+
+The portable format is `{"format":"learning-arcade-study-set","version":1,"title":"...","subject":"Math","testDate":"","questions":[...]}`. Each question uses `question`, `answer`, optional `accepted`, `explanation`, `distractors`, `diagram`, and `response`. A response has `fields` with `label`, `answer`, `type` (`number` or `text`), and optional `accepted`. `alternatives` contains complete answer arrays for puzzles with multiple valid arrangements; these preserve the relationship between fields rather than mixing digits from different solutions.
+
+Supported diagram shapes:
+
+- `table`: `rows`, with the first row used as column headings.
+- `equation` or `vertical`: `lines` of plain text, preserving spaces for column alignment.
+- `pyramid`: `rows` listed from top to bottom.
+- `number-bonds`: `groups` of `[left part, right part, whole]`.
+- `part-whole`: `total` and `parts` containing `label` and optional positive `width`.
+- `comparison`: `total`, `longLabel`, `shortLabel`, `difference`, and optional `shortRatio`.
+- `segment-bars`: `rows` containing `segments` (`light`/`dark`) and a total `label`.
+- `bar-chart`: `title`, `axisLabel`, positive `step`, and `bars` containing `label` and numeric `value`.
+
+Each diagram can have a plain-text `caption`. Uploaded markup and scripts are never executed; the app generates its own tables and SVG diagrams from validated data. One upload is limited to 100 questions and 250 KB to keep family saves compact. Mobile diagrams scroll sideways rather than shrinking labels too far. Rich exports stay JSON so no visuals are lost. The in-app editor can rename a visual set or change its subject/date without discarding diagrams; revise question content in the portable file and upload a new set. These files contain answer keys, not executable code. Existing family cloud limits still apply to the combined save.
+
 ## Mission Board imports
 
 The Mission Board accepts CSV files with `date`, `subject`, `assignment`, `notes`, and `estimated_minutes` columns. Dates use `YYYY-MM-DD`; `date` and `assignment` are required. Assignments are placed into the correct Monday–Sunday week automatically, and importing the same file again skips matching assignments. A reusable example is available at `templates/mission-board-import-template.csv`.

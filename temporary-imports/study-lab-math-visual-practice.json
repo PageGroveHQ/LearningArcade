@@ -1,0 +1,713 @@
+{
+  "format": "learning-arcade-study-set",
+  "version": 1,
+  "title": "Addition and Subtraction - Fresh Practice",
+  "subject": "Math",
+  "testDate": "2026-10-07",
+  "questions": [
+    {
+      "question": "Look at the number pattern. What is the missing number?",
+      "answer": "854",
+      "accepted": [],
+      "explanation": "Each lower number is the sum of the two above it. 2,100 − 1,246 = 854.",
+      "distractors": [
+        "3346",
+        "864",
+        "744"
+      ],
+      "diagram": {
+        "type": "number-bonds",
+        "caption": "",
+        "groups": [
+          [
+            320,
+            80,
+            400
+          ],
+          [
+            650,
+            350,
+            1000
+          ],
+          [
+            1246,
+            "?",
+            2100
+          ]
+        ]
+      },
+      "response": {
+        "fields": [
+          {
+            "label": "Answer",
+            "answer": "854",
+            "type": "number",
+            "accepted": []
+          }
+        ],
+        "alternatives": []
+      }
+    },
+    {
+      "question": "What is the missing number?",
+      "answer": "6623",
+      "accepted": [],
+      "explanation": "Add the difference and the number subtracted: 3,859 + 2,764 = 6,623.",
+      "distractors": [
+        "6613",
+        "5623",
+        "1095"
+      ],
+      "diagram": {
+        "type": "equation",
+        "caption": "",
+        "lines": [
+          "□ − 2,764 = 3,859"
+        ]
+      },
+      "response": {
+        "fields": [
+          {
+            "label": "Answer",
+            "answer": "6623",
+            "type": "number",
+            "accepted": []
+          }
+        ],
+        "alternatives": []
+      }
+    },
+    {
+      "question": "The table shows the number of tickets sold for three museum workshops. How many tickets were sold altogether?",
+      "answer": "1300",
+      "accepted": [],
+      "explanation": "367 + 648 + 285 = 1,300.",
+      "distractors": [
+        "1200",
+        "1015",
+        "1310"
+      ],
+      "diagram": {
+        "type": "table",
+        "caption": "",
+        "rows": [
+          [
+            "Workshop",
+            "Tickets sold"
+          ],
+          [
+            "Space lab",
+            367
+          ],
+          [
+            "Dinosaur dig",
+            648
+          ],
+          [
+            "Ocean explorers",
+            285
+          ]
+        ]
+      },
+      "response": {
+        "fields": [
+          {
+            "label": "Answer",
+            "answer": "1300",
+            "type": "number",
+            "accepted": []
+          }
+        ],
+        "alternatives": []
+      }
+    },
+    {
+      "question": "A bakery made 5,842 bread rolls. At closing time, 1,967 rolls were left. How many rolls had been sold?",
+      "answer": "3875",
+      "accepted": [],
+      "explanation": "Subtract the rolls left from the rolls made: 5,842 − 1,967 = 3,875.",
+      "distractors": [
+        "7809",
+        "3885",
+        "3975"
+      ],
+      "response": {
+        "fields": [
+          {
+            "label": "Answer",
+            "answer": "3875",
+            "type": "number",
+            "accepted": []
+          }
+        ],
+        "alternatives": []
+      }
+    },
+    {
+      "question": "When these numbers are added, what digit is in the ones place of the sum?",
+      "answer": "5",
+      "accepted": [],
+      "explanation": "The sum is 65. The ones digit is 5.",
+      "distractors": [
+        "0",
+        "6",
+        "1"
+      ],
+      "diagram": {
+        "type": "equation",
+        "caption": "",
+        "lines": [
+          "2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 + 11"
+        ]
+      },
+      "response": {
+        "fields": [
+          {
+            "label": "Answer",
+            "answer": "5",
+            "type": "number",
+            "accepted": []
+          }
+        ],
+        "alternatives": []
+      }
+    },
+    {
+      "question": "In 6,090, what is the difference between the values of the digit 6 and the digit 9?",
+      "answer": "5910",
+      "accepted": [],
+      "explanation": "The 6 has a value of 6,000. The 9 has a value of 90. 6,000 − 90 = 5,910.",
+      "distractors": [],
+      "response": {
+        "fields": [
+          {
+            "label": "Answer",
+            "answer": "5910",
+            "type": "number",
+            "accepted": []
+          }
+        ],
+        "alternatives": []
+      }
+    },
+    {
+      "question": "What is the missing number?",
+      "answer": "4000",
+      "accepted": [],
+      "explanation": "6,831 − 2,584 = 4,247 = 4,000 + 200 + 40 + 7.",
+      "distractors": [],
+      "diagram": {
+        "type": "equation",
+        "caption": "",
+        "lines": [
+          "6,831 − 2,584 = □ + 200 + 40 + 7"
+        ]
+      },
+      "response": {
+        "fields": [
+          {
+            "label": "Answer",
+            "answer": "4000",
+            "type": "number",
+            "accepted": []
+          }
+        ],
+        "alternatives": []
+      }
+    },
+    {
+      "question": "Look at the pattern and fill in the two missing numbers. Each brick is the sum of the two bricks directly below it.",
+      "answer": "Left middle brick: 1725 · Right top brick: 3245",
+      "accepted": [],
+      "explanation": "Left middle: 845 + 880 = 1,725. Right top: 1,475 + 1,770 = 3,245.",
+      "distractors": [],
+      "diagram": {
+        "type": "pyramid",
+        "caption": "",
+        "rows": [
+          [
+            3200,
+            "?"
+          ],
+          [
+            "?",
+            1475,
+            1770
+          ],
+          [
+            845,
+            880,
+            595,
+            1175
+          ]
+        ]
+      },
+      "response": {
+        "fields": [
+          {
+            "label": "Left middle brick",
+            "answer": "1725",
+            "type": "number",
+            "accepted": []
+          },
+          {
+            "label": "Right top brick",
+            "answer": "3245",
+            "type": "number",
+            "accepted": []
+          }
+        ],
+        "alternatives": []
+      }
+    },
+    {
+      "question": "Write the missing digits.",
+      "answer": "Top ones digit: 3 · Bottom thousands digit: 3",
+      "accepted": [],
+      "explanation": "The completed subtraction is 6,003 − 3,487 = 2,516. Both missing digits are 3.",
+      "distractors": [],
+      "diagram": {
+        "type": "vertical",
+        "caption": "",
+        "lines": [
+          "6 0 0 □",
+          "− □ 4 8 7",
+          "─────────",
+          "2 5 1 6"
+        ]
+      },
+      "response": {
+        "fields": [
+          {
+            "label": "Top ones digit",
+            "answer": "3",
+            "type": "number",
+            "accepted": []
+          },
+          {
+            "label": "Bottom thousands digit",
+            "answer": "3",
+            "type": "number",
+            "accepted": []
+          }
+        ],
+        "alternatives": []
+      }
+    },
+    {
+      "question": "Fill the boxes with 2, 3, 7, and 8. Use each digit only once. More than one arrangement works.",
+      "answer": "Top tens: 2 · Top ones: 3 · Bottom tens: 8 · Bottom ones: 7",
+      "accepted": [],
+      "explanation": "Valid examples: 4,123 + 87 = 4,210 or 4,127 + 83 = 4,210. The tens digits total 10 and the ones digits total 10. All eight valid arrangements are accepted.",
+      "distractors": [],
+      "diagram": {
+        "type": "vertical",
+        "caption": "",
+        "lines": [
+          "4 1 □ □",
+          "+     □ □",
+          "─────────",
+          "4 2 1 0"
+        ]
+      },
+      "response": {
+        "fields": [
+          {
+            "label": "Top tens",
+            "answer": "2",
+            "type": "number",
+            "accepted": []
+          },
+          {
+            "label": "Top ones",
+            "answer": "3",
+            "type": "number",
+            "accepted": []
+          },
+          {
+            "label": "Bottom tens",
+            "answer": "8",
+            "type": "number",
+            "accepted": []
+          },
+          {
+            "label": "Bottom ones",
+            "answer": "7",
+            "type": "number",
+            "accepted": []
+          }
+        ],
+        "alternatives": [
+          [
+            "2",
+            "3",
+            "8",
+            "7"
+          ],
+          [
+            "2",
+            "7",
+            "8",
+            "3"
+          ],
+          [
+            "3",
+            "2",
+            "7",
+            "8"
+          ],
+          [
+            "3",
+            "8",
+            "7",
+            "2"
+          ],
+          [
+            "7",
+            "2",
+            "3",
+            "8"
+          ],
+          [
+            "7",
+            "8",
+            "3",
+            "2"
+          ],
+          [
+            "8",
+            "3",
+            "2",
+            "7"
+          ],
+          [
+            "8",
+            "7",
+            "2",
+            "3"
+          ]
+        ]
+      }
+    },
+    {
+      "question": "Find the total shown by the bar model.",
+      "answer": "509",
+      "accepted": [],
+      "explanation": "Add all three parts: 248 + 76 + 185 = 509.",
+      "distractors": [],
+      "diagram": {
+        "type": "part-whole",
+        "caption": "",
+        "total": "?",
+        "parts": [
+          {
+            "label": 248,
+            "width": 248
+          },
+          {
+            "label": 76,
+            "width": 76
+          },
+          {
+            "label": 185,
+            "width": 185
+          }
+        ]
+      },
+      "response": {
+        "fields": [
+          {
+            "label": "Answer",
+            "answer": "509",
+            "type": "number",
+            "accepted": []
+          }
+        ],
+        "alternatives": []
+      }
+    },
+    {
+      "question": "Find the value of the missing part.",
+      "answer": "231",
+      "accepted": [],
+      "explanation": "462 − 96 − 135 = 231.",
+      "distractors": [],
+      "diagram": {
+        "type": "part-whole",
+        "caption": "",
+        "total": 462,
+        "parts": [
+          {
+            "label": 96,
+            "width": 96
+          },
+          {
+            "label": 135,
+            "width": 135
+          },
+          {
+            "label": "?",
+            "width": 231
+          }
+        ]
+      },
+      "response": {
+        "fields": [
+          {
+            "label": "Answer",
+            "answer": "231",
+            "type": "number",
+            "accepted": []
+          }
+        ],
+        "alternatives": []
+      }
+    },
+    {
+      "question": "The two bars have a total value of 960. Find (a) the value of the longer bar and (b) the difference between the bars.",
+      "answer": "a: Longer bar: 575 · b: Difference: 190",
+      "accepted": [],
+      "explanation": "Longer bar: 960 − 385 = 575. Difference: 575 − 385 = 190.",
+      "distractors": [],
+      "diagram": {
+        "type": "comparison",
+        "caption": "",
+        "total": 960,
+        "longLabel": "a",
+        "shortLabel": 385,
+        "difference": "b",
+        "shortRatio": 0.6695652173913044
+      },
+      "response": {
+        "fields": [
+          {
+            "label": "a: Longer bar",
+            "answer": "575",
+            "type": "number",
+            "accepted": []
+          },
+          {
+            "label": "b: Difference",
+            "answer": "190",
+            "type": "number",
+            "accepted": []
+          }
+        ],
+        "alternatives": []
+      }
+    },
+    {
+      "question": "A team earned and lost points during a robotics challenge. What was its final score?",
+      "answer": "2130",
+      "accepted": [],
+      "explanation": "2,840 + 975 = 3,815. Then 3,815 − 1,685 = 2,130 points.",
+      "distractors": [],
+      "diagram": {
+        "type": "table",
+        "caption": "",
+        "rows": [
+          [
+            "Starting score",
+            "Points earned",
+            "Points lost",
+            "Final score"
+          ],
+          [
+            2840,
+            975,
+            1685,
+            "?"
+          ]
+        ]
+      },
+      "response": {
+        "fields": [
+          {
+            "label": "Answer",
+            "answer": "2130",
+            "type": "number",
+            "accepted": []
+          }
+        ],
+        "alternatives": []
+      }
+    },
+    {
+      "question": "Maya made a four-digit locker code using 0, 4, 7, and 9 exactly once. It is the smallest number between 3,000 and 8,000. What is the code?",
+      "answer": "4079",
+      "accepted": [],
+      "explanation": "Choose 4 as the smallest possible thousands digit. Put the other digits in increasing order: 0, 7, 9. The code is 4,079.",
+      "distractors": [],
+      "response": {
+        "fields": [
+          {
+            "label": "Answer",
+            "answer": "4079",
+            "type": "number",
+            "accepted": []
+          }
+        ],
+        "alternatives": []
+      }
+    },
+    {
+      "question": "A library lent 3,460 books in one week. Of these, 1,875 were fiction books and the rest were nonfiction. How many more fiction books than nonfiction books were lent? Draw a bar model to help.",
+      "answer": "290",
+      "accepted": [],
+      "explanation": "Nonfiction: 3,460 − 1,875 = 1,585. Difference: 1,875 − 1,585 = 290 books.",
+      "distractors": [],
+      "response": {
+        "fields": [
+          {
+            "label": "Answer",
+            "answer": "290",
+            "type": "number",
+            "accepted": []
+          }
+        ],
+        "alternatives": []
+      }
+    },
+    {
+      "question": "Three volunteers planted 2,400 seedlings altogether. Nora planted 625. Eli planted 284 more than Nora. How many seedlings did Sam plant? Draw a bar model to help.",
+      "answer": "866",
+      "accepted": [],
+      "explanation": "Eli: 625 + 284 = 909. Sam: 2,400 − 625 − 909 = 866 seedlings.",
+      "distractors": [],
+      "response": {
+        "fields": [
+          {
+            "label": "Answer",
+            "answer": "866",
+            "type": "number",
+            "accepted": []
+          }
+        ],
+        "alternatives": []
+      }
+    },
+    {
+      "question": "Warehouse A has 1,546 more notebooks than Warehouse B. If 428 notebooks are moved from A to B, how many more notebooks will A have than B? Draw a bar model to help.",
+      "answer": "690",
+      "accepted": [],
+      "explanation": "A loses 428 and B gains 428, so the gap shrinks by 856. 1,546 − 428 − 428 = 690 notebooks.",
+      "distractors": [],
+      "response": {
+        "fields": [
+          {
+            "label": "Answer",
+            "answer": "690",
+            "type": "number",
+            "accepted": []
+          }
+        ],
+        "alternatives": []
+      }
+    },
+    {
+      "question": "A gardener put 6,420 bulbs into crates A, B, and C. Crates A and B together held 3,180 bulbs. Crates B and C together held 5,265 bulbs. How many bulbs were in each crate?",
+      "answer": "Crate A: 1155 · Crate B: 2025 · Crate C: 3240",
+      "accepted": [],
+      "explanation": "A = 6,420 − 5,265 = 1,155. C = 6,420 − 3,180 = 3,240. B = 3,180 − 1,155 = 2,025. Check: 1,155 + 2,025 + 3,240 = 6,420.",
+      "distractors": [],
+      "diagram": {
+        "type": "table",
+        "caption": "",
+        "rows": [
+          [
+            "Crate",
+            "Bulbs"
+          ],
+          [
+            "A",
+            "?"
+          ],
+          [
+            "B",
+            "?"
+          ],
+          [
+            "C",
+            "?"
+          ]
+        ]
+      },
+      "response": {
+        "fields": [
+          {
+            "label": "Crate A",
+            "answer": "1155",
+            "type": "number",
+            "accepted": []
+          },
+          {
+            "label": "Crate B",
+            "answer": "2025",
+            "type": "number",
+            "accepted": []
+          },
+          {
+            "label": "Crate C",
+            "answer": "3240",
+            "type": "number",
+            "accepted": []
+          }
+        ],
+        "alternatives": []
+      }
+    },
+    {
+      "question": "Matching light parts have the same value. Matching dark parts have the same value. Use the first two bars to find the value of the last bar.",
+      "answer": "1240",
+      "accepted": [],
+      "explanation": "Subtract the second bar from the first: one light part = 1,230 − 990 = 240. Three dark parts = 990 − 240 = 750, so one dark part = 250. Last bar: 240 + 4 × 250 = 1,240.",
+      "distractors": [],
+      "diagram": {
+        "type": "segment-bars",
+        "caption": "",
+        "rows": [
+          {
+            "segments": [
+              "light",
+              "light",
+              "dark",
+              "dark",
+              "dark"
+            ],
+            "label": 1230
+          },
+          {
+            "segments": [
+              "light",
+              "dark",
+              "dark",
+              "dark"
+            ],
+            "label": 990
+          },
+          {
+            "segments": [
+              "light",
+              "dark",
+              "dark",
+              "dark",
+              "dark"
+            ],
+            "label": "?"
+          }
+        ]
+      },
+      "response": {
+        "fields": [
+          {
+            "label": "Answer",
+            "answer": "1240",
+            "type": "number",
+            "accepted": []
+          }
+        ],
+        "alternatives": []
+      }
+    }
+  ]
+}

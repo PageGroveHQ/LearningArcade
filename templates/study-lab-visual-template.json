@@ -1,0 +1,27 @@
+{
+  "format": "learning-arcade-study-set",
+  "version": 1,
+  "title": "Visual Practice Example",
+  "subject": "Math",
+  "testDate": "",
+  "questions": [
+    {
+      "question": "The table shows books read by three classes. How many books did they read altogether?",
+      "answer": "240",
+      "accepted": [],
+      "explanation": "85 + 75 + 80 = 240 books.",
+      "distractors": ["230", "250", "160"],
+      "diagram": {"type": "table", "rows": [["Class", "Books"], ["Birch", 85], ["Maple", 75], ["Oak", 80]]},
+      "response": {"fields": [{"label": "Books altogether", "answer": "240", "type": "number", "accepted": []}], "alternatives": []}
+    },
+    {
+      "question": "The two bars total 800. Find the longer bar and the difference.",
+      "answer": "Longer bar: 500 · Difference: 200",
+      "accepted": [],
+      "explanation": "800 − 300 = 500. Then 500 − 300 = 200.",
+      "distractors": [],
+      "diagram": {"type": "comparison", "total": 800, "longLabel": "a", "shortLabel": 300, "difference": "b", "shortRatio": 0.6},
+      "response": {"fields": [{"label": "Longer bar", "answer": "500", "type": "number", "accepted": []}, {"label": "Difference", "answer": "200", "type": "number", "accepted": []}], "alternatives": []}
+    }
+  ]
+}
