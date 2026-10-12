@@ -1302,7 +1302,7 @@
   window.addEventListener("pageshow",()=>{if(!document.hidden)restoreForegroundAudio();});
   window.addEventListener("learning-arcade-cloud-state",()=>{if($("[data-screen='settings']")?.classList.contains("active"))renderCloudSettings();});
   window.addEventListener("hashchange",()=>go(location.hash.slice(1)||"home"));
-  if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=46"));
+  if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=47"));
   if (document.modelContext?.registerTool) {
     const register = tool => Promise.resolve(document.modelContext.registerTool(tool)).catch(() => {});
     register({name:"read_learning_sets",title:"Read learning sets",description:"Read the current spelling words and poem titles configured in Learning Arcade.",inputSchema:{type:"object",properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({spellingWords:[...store.spelling],poems:store.poems.map(p=>({id:p.id,title:p.title,author:p.author}))})});

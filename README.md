@@ -54,6 +54,8 @@ GitHub Pages distributes app code, layout changes, artwork, and bundled audio. C
 
 Parent Setup also includes **Start completely fresh**. It removes only Learning Arcade's own browser keys, never data belonging to another PageGrove app on the shared GitHub Pages domain. When Cloud Save is signed in, the cloud document is replaced with a blank Learning Arcade save so connected devices receive the reset; the Firebase login itself remains available for reuse.
 
+Cloud records version 2 store the app data as a JSON string so visual tables, number patterns, and answer arrangements do not violate Firestore's nested-array restriction. Version 1 object saves remain readable and are upgraded on the next upload. Local saves and downloaded backups retain their existing format. Refresh Learning Arcade on every device before using the updated cloud format. Uploads larger than 1,000,000 UTF-8 bytes are stopped before changing the cloud document, with a backup reminder; failed uploads do not discard local work. Sync errors distinguish access, quota, connection, and save-size failures without exposing the save contents.
+
 ## Study Lab imports
 
 The included `templates/study-lab-import-template.csv` opens in Excel, Numbers, or Google Sheets. Each row is one question. `set_title`, `question`, and `answer` are required; optional alternate answers and multiple-choice distractors use semicolons inside their cells. Multiple rows with the same set title become one reusable study set.

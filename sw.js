@@ -1,4 +1,4 @@
-const CACHE = "learning-arcade-v46";
+const CACHE = "learning-arcade-v47";
 const PACKS = {"circuit-sentinel":["yolk","post","thrown","throat","suppose","though","approach","bellow","foam","know","joe","colt","doughnut","yoke","stroll","hoe","throne","boast","woeful","prove"]};
 // Word recordings are cached on first successful use. Keeping them out of the
 // install list lets a newly entered bank use device speech until its MP3s are generated.
