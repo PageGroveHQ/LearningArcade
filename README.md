@@ -121,6 +121,10 @@ The public Circuit Sentinel voice ID is stored in `tools/fish-state-audio.exampl
 
 ## Generating Circuit Sentinel Word Wizard audio
 
+The October 2026 release adds two selectable spelling sets without replacing existing banks: **Word Bank 10/8–10/14** (20 Circuit Sentinel words) and **Spanish Spelling Quiz 10/15** (10 regular and 10 challenge words). Spanish uses standard accented spellings, English meaning cues during questions, labeled challenge words, and accent-letter buttons for typed answers. Accents are required. Each question carries its set's recording path and language through paused rounds, reports, and mistake repair. Spanish recordings take priority over the global English voice selection; unavailable recordings fall back to Spanish device speech. Meanings for context-sensitive words include common alternatives, such as “view; sight” for *vista*.
+
+Run `tools/run-october-word-banks-audio.cmd` to generate both new banks with one secure, hidden API-key prompt. It uses Circuit Sentinel reference ID `e61f2a036dc444fc97eb8ec84e9f81a0` and Spanish reference ID `ebdc56fadde34e1681e4cad27a9b4a0e`. Audio stays in `audio/circuit-sentinel/spelling/` and its `spanish/` subfolder. Existing MP3s are preserved. Before publication, run `node tests/october-word-banks-validation.cjs --require-files` to require all 40 MP3s. “Minute” in the English bank means 60 seconds (MIN-it).
+
 The reusable Word Wizard workflow reads one word per line from `tools/circuit-sentinel-word-bank.txt` and writes matching MP3 files to `audio/circuit-sentinel/spelling/`. Change that text file whenever a new weekly bank is ready, then keep `BUNDLED_SPELLING_WORDS` in `data.js` synchronized with it.
 
 1. Double-click `tools/run-fish-word-bank-audio.cmd`. It opens the correct folder and runs the PowerShell launcher automatically.

@@ -18,7 +18,7 @@ for (const state of states) {
 }
 
 const app = fs.readFileSync(path.join(root, "app.js"), "utf8");
-for (const marker of ["stateRecordedAudio(state, field)", "audio:stateRecordedAudio(state,field)", "playPracticeAudio(q.speech,q.audio)", "audio:q.audio||\"\""]) {
+for (const marker of ["stateRecordedAudio(state, field)", "audio:stateRecordedAudio(state,field)", "playPracticeAudio(q.speech,q.audio,\"\",q.language||\"\")", "audio:q.audio||\"\""]) {
   if (!app.includes(marker)) throw new Error(`State Quest playback integration is missing: ${marker}`);
 }
 

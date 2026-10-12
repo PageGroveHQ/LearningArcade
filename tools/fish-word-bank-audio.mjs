@@ -15,7 +15,7 @@ const apiKey = process.env.FISH_AUDIO_API_KEY;
 const dryRun = args["dry-run"] === true || args["dry-run"] === "true";
 
 if (!dryRun && !apiKey) throw new Error("FISH_AUDIO_API_KEY is missing. Start this tool with the secure PowerShell launcher.");
-if (!config.voice?.referenceId) throw new Error(`Add the Circuit Sentinel referenceId to ${configPath}.`);
+if (!config.voice?.referenceId) throw new Error(`Add the voice referenceId to ${configPath}.`);
 if (outputDirectory !== allowedOutputRoot && !outputDirectory.startsWith(`${allowedOutputRoot}${path.sep}`)) {
   throw new Error("The output folder must remain inside audio/circuit-sentinel.");
 }
@@ -87,7 +87,7 @@ try {
     }
   }
   console.log(dryRun
-    ? `Dry run complete: ${words.length} planned Circuit Sentinel word recordings.`
+    ? `Dry run complete: ${words.length} planned ${config.voice.name || "spelling"} word recordings.`
     : `Word-bank audio generation complete: ${generated} created, ${skipped} preserved.`);
 } catch (error) {
   if (error.status === 402) {

@@ -53,6 +53,11 @@ window.STATE_DATA = [
 ];
 
 window.BUNDLED_SPELLING_WORDS = ["yolk","post","thrown","throat","suppose","though","approach","bellow","foam","know","Joe","colt","doughnut","yoke","stroll","hoe","throne","boast","woeful","prove"];
+window.BUNDLED_WORD_SETS = [
+  {id:"word-bank-2026-10-08",name:"Word Bank 10/8–10/14",language:"en-US",voiceName:"Circuit Sentinel",words:["huge","value","fruit","pure","juice","suit","avenue","askew","Tuesday","proof","loose","foolish","jewelry","choosing","cruise","knew","costume","argue","excuse","minute"],audioFolder:"audio/circuit-sentinel/spelling"},
+  {id:"spanish-spelling-2026-10-15",name:"Spanish Spelling Quiz 10/15",language:"es",voiceName:"Spanish Spelling",words:["mercado","último","primo","noches","tardes","abuelo","presento","debajo","soy","eres","navegar","barco","barquito","también","llegar","doce","vista","muchachos","viaje","octubre"],challengeWords:["navegar","barco","barquito","también","llegar","doce","vista","muchachos","viaje","octubre"],translations:{mercado:"market",último:"last; final",primo:"male cousin",noches:"nights",tardes:"afternoons; evenings",abuelo:"grandfather",presento:"I introduce; I present",debajo:"under; below",soy:"I am",eres:"you are (informal singular)",navegar:"to sail; to navigate",barco:"boat; ship",barquito:"little boat",también:"also; too",llegar:"to arrive",doce:"twelve",vista:"view; sight",muchachos:"boys; young people",viaje:"trip; journey",octubre:"October"},audioFolder:"audio/circuit-sentinel/spelling/spanish"}
+];
+window.BUNDLED_WORD_SETS.forEach(set=>{set.audio=Object.fromEntries(set.words.map(word=>[word.toLowerCase(),`${set.audioFolder}/${word.normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLowerCase()}.mp3`]));});
 const CIRCUIT_SENTINEL_STATE_AUDIO = Object.fromEntries(window.STATE_DATA.map(location=>[location.abbr,{
   name:`audio/circuit-sentinel/states/names/${location.abbr.toLowerCase()}.mp3`,
   capital:`audio/circuit-sentinel/states/capitals/${location.abbr.toLowerCase()}.mp3`

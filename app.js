@@ -323,6 +323,11 @@
     store.audioContentV4=true;
     saveSoon();
   }
+  if(!store.october2026WordBanksV1){
+    (window.BUNDLED_WORD_SETS||[]).forEach(source=>{if(!store.spellingSets.some(set=>set.id===source.id))store.spellingSets.push({...structuredClone(source),archived:false});});
+    store.october2026WordBanksV1=true;
+    saveSoon();
+  }
   if(!store.visualRewardsV1){
     store.profiles.forEach(profile=>{
       const completed=MISSIONS.filter(mission=>(profile.missions[mission.id]?.progress||0)>=mission.goal).length;
@@ -463,15 +468,17 @@
   refreshVoices();
   if (window.speechSynthesis) speechSynthesis.onvoiceschanged = refreshVoices;
 
-  function speakText(text) {
+  function speakText(text,language="") {
     if(!store.audioPrefs.enabled)return toast("Turn sound on to hear audio");
     if(appBackgrounded||document.hidden)return;
     if (activeAudio) { activeAudio.pause(); activeAudio = null; }
     if (!window.speechSynthesis) return toast("Speech is not available on this device");
     refreshVoices(); speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    const chosen = availableVoices.find(v => v.voiceURI === store.voicePrefs.voiceURI) || availableVoices.find(v => /natural|premium|enhanced/i.test(v.name)) || availableVoices[0];
+    const matchingVoices=language?availableVoices.filter(v=>v.lang.toLowerCase().split('-')[0]===language.toLowerCase().split('-')[0]):availableVoices;
+    const chosen = matchingVoices.find(v => v.voiceURI === store.voicePrefs.voiceURI) || matchingVoices.find(v => /natural|premium|enhanced/i.test(v.name)) || matchingVoices[0];
     if (chosen) utterance.voice = chosen;
+    if(language)utterance.lang=language;
     const styles = {natural:{rate:.92,pitch:1},bright:{rate:.94,pitch:1.18},hero:{rate:1.04,pitch:1.06},calm:{rate:.82,pitch:.94}};
     Object.assign(utterance, styles[store.voicePrefs.style] || styles.bright);
     duckMusic(true);utterance.onend=()=>duckMusic(false);utterance.onerror=()=>duckMusic(false);speechSynthesis.speak(utterance);
@@ -485,16 +492,16 @@
     return window.AUDIO_PACKS?.["circuit-sentinel"]?.states?.[state?.abbr]?.[field] || "";
   }
 
-  function playPracticeAudio(text, suppliedAudio="", poemId="") {
+  function playPracticeAudio(text, suppliedAudio="", poemId="",language="") {
     if(!store.audioPrefs.enabled)return toast("Turn sound on to hear audio");
     if(appBackgrounded||document.hidden)return;
     const pack = window.AUDIO_PACKS?.[store.voicePrefs.source];
-    const audioPath = pack ? (poemId ? pack.poems?.[poemId] || suppliedAudio : recordedAudioFor(text)||suppliedAudio) : suppliedAudio;
-    if (!audioPath) { speakText(text); return; }
+    const audioPath = pack ? (poemId ? pack.poems?.[poemId] || suppliedAudio : suppliedAudio||recordedAudioFor(text)) : suppliedAudio;
+    if (!audioPath) { speakText(text,language); return; }
     window.speechSynthesis?.cancel();
     if (activeAudio) activeAudio.pause();
     activeAudio = new Audio(audioPath);
-    ensureAudioGraph();connectMedia(activeAudio,voiceGain);applySoundVolumes();duckMusic(true);activeAudio.onended=()=>duckMusic(false);activeAudio.onerror=()=>{duckMusic(false);speakText(text);};activeAudio.play().catch(()=>{duckMusic(false);speakText(text);});
+    ensureAudioGraph();connectMedia(activeAudio,voiceGain);applySoundVolumes();duckMusic(true);activeAudio.onended=()=>duckMusic(false);activeAudio.onerror=()=>{duckMusic(false);speakText(text,language);};activeAudio.play().catch(()=>{duckMusic(false);speakText(text,language);});
   }
 
   function voicePanelMarkup() {
@@ -597,6 +604,8 @@
     </div>`;
   }
   function activeSpellingSet(){return store.spellingSets.find(set=>set.id===store.activeSpellingSetId&&!set.archived)||store.spellingSets.find(set=>!set.archived)||store.spellingSets[0];}
+  function spellingQuestion(word,modeOverride,set=activeSpellingSet()){const key=word.toLowerCase(),translation=set?.translations?.[key]||"";return {subject:"spelling",prompt:set?.language?.startsWith("es")?"Spell the Spanish word you hear":"Spell the word you hear",answer:word,speech:word,audio:set?.audio?.[key]||"",language:set?.language||"",translation,challengeWord:!!set?.challengeWords?.includes(word),wordSetId:set?.id||"",detail:translation?`${word} — ${translation}`:word,pool:store.spelling,modeOverride};}
+  function wireSpanishAccents(){const input=$("#typedAnswer");if(!input)return;input.lang="es";input.setAttribute("autocapitalize","none");input.setAttribute("spellcheck","false");const row=document.createElement("div");row.className="spanish-accents";row.setAttribute("aria-label","Spanish accent letters");row.innerHTML=['á','é','í','ó','ú','ü','ñ'].map(letter=>`<button type="button" aria-label="Insert ${letter}">${letter}</button>`).join('');input.after(row);row.querySelectorAll('button').forEach(button=>{button.onpointerdown=e=>e.preventDefault();button.onclick=()=>{if(session?.locked)return;input.setRangeText(button.textContent,input.selectionStart??input.value.length,input.selectionEnd??input.value.length,'end');input.dispatchEvent(new Event('input',{bubbles:true}));input.focus();};});}
   function activateSpellingSet(id){const set=store.spellingSets.find(item=>item.id===id&&!item.archived);if(!set)return false;store.activeSpellingSetId=set.id;store.spelling=[...set.words];return true;}
   function saveActiveSpellingWords(words){let set=activeSpellingSet();if(!set){set={id:`word-set-${Date.now()}`,name:"Current Word List",words:[],archived:false};store.spellingSets.push(set);store.activeSpellingSetId=set.id;}set.words=[...words];store.spelling=[...words];}
   function activePoem(){return store.poems.find(poem=>poem.id===store.activePoemId&&!poem.archived)||store.poems.find(poem=>!poem.archived)||store.poems[0];}
@@ -710,7 +719,7 @@
     const maxCount = p.mode === "mixed" ? store.spelling.length * 2 : store.spelling.length;
     if (!['10','20','max'].includes(p.count)) p.count='max';
     $("#spellingView").innerHTML = `${head("Word Wizard",`${store.spelling.length} words in ${current?.name||"the active set"}`)}
-      <div class="panel"><div class="panel-title-row"><div><p class="label">Spelling set</p><h2>${esc(current?.name||"Current Word List")}</h2></div></div><div class="field"><select id="spellingSetSelect">${sets.map(set=>`<option value="${esc(set.id)}" ${set.id===store.activeSpellingSetId?'selected':''}>${esc(set.name)} · ${set.words.length} words</option>`).join("")}</select></div><div class="pill-row">${store.spelling.slice(0,10).map(w => `<span class="pill">${esc(w)}</span>`).join("")}${store.spelling.length > 10 ? `<span class="pill">+${store.spelling.length-10}</span>`:""}</div><div class="set-action-row"><button class="tiny" id="newSpellingSet">New set</button><button class="tiny" id="renameSpellingSet">Rename</button><button class="tiny" id="archiveSpellingSet" ${sets.length<=1?'disabled':''}>Archive</button><button class="tiny danger-text" id="deleteSpellingSet" ${sets.length<=1?'disabled':''}>Delete</button></div><button class="secondary" style="margin-top:10px" data-go="settings" data-focus="spelling">Edit active word list</button></div>
+      <div class="panel"><div class="panel-title-row"><div><p class="label">Spelling set</p><h2>${esc(current?.name||"Current Word List")}</h2>${current?.language?.startsWith("es")?`<p class="helper">Spanish spelling · ${current.words.length-(current.challengeWords||[]).filter(word=>current.words.includes(word)).length} regular + ${(current.challengeWords||[]).filter(word=>current.words.includes(word)).length} challenge words · English translations included</p>`:""}</div></div><div class="field"><select id="spellingSetSelect">${sets.map(set=>`<option value="${esc(set.id)}" ${set.id===store.activeSpellingSetId?'selected':''}>${esc(set.name)} · ${set.words.length} words</option>`).join("")}</select></div><div class="pill-row">${store.spelling.slice(0,10).map(w => `<span class="pill">${esc(w)}</span>`).join("")}${store.spelling.length > 10 ? `<span class="pill">+${store.spelling.length-10}</span>`:""}</div><div class="set-action-row"><button class="tiny" id="newSpellingSet">New set</button><button class="tiny" id="renameSpellingSet">Rename</button><button class="tiny" id="archiveSpellingSet" ${sets.length<=1?'disabled':''}>Archive</button><button class="tiny danger-text" id="deleteSpellingSet" ${sets.length<=1?'disabled':''}>Delete</button></div><button class="secondary" style="margin-top:10px" data-go="settings" data-focus="spelling">Edit active word list</button></div>
       <div class="panel"><p class="label">Practice mode</p>${modeButtons(p.mode)}</div>
       <div class="panel"><p class="label">Round length</p><div class="option-grid" data-choice-group="count"><button class="choice ${p.count==='10'?'selected':''}" data-value="10">10 questions</button><button class="choice ${p.count==='20'?'selected':''}" data-value="20">20 questions</button><button class="choice ${p.count==='max'?'selected':''}" data-value="max">Max · ${maxCount}</button></div></div>
       ${voicePanelMarkup()}
@@ -720,7 +729,7 @@
       <button class="primary" id="startSpelling" ${store.spelling.length ? "" : "disabled"}>Start spelling round</button>`;
     wireChoices($("#spellingView"), (group,value) => { p[group]=value; store.spellingPrefs=p; save(); renderSpelling(); });
     $("#spellingSetSelect").onchange=e=>{activateSpellingSet(e.target.value);save();renderSpelling();};
-    $("#newSpellingSet").onclick=()=>{const name=prompt("Name the new spelling set");if(!name?.trim())return;const copy=confirm("Copy the current words into this set?");const set={id:`word-set-${Date.now()}`,name:name.trim(),words:copy?[...store.spelling]:[],archived:false};store.spellingSets.push(set);activateSpellingSet(set.id);save();renderSpelling();toast("Spelling set created");};
+    $("#newSpellingSet").onclick=()=>{const name=prompt("Name the new spelling set");if(!name?.trim())return;const copy=confirm("Copy the current words into this set?");const set={...(copy?structuredClone(current||{}):{}),id:`word-set-${Date.now()}`,name:name.trim(),words:copy?[...store.spelling]:[],archived:false};store.spellingSets.push(set);activateSpellingSet(set.id);save();renderSpelling();toast("Spelling set created");};
     $("#renameSpellingSet").onclick=()=>{const set=activeSpellingSet(),name=prompt("Rename this spelling set",set?.name||"");if(!set||!name?.trim())return;set.name=name.trim();save();renderSpelling();toast("Spelling set renamed");};
     $("#archiveSpellingSet").onclick=()=>{const set=activeSpellingSet();if(!set||sets.length<=1)return;set.archived=true;activateSpellingSet(store.spellingSets.find(item=>!item.archived)?.id);save();renderSpelling();toast("Spelling set moved to Archives");};
     $("#deleteSpellingSet").onclick=()=>{const set=activeSpellingSet();if(!set||sets.length<=1||!confirm(`Delete “${set.name}”?`))return;store.spellingSets=store.spellingSets.filter(item=>item.id!==set.id);activateSpellingSet(store.spellingSets.find(item=>!item.archived)?.id);save();renderSpelling();toast("Spelling set deleted");};
@@ -728,7 +737,7 @@
     $('[data-learn-toggle]',$('#spellingView')).onchange=e=>{p.learnMode=e.target.checked;store.spellingPrefs=p;save();renderSpelling();};
     $('[data-challenge-toggle]',$('#spellingView')).onchange=e=>{p.challenge=e.target.checked;store.spellingPrefs=p;save();};
     $("#startSpelling").onclick = () => {
-      const makeQuestion=(word,modeOverride)=>({subject:"spelling",prompt:"Spell the word you hear",answer:word,speech:word,detail:word,pool:store.spelling,modeOverride});
+      const makeQuestion=(word,modeOverride)=>spellingQuestion(word,modeOverride,current);
       const bank=p.mode==="mixed"?store.spelling.flatMap(word=>[makeQuestion(word,"choice"),makeQuestion(word,"type")]):store.spelling.map(word=>makeQuestion(word,p.mode));
       const wanted=p.count==='max'?bank.length:Math.min(+p.count,bank.length);
       startSession(`Word Wizard — ${current?.name||"Word List"}`, shuffle(bank).slice(0,wanted), p.mode,0,{livesEnabled:p.challenge&&!p.learnMode,learnMode:!!p.learnMode});
@@ -887,8 +896,8 @@
   }
   function bossQuestions(boss){
     const spelling=()=>shuffle(store.spelling.flatMap(word=>[
-      {subject:"spelling",prompt:"Spell the word you hear",answer:word,speech:word,detail:word,pool:store.spelling,modeOverride:"choice"},
-      {subject:"spelling",prompt:"Spell the word you hear",answer:word,speech:word,detail:word,pool:store.spelling,modeOverride:"type"}
+      spellingQuestion(word,"choice"),
+      spellingQuestion(word,"type")
     ]));
     const math=()=>boss.season===2?shuffle([...mathQuestionBank({...store.mathPrefs,sector:"multiply",divisionMode:"fluency"}),...mathQuestionBank({...store.mathPrefs,sector:"divide",divisionMode:"fluency"})]).map((q,index)=>({...q,modeOverride:index%2?"choice":"type"})):shuffle(Array.from({length:100},(_,index)=>{const a=Math.floor(index/10),b=index%10;return {subject:"math",prompt:`${a} × ${b}`,answer:String(a*b),detail:`${a} × ${b} = ${a*b}`,a,b,modeOverride:index%2?"choice":"type"};}));
     const states=()=>shuffle(stateQuestionBank(STATE_DATA.filter(state=>!state.district),"mixed")).map((question,index)=>({...question,modeOverride:index%3?"choice":"type"}));
@@ -1046,9 +1055,9 @@
     renderMasteryMap("states");
   }
 
-  function questionSnapshot(q){return {subject:q.subject,prompt:q.prompt,answer:q.answer,detail:q.detail||q.answer,speech:q.speech||"",audio:q.audio||"",poemId:q.poemId||"",a:q.a,b:q.b,product:q.product,operation:q.operation||"",map:!!q.map,placement:!!q.placement,neighbor:!!q.neighbor,regionSort:!!q.regionSort,discovery:!!q.discovery,combined:!!q.combined,learnRetry:!!q.learnRetry,answerType:q.answerType||"",stateName:q.state?.name||q.stateName||"",oddStateNames:(q.oddStates||[]).map(state=>state.name),modeOverride:q.modeOverride||"",resolvedMode:q.resolvedMode||"",accepted:q.accepted||[],distractors:q.distractors||[],studySetId:q.studySetId||"",diagram:q.diagram||null,response:q.response||null,draft:q.draft||[]};}
+  function questionSnapshot(q){return {subject:q.subject,prompt:q.prompt,answer:q.answer,detail:q.detail||q.answer,speech:q.speech||"",audio:q.audio||"",poemId:q.poemId||"",a:q.a,b:q.b,product:q.product,operation:q.operation||"",map:!!q.map,placement:!!q.placement,neighbor:!!q.neighbor,regionSort:!!q.regionSort,discovery:!!q.discovery,combined:!!q.combined,learnRetry:!!q.learnRetry,answerType:q.answerType||"",stateName:q.state?.name||q.stateName||"",oddStateNames:(q.oddStates||[]).map(state=>state.name),modeOverride:q.modeOverride||"",resolvedMode:q.resolvedMode||"",accepted:q.accepted||[],distractors:q.distractors||[],studySetId:q.studySetId||"",diagram:q.diagram||null,response:q.response||null,draft:q.draft||[],language:q.language||"",translation:q.translation||"",challengeWord:!!q.challengeWord,wordSetId:q.wordSetId||""};}
   function mistakeKey(q){return `${q.subject}|${q.prompt}|${q.answer}`;}
-  function hydrateQuestion(item){const q={subject:item.subject,prompt:item.prompt,answer:item.answer,detail:item.detail,speech:item.speech||"",audio:item.audio||"",poemId:item.poemId||"",a:item.a,b:item.b,product:item.product,operation:item.operation||"",map:item.map,placement:item.placement,neighbor:item.neighbor,regionSort:item.regionSort,discovery:item.discovery,combined:item.combined,learnRetry:item.learnRetry,answerType:item.answerType,modeOverride:item.modeOverride||undefined,resolvedMode:item.resolvedMode||undefined,accepted:item.accepted||[],distractors:item.distractors||[],studySetId:item.studySetId||"",diagram:item.diagram||null,response:item.response||null,draft:item.draft||[]};q.oddStates=(item.oddStateNames||[]).map(name=>STATE_DATA.find(state=>state.name===name)).filter(Boolean);if(item.stateName){q.state=STATE_DATA.find(state=>state.name===item.stateName);q.pool=STATE_DATA;}else if(item.subject==="states")q.pool=STATE_DATA;else if(item.subject==="spelling"||item.subject==="state-spelling")q.pool=store.spelling;else if(item.subject==="study"){const set=store.studySets.find(candidate=>candidate.id===item.studySetId);q.pool=set?.questions||[];}return q;}
+  function hydrateQuestion(item){const q={subject:item.subject,prompt:item.prompt,answer:item.answer,detail:item.detail,speech:item.speech||"",audio:item.audio||"",poemId:item.poemId||"",a:item.a,b:item.b,product:item.product,operation:item.operation||"",map:item.map,placement:item.placement,neighbor:item.neighbor,regionSort:item.regionSort,discovery:item.discovery,combined:item.combined,learnRetry:item.learnRetry,answerType:item.answerType,modeOverride:item.modeOverride||undefined,resolvedMode:item.resolvedMode||undefined,accepted:item.accepted||[],distractors:item.distractors||[],studySetId:item.studySetId||"",diagram:item.diagram||null,response:item.response||null,draft:item.draft||[],language:item.language||"",translation:item.translation||"",challengeWord:!!item.challengeWord,wordSetId:item.wordSetId||""};q.oddStates=(item.oddStateNames||[]).map(name=>STATE_DATA.find(state=>state.name===name)).filter(Boolean);if(item.stateName){q.state=STATE_DATA.find(state=>state.name===item.stateName);q.pool=STATE_DATA;}else if(item.subject==="states")q.pool=STATE_DATA;else if(item.subject==="spelling"||item.subject==="state-spelling")q.pool=store.spelling;else if(item.subject==="study"){const set=store.studySets.find(candidate=>candidate.id===item.studySetId);q.pool=set?.questions||[];}return q;}
   function savedSessionSnapshot(){if(!session)return null;const {timerId,questions,...rest}=session,now=Date.now(),remainingMs=session.paused?session.pausedRemainingMs||0:session.deadline?Math.max(0,session.deadline-now):0,elapsedMs=session.paused?session.pausedElapsedMs||0:Math.max(0,now-(session.startedAt||now));return {...rest,locked:false,paused:true,deadline:0,remainingMs,elapsedMs,savedAt:new Date().toISOString(),questions:questions.map(questionSnapshot),wrongQuestions:(session.wrongQuestions||[]).map(item=>item.stateName?item:questionSnapshot(item))};}
   function persistSessionProgress(){if(!session||session.roundSaved||session.index>=session.questions.length)return;activeProfile().savedRound=savedSessionSnapshot();save();}
   function clearSavedRound(){activeProfile().savedRound=null;save();}
@@ -1056,7 +1065,7 @@
   function startMistakeRound(items){const questions=shuffle(items).slice(0,20).map(hydrateQuestion).filter(q=>q.answer&&(!q.stateName||q.state));if(!questions.length)return toast("No mistakes are waiting for practice");startSession("Mistake Repair",questions,"mixed",0,{repair:true});}
   function startAssessment(subject){let questions=[],mode="mixed";
     if(subject==="states")questions=shuffle(stateQuestionBank(STATE_DATA.filter(s=>!s.district),"facts")).slice(0,10);
-    if(subject==="spelling")questions=shuffle(store.spelling).slice(0,10).map((word,index)=>({subject:"spelling",prompt:"Spell the word you hear",answer:word,speech:word,detail:word,pool:store.spelling,modeOverride:index%2?"type":"choice"}));
+    if(subject==="spelling")questions=shuffle(store.spelling).slice(0,10).map((word,index)=>spellingQuestion(word,index%2?"type":"choice"));
     if(subject==="math")questions=shuffle(Array.from({length:100},(_,i)=>{const a=Math.floor(i/10),b=i%10;return {subject:"math",prompt:`${a} × ${b}`,answer:String(a*b),detail:`${a} × ${b} = ${a*b}`,a,b};})).slice(0,10);
     if(subject==="poems"){mode="type";const poem=activePoem(),lines=poem.text.split("\n").filter(Boolean),candidates=lines.map(line=>({line,words:(line.match(/[A-Za-z’']+/g)||[]).filter(w=>w.length>3)})).filter(x=>x.words.length);questions=shuffle(candidates).slice(0,10).map(({line,words})=>{const word=pick(words);return {subject:"poem-missing",prompt:line.replace(new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\b`,'i'),"_____"),answer:word,detail:`The missing word was “${word}.”`};});}
     if(!questions.length)return toast("Add learning material before starting this assessment");
@@ -1093,10 +1102,11 @@
     if(q.subject==="poem-read") {body.innerHTML=`${guide}<h2>${esc(q.prompt)}</h2><p class="helper">${esc(q.detail)}</p><button class="secondary" style="margin-bottom:16px" data-play-poem>🔊 Play poem audio</button><div class="poem-text">${esc(q.answer)}</div><button class="primary" style="margin-top:18px" data-self-done>I read it aloud</button>`;$('[data-play-poem]').onclick=()=>playPracticeAudio(q.speech,q.audio,q.poemId);$('[data-self-done]').onclick=()=>grade(true);return;}
     const speech=q.speech?`<button class="subject-icon" id="speakWord" aria-label="Hear the word" style="border:0;color:#5e4bd0">🔊</button>`:"";
     if(mode==="map-place"){body.innerHTML=`${guide}<h2>${esc(q.prompt)}</h2><div class="state-drag-chip" draggable="true">${esc(q.state.name)}</div><div class="us-placement-map" id="placementMap"><span class="helper">Loading U.S. map…</span></div><div id="interaction"></div>`;renderStatePlacement(q);return;}
-    body.innerHTML=`${guide}${q.map?`<div class="map-stage" id="mapStage"><span class="helper">Loading state shape…</span></div>`:""}${speech}<h2 class="${q.subject?.startsWith('poem')?'poem-text':''}">${esc(q.prompt)}</h2>${StudyRich.render(q.diagram)}<div id="interaction"></div>`;
+    body.innerHTML=`${guide}${q.map?`<div class="map-stage" id="mapStage"><span class="helper">Loading state shape…</span></div>`:""}${speech}<h2 class="${q.subject?.startsWith('poem')?'poem-text':''}">${esc(q.prompt)}</h2>${q.translation?`<div class="spelling-translation"><span>${q.challengeWord?'CHALLENGE WORD · ':''}ENGLISH MEANING</span><strong>${esc(q.translation)}</strong></div>`:""}${StudyRich.render(q.diagram)}<div id="interaction"></div>`;
     if(q.map) renderStateMap(q.state);
-    if(q.speech){const speak=()=>playPracticeAudio(q.speech,q.audio);$("#speakWord").onclick=speak;setTimeout(()=>{if(session&&!session.paused)speak();},1200);}
+    if(q.speech){const speak=()=>playPracticeAudio(q.speech,q.audio,"",q.language||"");$("#speakWord").onclick=speak;setTimeout(()=>{if(session&&!session.paused)speak();},1200);}
     if(mode==="parent") renderParent(q); else if(q.response&&(mode!=="choice"||q.response.fields.length>1)) renderRichTyped(q); else if(mode==="choice") renderMultipleChoice(q); else renderTyped(q);
+    if(q.language?.startsWith("es")&&mode==="type")wireSpanishAccents();
   }
 
   function renderParent(q){
@@ -1292,7 +1302,7 @@
   window.addEventListener("pageshow",()=>{if(!document.hidden)restoreForegroundAudio();});
   window.addEventListener("learning-arcade-cloud-state",()=>{if($("[data-screen='settings']")?.classList.contains("active"))renderCloudSettings();});
   window.addEventListener("hashchange",()=>go(location.hash.slice(1)||"home"));
-  if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=45"));
+  if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=46"));
   if (document.modelContext?.registerTool) {
     const register = tool => Promise.resolve(document.modelContext.registerTool(tool)).catch(() => {});
     register({name:"read_learning_sets",title:"Read learning sets",description:"Read the current spelling words and poem titles configured in Learning Arcade.",inputSchema:{type:"object",properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({spellingWords:[...store.spelling],poems:store.poems.map(p=>({id:p.id,title:p.title,author:p.author}))})});
