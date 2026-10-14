@@ -15,7 +15,8 @@
   <link rel="stylesheet" href="styles.css?v=44">
   <link rel="stylesheet" href="features.css?v=48">
   <link rel="stylesheet" href="study-rich.css?v=45">
-<link rel="stylesheet" href="word-games.css?v=50">
+<link rel="stylesheet" href="word-games.css?v=51">
+  <link rel="stylesheet" href="atlas.css?v=51">
 </head>
 <body class="intro-active">
   <section class="startup-gate" id="startupGate" aria-label="Learning Arcade startup">
@@ -89,7 +90,7 @@
           <button class="story-launch" data-go="story"><span class="story-launch-icon">✦</span><span><small>CONTINUE THE ADVENTURE</small><strong>Story Mode</strong><em id="storyLaunchStatus">Restore the Learning Arcade</em></span><b>›</b></button>
           <section id="weeklyLoadoutCard"></section>
           <section class="home-zone game-zone"><div class="zone-heading"><span>01</span><div><p class="eyebrow">Training deck</p><h2>Game Modes</h2></div></div><div class="subject-grid">
-            <button class="subject-card states" data-go="states"><span class="subject-icon">⌖</span><span class="subject-copy"><strong>State Quest</strong><small>States · capitals · abbreviations · maps</small></span><span class="arrow">›</span></button>
+            <button class="subject-card states" data-go="states"><span class="subject-icon">⌖</span><span class="subject-copy"><strong>Atlas Quest</strong><small>States · countries · capitals · maps</small></span><span class="arrow">›</span></button>
             <button class="subject-card spelling" data-go="spelling"><span class="subject-icon">Aa</span><span class="subject-copy"><strong>Word Wizard</strong><small>This week's spelling words</small></span><span class="arrow">›</span></button>
             <button class="subject-card math" data-go="math"><span class="subject-icon">×</span><span class="subject-copy"><strong>Math Mayhem</strong><small>Enter the Multiplication Reactor</small></span><span class="arrow">›</span></button>
             <button class="subject-card poems" data-go="poems"><span class="subject-icon">❝</span><span class="subject-copy"><strong>Poem Power</strong><small>Read · remember · recite</small></span><span class="arrow">›</span></button>
@@ -99,7 +100,7 @@
         </div>
         <div class="parent-home" data-home-panel="parent" hidden>
           <section class="parent-briefing"><img src="assets/characters/professor-volt.png" alt="Professor Volt"><div><p class="eyebrow">Parent Command</p><h2>Plan the week. Build the material. Review the results.</h2><p>To hold the phone during practice, open a game and choose <strong>Parent Swipe</strong> in that round's setup.</p></div></section>
-          <section class="home-zone parent-zone"><div class="zone-heading"><span>P</span><div><p class="eyebrow">Command tools</p><h2>Manage Learning</h2></div></div><div class="parent-tool-grid"><button class="parent-tool profiles-tool" data-go="profiles"><span>◎</span><strong>Learner Profiles</strong><small>Switch, create, or delete profiles</small></button><button class="parent-tool study-tool" data-go="study"><span>▤</span><strong>Study Lab Builder</strong><small>Create and import reusable quizzes</small></button><button class="parent-tool homework-tool" data-go="homework"><span>✓</span><strong>Mission Board</strong><small>Enter and verify weekly homework</small></button><button class="parent-tool states-tool" data-go="states"><span>⌖</span><strong>State Quest Sets</strong><small>Choose and save assigned states</small></button><button class="parent-tool reports-tool" data-go="reports"><span>⌁</span><strong>Assessments & Reports</strong><small>Review accuracy and skill mastery</small></button><button class="parent-tool settings-tool" data-go="settings"><span>⚙</span><strong>Parent Setup</strong><small>Audio, word banks, poems, and backups</small></button></div></section>
+          <section class="home-zone parent-zone"><div class="zone-heading"><span>P</span><div><p class="eyebrow">Command tools</p><h2>Manage Learning</h2></div></div><div class="parent-tool-grid"><button class="parent-tool profiles-tool" data-go="profiles"><span>◎</span><strong>Learner Profiles</strong><small>Switch, create, or delete profiles</small></button><button class="parent-tool study-tool" data-go="study"><span>▤</span><strong>Study Lab Builder</strong><small>Create and import reusable quizzes</small></button><button class="parent-tool homework-tool" data-go="homework"><span>✓</span><strong>Mission Board</strong><small>Enter and verify weekly homework</small></button><button class="parent-tool states-tool" data-go="states"><span>⌖</span><strong>Atlas Quest Sets</strong><small>Choose and save assigned states</small></button><button class="parent-tool reports-tool" data-go="reports"><span>⌁</span><strong>Assessments & Reports</strong><small>Review accuracy and skill mastery</small></button><button class="parent-tool settings-tool" data-go="settings"><span>⚙</span><strong>Parent Setup</strong><small>Audio, word banks, poems, and backups</small></button></div></section>
           <button class="student-preview" data-home-mode="student">Return to Student Arcade</button>
         </div>
       </section>
@@ -127,7 +128,9 @@
   <script src="cloud-config.js?v=40"></script>
   <script src="study-rich.js?v=45"></script>
   <script src="word-games.js?v=48"></script>
-  <script src="app.js?v=50"></script>
+  <script src="atlas-data.js?v=51"></script>
+  <script src="atlas.js?v=51"></script>
+  <script src="app.js?v=51"></script>
   <script type="module" src="cloud-sync.js?v=47"></script>
 </body>
 </html>

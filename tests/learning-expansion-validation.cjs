@@ -10,7 +10,7 @@ const css = fs.readFileSync(path.join(root, 'features.css'), 'utf8');
 for (const marker of [
   'Weekly Learning Loadout','Mastery Review Queue','Learn Mode','REWARD GALLERY','Set Archives',
   'Weekly Parent Summary','Undo latest round','Last five completed items','Division Drive',
-  'Fact families','Missing factor','Equal groups','Choose a poem','Rename this State Quest set',
+  'Fact families','Missing factor','Equal groups','Choose a poem','Rename this Atlas Quest set',
   'Name the new spelling set','Correct location:'
 ]) assert(app.includes(marker), `Missing Learning Arcade expansion marker: ${marker}`);
 
@@ -23,7 +23,7 @@ assert(app.includes('restoreProgress(profile,receipt.before)'), 'Undo must resto
 assert(app.includes('rounds:structuredClone(stats.rounds||[])'), 'Undo must restore the exact prior round history, including a trimmed oldest record');
 assert(app.includes('before.consumables=structuredClone(session.inventoryBefore)'), 'Undo must restore support items used by the round');
 assert(app.includes('answers:(session.answerEvents||[]).map'), 'Completed rounds must preserve question-level review data');
-assert(app.includes('p.kinds.includes(value)'), 'State Quest must support multiple simultaneous question styles');
+assert(app.includes('p.kinds.includes(value)'), 'Atlas Quest must support multiple simultaneous question styles');
 assert(app.includes('store.spellingSets') && app.includes('activeSpellingSetId'), 'Word Wizard saved sets are incomplete');
 assert(app.includes('activePoemId') && app.includes('featured-poem'), 'Poem selection is incomplete');
 assert(app.includes('The app never archives learning material automatically'), 'Set Archives must be parent controlled');
@@ -44,7 +44,7 @@ assert(css.includes('.sentinel-reward-aura') && css.includes('.sentinel-reward-t
 for (const reward of ['cyan-armor-trim','navigator-badge','energy-orb-trail','reactor-glow','archive-crest','master-sentinel-emblem']) {
   assert(fs.existsSync(path.join(root, 'assets', 'ui', 'rewards', `${reward}.png`)), `Missing campaign reward art: ${reward}`);
 }
-for (const versioned of ['styles.css?v=44','features.css?v=48','app.js?v=48','study-rich.js?v=45','cloud-sync.js?v=47']) {
+for (const versioned of ['styles.css?v=44','features.css?v=48','app.js?v=51','atlas.js?v=51','atlas.css?v=51','study-rich.js?v=45','cloud-sync.js?v=47']) {
   assert(html.includes(versioned), `Missing current asset marker: ${versioned}`);
 }
 
