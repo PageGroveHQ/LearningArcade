@@ -44,7 +44,7 @@ assert(css.includes('.sentinel-reward-aura') && css.includes('.sentinel-reward-t
 for (const reward of ['cyan-armor-trim','navigator-badge','energy-orb-trail','reactor-glow','archive-crest','master-sentinel-emblem']) {
   assert(fs.existsSync(path.join(root, 'assets', 'ui', 'rewards', `${reward}.png`)), `Missing campaign reward art: ${reward}`);
 }
-for (const versioned of ['styles.css?v=44','features.css?v=48','app.js?v=53','atlas.js?v=53','atlas.css?v=53','study-rich.js?v=45','cloud-sync.js?v=47']) {
+for (const versioned of ['styles.css?v=45','features.css?v=48','app.js?v=54','atlas.js?v=54','atlas.css?v=54','study-rich.js?v=45','cloud-sync.js?v=47']) {
   assert(html.includes(versioned), `Missing current asset marker: ${versioned}`);
 }
 
