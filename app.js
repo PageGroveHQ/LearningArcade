@@ -637,6 +637,7 @@
     const divisions = ["All 50","Custom selection"].includes(p.region) ? [] : [...new Set(STATE_DATA.filter(s=>s.region===p.region).map(s=>s.division))];
     if (p.division !== "All" && !divisions.includes(p.division)) p.division = "All";
     const selectedStates = activeStates(p.region,p.division,p.customStates);
+    p.kinds=(Array.isArray(p.kinds)?p.kinds:[]).filter(kind=>["facts","map","placement","neighbors","regions","odd","discovery","triples","spelling"].includes(kind));if(!p.kinds.length)p.kinds=["facts"];
     const setSize = selectedStates.length;
     const maxCount = stateQuestionBank(selectedStates,p.kinds).length;
     if (p.count !== 'max' && +p.count > maxCount) { p.count = 'max'; store.statePrefs = p; save(); }
@@ -712,7 +713,7 @@
       else if(k==='regions'){questions.push({subject:"states",state,prompt:`Which region contains ${state.name}?`,answer:state.region.replace(" Region",""),answerType:"region",detail:`${state.name} is in the ${state.region}.`,regionSort:true});questions.push({subject:"states",state,prompt:`Which division contains ${state.name}?`,answer:state.division.replace(" Division",""),answerType:"division",detail:`${state.name} is in the ${state.division}.`,regionSort:true});}
       else if(k==='capital-speed'){questions.push(stateQuestion(state,'facts',Math.random()>.5?'state-capital':'capital-state'));}
       else if(k==='discovery') questions.push({subject:"states",state,prompt:STATE_DISCOVERY[state.abbr],answer:state.name,answerType:"state",detail:`${STATE_DISCOVERY[state.abbr]} Answer: ${state.name}.`,discovery:true});
-      else questions.push(stateQuestion(state,k));
+      else if(k==='map'||k==='triples') questions.push(stateQuestion(state,k));
     }));
     if(kinds.includes('odd')){
       const groups=[...new Set(states.map(state=>state.region))];
@@ -1095,7 +1096,7 @@
   function pauseSession(){if(!session||session.paused||!$("[data-screen='session']")?.classList.contains("active"))return;clearInterval(session.timerId);session.paused=true;session.pausedRemainingMs=session.deadline?Math.max(0,session.deadline-Date.now()):0;session.pausedElapsedMs=Math.max(0,Date.now()-(session.startedAt||Date.now()));activeAudio?.pause();voiceCue.pause();window.speechSynthesis?.cancel();setAudioScene("silent");persistSessionProgress();renderPauseMenu();}
   function resumePausedSession(){if(!session)return;const now=Date.now();if(session.pausedRemainingMs)session.deadline=now+session.pausedRemainingMs;session.startedAt=now-(session.pausedElapsedMs||0);session.paused=false;delete session.pausedRemainingMs;delete session.pausedElapsedMs;closePauseMenu();renderQuestion();}
   function renderQuestion(){
-    clearInterval(session?.timerId);const view=$("#sessionView");const q=session.questions[session.index];if(!q){renderFinish();return;}session.locked=false;session.currentMode=resolvedMode();
+    clearInterval(session?.timerId);const view=$("#sessionView");const q=session.questions[session.index];if(!q){renderFinish();return;}session.locked=false;session.currentMode=resolvedMode();if(!q.modeOverride&&(session.currentMode==="choice"||session.currentMode==="type"))q.resolvedMode=session.currentMode;
     setQuestionAudioDuck(!!q.speech);setAudioScene(session.silentMusic?"silent":"level");session.questionStarted=Date.now();persistSessionProgress();
     const pct=(session.index/session.questions.length)*100,boss=session.bossId?ALL_BOSSES.find(item=>item.id===session.bossId):null,damage=Math.min(session.bossDamage||0,boss?.goal||0),health=boss?Math.max(0,Math.round((1-damage/boss.goal)*100)):0;
     const bossHud=boss?`<div class="boss-hud" style="--boss-color:${boss.color}"><img src="${boss.art}" alt="${esc(boss.name)}"><div><span>${esc(boss.sector)} boss</span><strong>${esc(boss.name)}</strong><div class="boss-health"><i style="width:${health}%"></i></div><small>${damage}/${boss.goal} signal hits</small></div></div>`:"";
@@ -1175,7 +1176,7 @@ it.innerHTML=`${q.language?.startsWith('es')?'':`<div class="assembly-clue"><sma
   }
 
   function stateAnswerOptions(q){
-    if(q.oddStates)return shuffle(q.oddStates.map(state=>state.name));
+    if(q.oddStates?.length)return shuffle(q.oddStates.map(state=>state.name));
     if(q.combined){const pool=[...new Map([q.state,...shuffle(q.pool||[]),...shuffle(STATE_DATA)].filter(Boolean).map(state=>[state.abbr,state])).values()].slice(0,4);return shuffle(pool).map(state=>q.map?`${state.name} · ${state.abbr} · ${state.capital}`:`${state.abbr} · ${state.capital}`);}
     if(q.answerType==="region")return shuffle([q.answer,...["Northeast","Midwest","South","West"].filter(value=>value!==q.answer).slice(0,3)]);
     if(q.answerType==="division"){const divisions=[...new Set(STATE_DATA.map(state=>state.division.replace(" Division","")))];return shuffle([q.answer,...shuffle(divisions.filter(value=>value!==q.answer)).slice(0,3)]);}
@@ -1208,7 +1209,7 @@ it.innerHTML=`${q.language?.startsWith('es')?'':`<div class="assembly-clue"><sma
     const skillId=mistakeKey(q),skill=stats.skills[skillId]||{subject:group,prompt:q.prompt,answer:q.answer,answered:0,correct:0};skill.answered++;if(ok)skill.correct++;stats.skills[skillId]=skill;
     const existing=stats.mistakes[skillId];
     if(ok&&existing)existing.corrected=(existing.corrected||0)+1;
-    if(!ok){const snapshot=questionSnapshot(q),mistake=existing||{...snapshot,misses:0,corrected:0};mistake.misses=(mistake.misses||0)+1;mistake.lastSeen=today();stats.mistakes[skillId]=mistake;}
+    if(!ok){const snapshot=questionSnapshot(q),mistake=existing||{...snapshot,misses:0,corrected:0};mistake.misses=(mistake.misses||0)+1;if(snapshot.resolvedMode)mistake.resolvedMode=snapshot.resolvedMode;mistake.lastSeen=today();stats.mistakes[skillId]=mistake;}
     if(ok){stats.stars=(stats.stars||0)+1;session.earnedOrbs=(session.earnedOrbs||0)+1;}
     const selected=MISSIONS.find(m=>m.id===profile.activeMissionId&&m.subject===group&&missionUnlocked(profile,m)&&(profile.missions[m.id]?.progress||0)<m.goal);
     const mission=selected||currentMissionFor(profile,group);
@@ -1339,7 +1340,7 @@ it.innerHTML=`${q.language?.startsWith('es')?'':`<div class="assembly-clue"><sma
   window.addEventListener("pageshow",()=>{if(!document.hidden)restoreForegroundAudio();});
   window.addEventListener("learning-arcade-cloud-state",()=>{if($("[data-screen='settings']")?.classList.contains("active"))renderCloudSettings();});
   window.addEventListener("hashchange",()=>go(location.hash.slice(1)||"home"));
-if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=54"));
+if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=55"));
   if (document.modelContext?.registerTool) {
     const register = tool => Promise.resolve(document.modelContext.registerTool(tool)).catch(() => {});
     register({name:"read_learning_sets",title:"Read learning sets",description:"Read the current spelling words and poem titles configured in Learning Arcade.",inputSchema:{type:"object",properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({spellingWords:[...store.spelling],poems:store.poems.map(p=>({id:p.id,title:p.title,author:p.author}))})});
