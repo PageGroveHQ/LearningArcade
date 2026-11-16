@@ -2,8 +2,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const appPath = path.join(__dirname, "..", "app.js");
-const source = fs.readFileSync(appPath, "utf8");
+const source = require("./app-source.cjs").read();
 const start = source.indexOf("function mathAnswerOptions(q)");
 const answerOptionsMatch = /\r?\n\r?\n  function answerOptions\(q\)/g;
 answerOptionsMatch.lastIndex = start;
