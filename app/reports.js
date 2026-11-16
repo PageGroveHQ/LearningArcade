@@ -15,12 +15,21 @@
     }
     renderStateMasteryMap(root,bySubject);
   }
+  // New records carry the state they were about. Older ones are matched by text, taking care that
+  // "Kansas" is not found inside "Arkansas", "Virginia" inside "West Virginia", or "IN" inside a sentence.
+  function skillMatchesState(item,state){
+    if(item.countryCode)return false;
+    if(item.stateName)return item.stateName===state.name;
+    const text=`${item.prompt} ${item.answer}`,lower=text.toLowerCase(),labels=STATE_DATA.flatMap(place=>[place.name,place.capital]);
+    const mentions=label=>new RegExp(`\\b${label.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}(?![\\w])`,"i").test(text)&&!labels.some(other=>other!==label&&other.toLowerCase().includes(label.toLowerCase())&&lower.includes(other.toLowerCase()));
+    return mentions(state.name)||mentions(state.capital)||new RegExp(`\\b${state.abbr}\\b`).test(text);
+  }
   async function renderStateMasteryMap(root,skills){
     root.innerHTML=`<p class="helper">Loading the national signal map…</p>`;
     try{
       if(!mapTopology){const response=await fetch("vendor/states-10m.json");mapTopology=await response.json();}
       const states=STATE_DATA.filter(state=>!state.district),features=topojson.feature(mapTopology,mapTopology.objects.states).features,collection={type:"FeatureCollection",features:features.filter(feature=>states.some(state=>String(feature.id).padStart(2,'0')===state.id))},projection=d3.geoAlbersUsa().fitExtent([[16,16],[959,594]],collection),path=d3.geoPath(projection);
-      root.innerHTML=`<p class="helper">States brighten as names, capitals, abbreviations, and shapes become fluent.</p><div class="state-mastery-map"><svg viewBox="0 0 975 610" role="img" aria-label="Atlas Quest mastery map">${collection.features.map(feature=>{const state=states.find(item=>item.id===String(feature.id).padStart(2,'0')),pattern=new RegExp(`\\b${state.abbr}\\b`,'i'),matches=skills.filter(item=>{if(item.countryCode)return false;const text=`${item.prompt} ${item.answer}`;return norm(text).includes(norm(state.name))||norm(text).includes(norm(state.capital))||pattern.test(text);}),info=masteryInfo(matches);return `<path class="${info.level}" d="${path(feature)}"><title>${esc(state.name)}: ${info.answered?`${info.accuracy}% across ${info.answered}`:'not practiced'}</title></path>`;}).join('')}</svg></div>${masteryLegend()}`;
+      root.innerHTML=`<p class="helper">States brighten as names, capitals, abbreviations, and shapes become fluent.</p><div class="state-mastery-map"><svg viewBox="0 0 975 610" role="img" aria-label="Atlas Quest mastery map">${collection.features.map(feature=>{const state=states.find(item=>item.id===String(feature.id).padStart(2,'0')),matches=skills.filter(item=>skillMatchesState(item,state)),info=masteryInfo(matches);return `<path class="${info.level}" d="${path(feature)}"><title>${esc(state.name)}: ${info.answered?`${info.accuracy}% across ${info.answered}`:'not practiced'}</title></path>`;}).join('')}</svg></div>${masteryLegend()}`;
     }catch{root.innerHTML=`<div class="empty">The Atlas Quest mastery map could not load. Reopen the app and try again.</div>`;}
   }
 

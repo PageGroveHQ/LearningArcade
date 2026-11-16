@@ -36,7 +36,7 @@ async function upload(){
   }catch(error){status.phase="error";status.pending=true;status.message=syncErrorMessage(error);}
   finally{pushing=false;emit();if(pushAgain){pushAgain=false;schedulePush();}}
 }
-function schedulePush(){if(!user||status.phase==="loading"||status.phase==="pulling")return;if(pushing){pushAgain=true;return;}status.pending=true;clearTimeout(pushTimer);pushTimer=setTimeout(upload,1400);emit();}
+function schedulePush(){if(!user||status.phase==="loading"||status.phase==="pulling"||status.phase==="conflict")return;if(pushing){pushAgain=true;return;}status.pending=true;clearTimeout(pushTimer);pushTimer=setTimeout(upload,1400);emit();}
 async function applyCloud(snapshot){
   const record=snapshot.data(),updatedAt=cloudMillis(record?.updatedAt)||Date.now();if(!record?.data)return;
   const data=decodeCloudData(record);
@@ -56,13 +56,17 @@ async function reconcile(){
   const snapshot=await api.getDoc(cloudDocument()),meta=readMeta(),localChanged=bridge.changedAt();
   if(!snapshot.exists()){await upload();return;}
   const cloudUpdated=cloudMillis(snapshot.data()?.updatedAt),lastSynced=meta.uid===user.uid?Number(meta.lastSyncedAt)||0:0;
-  if(!lastSynced||cloudUpdated>lastSynced){await applyCloud(snapshot);return;}
+  // Never replace progress silently: if the cloud copy is newer and this device also has work the
+  // cloud has not seen, stop and let the parent choose which copy to keep.
+  const cloudNewer=!lastSynced||cloudUpdated>lastSynced,localUnsynced=lastSynced?localChanged>lastSynced:!!bridge.hasProgress?.();
+  if(cloudNewer&&localUnsynced){status.phase="conflict";status.pending=false;status.lastSyncedAt=lastSynced;status.message="This device and Cloud Save both have progress. Choose “Sync this device now” to keep this device's copy, or “Restore from cloud” to keep the cloud copy.";emit();return;}
+  if(cloudNewer){await applyCloud(snapshot);return;}
   status.lastSyncedAt=cloudUpdated;if(localChanged>lastSynced){await upload();return;}
   status.phase="ready";status.message="Cloud save is current";emit();
 }
 async function initialize(){
   if(!status.configured||!bridge){emit();return;}
-try{await loadFirebase();api.setPersistence(auth,api.browserLocalPersistence).catch(()=>{});api.onAuthStateChanged(auth,async current=>{unsubscribe?.();user=current;status.email=current?.email||"";if(!current){status.phase="signed-out";status.message="Sign in to synchronize devices";emit();return;}status.phase="loading";status.message="Checking cloud save…";emit();try{await reconcile();unsubscribe=api.onSnapshot(cloudDocument(),snapshot=>{if(!snapshot.exists()||pushing)return;if(acknowledgeOwnSnapshot(snapshot))return;const remote=cloudMillis(snapshot.data()?.updatedAt),meta=readMeta();if(remote>(Number(meta.lastSyncedAt)||0)&&bridge.changedAt()<=(Number(meta.lastSyncedAt)||0))applyCloud(snapshot).catch(reportSyncError);},reportSyncError);}catch(error){reportSyncError(error);}});}catch(error){reportSyncError(error);}
+try{await loadFirebase();api.setPersistence(auth,api.browserLocalPersistence).catch(()=>{});api.onAuthStateChanged(auth,async current=>{unsubscribe?.();user=current;status.email=current?.email||"";if(!current){status.phase="signed-out";status.message="Sign in to synchronize devices";emit();return;}status.phase="loading";status.message="Checking cloud save…";emit();try{await reconcile();unsubscribe=api.onSnapshot(cloudDocument(),snapshot=>{if(!snapshot.exists()||pushing||status.phase==="conflict")return;if(acknowledgeOwnSnapshot(snapshot))return;const remote=cloudMillis(snapshot.data()?.updatedAt),meta=readMeta();if(remote>(Number(meta.lastSyncedAt)||0)&&bridge.changedAt()<=(Number(meta.lastSyncedAt)||0))applyCloud(snapshot).catch(reportSyncError);},reportSyncError);}catch(error){reportSyncError(error);}});}catch(error){reportSyncError(error);}
 }
 async function createAccount(email,password){await loadFirebase();status.phase="loading";status.message="Creating cloud account…";emit();await api.createUserWithEmailAndPassword(auth,email,password);}
 async function signIn(email,password){await loadFirebase();status.phase="loading";status.message="Signing in…";emit();await api.signInWithEmailAndPassword(auth,email,password);}

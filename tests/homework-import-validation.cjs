@@ -3,7 +3,7 @@ const fs=require("node:fs");
 const path=require("node:path");
 const root=path.join(__dirname,"..");
 const app=require('./app-source.cjs').read();
-const csv=fs.readFileSync(path.join(root,"temporary-imports","asher-homework-2026-09-28.csv"),"utf8");
+const csv=fs.readFileSync(path.join(root,"temporary-imports","sample-homework-2026-09-28.csv"),"utf8");
 const parserStart=app.indexOf("function parseCSV(text)"),parserEnd=app.indexOf("\n",parserStart),start=app.indexOf("function homeworkTasksFromCSV(text)"),end=app.indexOf("  function importHomeworkCSV(file)",start);
 assert(parserStart>=0&&parserEnd>parserStart&&start>=0&&end>start,"Could not locate the Mission Board CSV parser");
 const isoLocal=date=>`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;

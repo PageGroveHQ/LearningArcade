@@ -6,9 +6,10 @@
   const shuffle = arr => [...arr].sort(() => Math.random() - .5);
   const pick = arr => arr[Math.floor(Math.random() * arr.length)];
   const norm = value => String(value).trim().toLowerCase().replace(/[.?!,'’]/g, "").replace(/\s+/g, " ");
-  const today = () => new Date().toISOString().slice(0, 10);
+  const today = () => isoLocal(new Date());
   const STORE = "learning-arcade-v2",SKIP_INTRO_ONCE="learning-arcade-skip-intro-once-v1";
   const OLD_STORE = "asher-learning-arcade-v1";
+  const ROUND_DETAIL_LIMIT = 10;
   const ORIGINAL_SPELLING = ["because", "friend", "school", "people", "favorite", "different", "thought", "through"];
   const BUNDLED_SPELLING = window.BUNDLED_SPELLING_WORDS || [];
   const blankStats = () => ({stars:0,days:{},subjects:{},rounds:[],mistakes:{},skills:{},assessments:{}});

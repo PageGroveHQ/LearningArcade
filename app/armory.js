@@ -3,7 +3,7 @@
   function cosmeticDemo(item){
     const appliesTo={frame:"Active Pilot profile frame",trail:"Energy Orb rewards and results",theme:"Student Arcade interface accents",title:"Active Pilot title"}[item.type]||"Student Arcade";
     let preview="";
-    if(item.type==="frame") preview=`<div class="demo-profile demo-${item.value}"><b>A</b><span><small>ACTIVE PILOT</small><strong>Asher</strong></span></div>`;
+    if(item.type==="frame") preview=`<div class="demo-profile demo-${item.value}"><b>P</b><span><small>ACTIVE PILOT</small><strong>Pilot</strong></span></div>`;
     if(item.type==="trail") preview=`<div class="demo-orb demo-${item.value}"><i></i><i></i><img src="assets/ui/energy-orb.png" alt=""><i></i></div>`;
     if(item.type==="theme") preview=`<div class="demo-theme demo-${item.value}"><i></i><span>ARCADE GRID</span><i></i></div>`;
     if(item.type==="title") preview=`<div class="demo-title"><small>PILOT TITLE</small><strong>${esc(item.value)}</strong></div>`;

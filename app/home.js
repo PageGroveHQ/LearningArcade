@@ -4,6 +4,7 @@
     if(name==="settings"&&!parentUnlocked){requestParentAccess(()=>go("settings"));return;}
     $$(".screen").forEach(s => s.classList.toggle("active", s.dataset.screen === name));
     window.scrollTo(0, 0); $("#app").focus({preventScroll:true});
+    try {
     if (name === "home") renderHome();
     if (name === "states") renderStates();
     if (name === "spelling") renderSpelling();
@@ -18,8 +19,17 @@
     if (name === "study-editor") renderStudyEditor();
     if (name === "homework") renderHomeworkBoard();
     if (name === "settings") renderSettings();
+    } catch (error) { showScreenError(name,error); }
     if(name!=="session")setQuestionAudioDuck(false);
     setAudioScene(name === "session" ? (session?.silentMusic?"silent":"level") : "menu");
+  }
+
+  // A failure while drawing one screen should say so and offer a way out, not leave a blank page.
+  function showScreenError(name,error){
+    console.error(`Learning Arcade could not open "${name}"`,error);
+    const view=name==="home"?null:$(`.screen[data-screen="${name}"] > div`);
+    if(!view){toast("Part of this screen could not load");return;}
+    view.innerHTML=`<div class="panel"><p class="label">Something went wrong</p><h2>This screen could not load</h2><p class="helper">Your saved progress is not affected. Go back and try again; if it keeps happening, use Parent Setup → Check for update.</p><p class="helper">Details: ${esc(error?.message||"Unknown error")}</p><button class="primary" data-go="home">Back to home</button></div>`;
   }
 
   function head(title, subtitle, back = "home") {

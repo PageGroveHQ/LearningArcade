@@ -37,6 +37,7 @@
         else if(mode==="groups")questions.push({subject:"math",operation:"divide",prompt:`${product} Energy Orbs are shared equally among ${a} stations. How many does each station receive?`,answer:String(b),detail:`${product} ÷ ${a} = ${b}.`,a,b,product});
         else questions.push({subject:"math",operation:"divide",prompt:`${product} ÷ ${a}`,answer:String(b),detail:`${product} ÷ ${a} = ${b}, because ${a} × ${b} = ${product}.`,a,b,product});
       }else{
+        if(mode==="factor"&&a===0)return;
         if(mode==="fact-family")questions.push({subject:"math",operation:"multiply",prompt:`Fact family: ${a} × ${b} = ?`,answer:String(product),detail:`${a} × ${b} = ${product}; ${b} × ${a} = ${product}; ${product} ÷ ${Math.max(1,a)} = ${a?b:0}.`,a,b,product});
         else if(mode==="factor")questions.push({subject:"math",operation:"multiply",prompt:`${a} × ? = ${product}`,answer:String(b),detail:`The missing factor is ${b}: ${a} × ${b} = ${product}.`,a,b,product});
         else if(mode==="groups")questions.push({subject:"math",operation:"multiply",prompt:`${a} groups of ${b} Energy Orbs make how many altogether?`,answer:String(product),detail:`${a} groups of ${b}: ${a} × ${b} = ${product}.`,a,b,product});

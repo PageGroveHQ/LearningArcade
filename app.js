@@ -4,9 +4,10 @@
   document.addEventListener("keydown",event=>{if(!session||session.currentMode!=="assembly"||session.paused||session.locked||!$("[data-screen='session']")?.classList.contains('active')||event.ctrlKey||event.altKey||event.metaKey||event.target.closest('input,textarea,select'))return;const letter=WordGames.normalize(event.key);if([...letter].length!==1||!WordGames.isLetter(letter))return;const key=$$('[data-guess]').find(button=>button.dataset.guess===letter&&!button.disabled);if(key){event.preventDefault();key.click();}});
   window.addEventListener("pagehide",()=>{persistSessionProgress();stopBackgroundAudio();});
   window.addEventListener("pageshow",()=>{if(!document.hidden)restoreForegroundAudio();});
-  window.addEventListener("learning-arcade-cloud-state",()=>{if($("[data-screen='settings']")?.classList.contains("active"))renderCloudSettings();});
+  let cloudConflictNoticed=false;
+  window.addEventListener("learning-arcade-cloud-state",event=>{if(event.detail?.phase==="conflict"){if(!cloudConflictNoticed){cloudConflictNoticed=true;toast("Cloud Save needs a choice in Parent Setup");}}else cloudConflictNoticed=false;if($("[data-screen='settings']")?.classList.contains("active"))renderCloudSettings();});
   window.addEventListener("hashchange",()=>go(location.hash.slice(1)||"home"));
-if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=56"));
+if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=57"));
   if (document.modelContext?.registerTool) {
     const register = tool => Promise.resolve(document.modelContext.registerTool(tool)).catch(() => {});
     register({name:"read_learning_sets",title:"Read learning sets",description:"Read the current spelling words and poem titles configured in Learning Arcade.",inputSchema:{type:"object",properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:()=>({spellingWords:[...store.spelling],poems:store.poems.map(p=>({id:p.id,title:p.title,author:p.author}))})});

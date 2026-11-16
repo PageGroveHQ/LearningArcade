@@ -70,11 +70,15 @@ Cloud Save uses Firebase's no-cost Spark plan. The app remains fully usable with
 6. In Firestore **Rules**, publish the contents of `firestore.rules`. The supplied rule permits each signed-in account to read and write only its own Learning Arcade save.
 7. Publish the site, open **Parent Setup → Cloud Save** on the primary device, create the family account, and use that same sign-in on the other devices.
 
-GitHub Pages distributes app code, layout changes, artwork, and bundled audio. Cloud Save synchronizes the changing family data: profiles, progress, reports, orbs and purchases, equipped cosmetics, settings, spelling and poem edits, Study Lab sets, State Quest sets, Mission Board assignments, and paused rounds. Manual JSON backups remain available as a separate recovery option. Avoid actively playing or editing the same profile on two devices at the exact same time; the most recently synchronized save becomes current.
+GitHub Pages distributes app code, layout changes, artwork, and bundled audio. Cloud Save synchronizes the changing family data: profiles, progress, reports, orbs and purchases, equipped cosmetics, settings, spelling and poem edits, Study Lab sets, State Quest sets, Mission Board assignments, and paused rounds. Manual JSON backups remain available as a separate recovery option. Avoid actively playing or editing the same profile on two devices at the exact same time; the most recently synchronized save becomes current. If a device has progress the cloud has not seen and the cloud copy is also newer (for example, a second device signing in for the first time, or a device that was used offline), Cloud Save pauses and Parent Setup asks which copy to keep: **Sync this device now** or **Restore from cloud**. Nothing is replaced until one is chosen.
 
 Parent Setup also includes **Start completely fresh**. It removes only Learning Arcade's own browser keys, never data belonging to another PageGrove app on the shared GitHub Pages domain. When Cloud Save is signed in, the cloud document is replaced with a blank Learning Arcade save so connected devices receive the reset; the Firebase login itself remains available for reuse.
 
 Cloud records version 2 store the app data as a JSON string so visual tables, number patterns, and answer arrangements do not violate Firestore's nested-array restriction. Version 1 object saves remain readable and are upgraded on the next upload. Local saves and downloaded backups retain their existing format. Refresh Learning Arcade on every device before using the updated cloud format. Uploads larger than 1,000,000 UTF-8 bytes are stopped before changing the cloud document, with a backup reminder; failed uploads do not discard local work. Sync errors distinguish access, quota, connection, and save-size failures without exposing the save contents.
+
+## Save size
+
+Each profile keeps summaries of its last 100 rounds; only the 10 newest keep question-by-question detail (the reports show the latest five). The undo receipt for the newest round records just the entries that round changed. If the browser refuses a save because storage is full, play continues and a message asks for a backup from Parent Setup.
 
 ## Study Lab imports
 
