@@ -41,6 +41,9 @@
     profile.homeworkRewards=Array.isArray(profile.homeworkRewards)?profile.homeworkRewards:[];
     profile.savedRound=profile.savedRound&&typeof profile.savedRound==="object"?profile.savedRound:null;
     profile.lastRoundUndo=profile.lastRoundUndo&&typeof profile.lastRoundUndo==="object"?profile.lastRoundUndo:null;
+    // Only the newest rounds keep their question-by-question detail; older receipts held a second copy of every round.
+    profile.stats.rounds.slice(0,-ROUND_DETAIL_LIMIT).forEach(round=>{delete round.answers;});
+    if(Array.isArray(profile.lastRoundUndo?.before?.stats?.rounds)){delete profile.lastRoundUndo.before.stats.rounds;profile.lastRoundUndo.before.droppedRounds||=[];}
     profile.consumables=profile.consumables&&typeof profile.consumables==="object"?profile.consumables:{};
     SUPPORT_ITEMS.forEach(item=>profile.consumables[item.id]=Math.max(0,Number(profile.consumables[item.id])||0));
     profile.cosmeticsOwned=Array.isArray(profile.cosmeticsOwned)?profile.cosmeticsOwned.filter(id=>COSMETICS.some(item=>item.id===id)):[];
@@ -171,13 +174,20 @@
   const legacyBrandedPoem=store.poems.find(poem=>poem.author==="Asher's Learning Arcade");
   if(legacyBrandedPoem){store.poems.forEach(poem=>{if(poem.author==="Asher's Learning Arcade")poem.author="Learning Arcade";});saveSoon();}
   const LOCAL_CHANGED="learning-arcade-local-changed-at-v1",DEVICE_ID="learning-arcade-device-id-v1";
-  const save = () => {localStorage.setItem(STORE,JSON.stringify(store));localStorage.setItem(LOCAL_CHANGED,String(Date.now()));window.LearningArcadeCloud?.schedulePush?.();};
+  // store.stats is only a live alias of the active profile's stats, so it is left out of every saved copy.
+  const persistable = () => ({...store,stats:undefined});
+  let saveFailed = false;
+  const save = () => {
+    try{localStorage.setItem(STORE,JSON.stringify(persistable()));localStorage.setItem(LOCAL_CHANGED,String(Date.now()));saveFailed=false;document.body.dataset.saveFailed="false";}
+    catch(error){console.error("Learning Arcade could not save",error);document.body.dataset.saveFailed="true";if(!saveFailed){saveFailed=true;setTimeout(()=>toast("This device's storage is full. Download a backup in Parent Setup."),0);}return false;}
+    window.LearningArcadeCloud?.schedulePush?.();return true;
+  };
   // Defer the lookup as well as the call. Fresh installs reach the content
   // migrations above before the `save` constant has finished initializing.
   function saveSoon(){setTimeout(()=>save(),0);}
   function freshData(){const fresh=structuredClone(defaults),profile=createProfile("Player 1");fresh.poems=structuredClone(window.DEFAULT_POEMS||[]);fresh.profiles=[profile];fresh.activeProfileId=profile.id;return fresh;}
   function clearLocalData(){[STORE,OLD_STORE,LOCAL_CHANGED,DEVICE_ID,"learning-arcade-cloud-meta-v1"].forEach(key=>localStorage.removeItem(key));location.hash="";location.reload();}
-  window.LearningArcadeDataBridge={exportData:()=>JSON.parse(JSON.stringify(store)),freshData,clearLocalData,importData:data=>{if(!data||!Array.isArray(data.profiles)||!data.profiles.length)throw new Error("Invalid cloud save");localStorage.setItem(STORE,JSON.stringify({...defaults,...data}));sessionStorage.setItem(SKIP_INTRO_ONCE,"1");location.reload();},changedAt:()=>Number(localStorage.getItem(LOCAL_CHANGED))||0,markSynced:timestamp=>localStorage.setItem(LOCAL_CHANGED,String(timestamp||Date.now())),deviceId:()=>{let id=localStorage.getItem(DEVICE_ID);if(!id){id=`device-${Date.now()}-${Math.random().toString(36).slice(2,9)}`;localStorage.setItem(DEVICE_ID,id);}return id;}};
+  window.LearningArcadeDataBridge={exportData:()=>JSON.parse(JSON.stringify(persistable())),hasProgress:()=>store.profiles.some(profile=>profile.stats.rounds.length||Object.keys(profile.stats.subjects||{}).length||profile.homeworkTasks.length)||store.studySets.length>0||store.statePresets.length>0,freshData,clearLocalData,importData:data=>{if(!data||!Array.isArray(data.profiles)||!data.profiles.length)throw new Error("Invalid cloud save");localStorage.setItem(STORE,JSON.stringify({...defaults,...data}));sessionStorage.setItem(SKIP_INTRO_ONCE,"1");location.reload();},changedAt:()=>Number(localStorage.getItem(LOCAL_CHANGED))||0,markSynced:timestamp=>localStorage.setItem(LOCAL_CHANGED,String(timestamp||Date.now())),deviceId:()=>{let id=localStorage.getItem(DEVICE_ID);if(!id){id=`device-${Date.now()}-${Math.random().toString(36).slice(2,9)}`;localStorage.setItem(DEVICE_ID,id);}return id;}};
   let session = null;
   let editingStudySetId = "";
   let homeworkWeekOffset = 0;

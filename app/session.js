@@ -24,6 +24,15 @@
   function pauseSession(){if(!session||session.paused||!$("[data-screen='session']")?.classList.contains("active"))return;clearInterval(session.timerId);session.paused=true;session.pausedRemainingMs=session.deadline?Math.max(0,session.deadline-Date.now()):0;session.pausedElapsedMs=Math.max(0,Date.now()-(session.startedAt||Date.now()));activeAudio?.pause();voiceCue.pause();window.speechSynthesis?.cancel();setAudioScene("silent");persistSessionProgress();renderPauseMenu();}
   function resumePausedSession(){if(!session)return;const now=Date.now();if(session.pausedRemainingMs)session.deadline=now+session.pausedRemainingMs;session.startedAt=now-(session.pausedElapsedMs||0);session.paused=false;delete session.pausedRemainingMs;delete session.pausedElapsedMs;closePauseMenu();renderQuestion();}
   function renderQuestion(){
+    try{drawQuestion();}
+    catch(error){
+      console.error("Learning Arcade could not show this question",error);
+      $("#sessionView").innerHTML=`<div class="panel"><p class="label">Something went wrong</p><h2>This question could not load</h2><p class="helper">You can skip it and keep going, or leave the round.</p><p class="helper">Details: ${esc(error?.message||"Unknown error")}</p><div class="stack"><button class="primary" id="skipBrokenQuestion">Skip this question</button><button class="secondary" id="exitBrokenRound">Exit round</button></div></div>`;
+      $("#skipBrokenQuestion").onclick=()=>{session.index++;renderQuestion();};
+      $("#exitBrokenRound").onclick=()=>{clearInterval(session?.timerId);clearSavedRound();session=null;go("home");};
+    }
+  }
+  function drawQuestion(){
     clearInterval(session?.timerId);const view=$("#sessionView");const q=session.questions[session.index];if(!q){renderFinish();return;}session.locked=false;session.currentMode=resolvedMode();if(!q.modeOverride&&(session.currentMode==="choice"||session.currentMode==="type"))q.resolvedMode=session.currentMode;
     setQuestionAudioDuck(!!q.speech);setAudioScene(session.silentMusic?"silent":"level");session.questionStarted=Date.now();persistSessionProgress();
     const pct=(session.index/session.questions.length)*100,boss=session.bossId?ALL_BOSSES.find(item=>item.id===session.bossId):null,damage=Math.min(session.bossDamage||0,boss?.goal||0),health=boss?Math.max(0,Math.round((1-damage/boss.goal)*100)):0;
