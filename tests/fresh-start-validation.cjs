@@ -2,7 +2,7 @@ const assert=require("node:assert/strict");
 const fs=require("node:fs");
 const path=require("node:path");
 const root=path.join(__dirname,"..");
-const app=fs.readFileSync(path.join(root,"app.js"),"utf8");
+const app=require('./app-source.cjs').read();
 const html=fs.readFileSync(path.join(root,"index.html"),"utf8");
 const cloud=fs.readFileSync(path.join(root,"cloud-sync.js"),"utf8");
 assert(html.includes("__arcadeEnterRequested"),"Early startup taps are not queued");

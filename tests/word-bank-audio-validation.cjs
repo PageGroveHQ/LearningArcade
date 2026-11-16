@@ -30,7 +30,7 @@ for (const marker of ["FISH_AUDIO_API_KEY", "reference_id:config.voice.reference
   if (!generator.includes(marker)) throw new Error(`Word-bank generator is missing: ${marker}`);
 }
 
-const appFiles = ["app.js","data.js","sw.js"].map(file=>fs.readFileSync(path.join(root,file),"utf8")).join("\n").toLowerCase();
+const appFiles = [...require('./app-source.cjs').files,"data.js","sw.js"].map(file=>fs.readFileSync(path.join(root,file),"utf8")).join("\n").toLowerCase();
 for (const legacy of ["william-cypher","cartoon-dog-heeler"]) {
   if (appFiles.includes(legacy)) throw new Error(`Legacy voice reference remains in the published app: ${legacy}`);
 }

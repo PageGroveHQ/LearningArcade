@@ -38,6 +38,26 @@ A mobile-first, installable learning app for:
 
 Everything is static and can be hosted on GitHub Pages. Practice data is always stored in the browser first; Cloud Save is an optional second copy for using the same family data on multiple devices.
 
+## Code layout
+
+The app has no build step. `index.html` loads plain scripts in order; the files in `app/` share one global scope, so a function in one file can call a function in another.
+
+| File | What it holds |
+| --- | --- |
+| `app/core.js` | DOM shortcuts, text/date/CSV helpers, toast |
+| `app/content.js` | Missions, rewards, shop items, story chapters, bosses |
+| `app/store.js` | Saved-data defaults, loading, one-time migrations, `save()` |
+| `app/audio.js` | Music, effects, voice cues, practice audio |
+| `app/startup.js` | Startup gate, onboarding, Parent PIN |
+| `app/home.js` | Screen navigation, home screen, shared menu controls |
+| `app/atlas-usa.js` | Atlas Quest (USA) menu and question building |
+| `app/word-wizard.js`, `app/study-lab.js`, `app/mission-board.js`, `app/math.js`, `app/poems.js` | One file per game or tool |
+| `app/campaign.js`, `app/armory.js`, `app/reports.js`, `app/settings.js` | Story Mode, shop and profiles, reports, Parent Setup |
+| `app/session.js`, `app/questions.js`, `app/grading.js`, `app/state-maps.js` | The round engine: starting and pausing, drawing questions, grading and results, U.S. maps |
+| `app.js` | Global listeners, service worker registration, boot. Loaded last |
+
+When adding a file to `app/`, list it in `index.html` before `app.js` and in the `LOCAL` list in `sw.js`, then raise the version numbers in both. Top-level code that runs while a file loads may only call functions from files listed before it.
+
 ## Free Cloud Save setup
 
 Cloud Save uses Firebase's no-cost Spark plan. The app remains fully usable with local saves when Firebase is not configured or when a device is offline.

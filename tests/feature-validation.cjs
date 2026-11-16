@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const root = path.resolve(__dirname, '..');
-const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+const app = require('./app-source.cjs').read();
 const data = fs.readFileSync(path.join(root, 'data.js'), 'utf8');
 
 function objectLiteral(source, name, nextMarker) {

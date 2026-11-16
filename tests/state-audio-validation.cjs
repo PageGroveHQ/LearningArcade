@@ -17,7 +17,7 @@ for (const state of states) {
   if (mappings?.[state.abbr]?.capital !== expectedCapital) throw new Error(`Incorrect capital mapping for ${state.abbr}.`);
 }
 
-const app = fs.readFileSync(path.join(root, "app.js"), "utf8");
+const app = require('./app-source.cjs').read();
 for (const marker of ["stateRecordedAudio(state, field)", "audio:stateRecordedAudio(state,field)", "playPracticeAudio(q.speech,q.audio,\"\",q.language||\"\")", "audio:q.audio||\"\""]) {
   if (!app.includes(marker)) throw new Error(`State Quest playback integration is missing: ${marker}`);
 }
